@@ -1,0 +1,32 @@
+Metadata-Version: 2.4
+Name: text-info
+Version: 1.0.0
+Summary: Tools to extract useful information from xml text corpora
+Home-page: https://github.com/annotation/text-info
+Author: Dirk Roorda
+Author-email: dirk.roorda@di.huc.knaw.nl
+License: MIT
+Keywords: text,xml,corpus
+Classifier: Development Status :: 4 - Beta
+Classifier: Environment :: Other Environment
+Classifier: Framework :: Jupyter
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Education
+Classifier: Intended Audience :: Science/Research
+Classifier: Natural Language :: English
+Classifier: Operating System :: MacOS :: MacOS X
+Classifier: Operating System :: Microsoft :: Windows :: Windows 10
+Classifier: Operating System :: POSIX :: Linux
+Classifier: Programming Language :: Python :: 3 :: Only
+Classifier: Programming Language :: Python :: Implementation :: CPython
+Classifier: Topic :: Scientific/Engineering :: Information Analysis
+Classifier: Topic :: Text Processing :: Filters
+Classifier: Topic :: Text Processing :: Linguistic
+Classifier: Topic :: Text Processing :: Markup
+Requires-Python: >=3.13.0
+License-File: LICENSE
+Requires-Dist: wheel
+Requires-Dist: lxml
+Dynamic: license-file
+
+file README.md
