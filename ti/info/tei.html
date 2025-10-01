@@ -1,0 +1,4989 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.11.6" />
+<title>ti.info.tei API documentation</title>
+<meta name="description" content="TEI info …" />
+<!-- integrity SRI from https://cdnjs.com/libraries/10up-sanitize.css/11.0.1 -->
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css"
+integrity="sha512-kcbluZFacWN57NgWZ4aH6eUMBEaTyErFhIFD3y5qYZbKuuyImH0K/AKsBbfXlivh2z5C+3IDTIhI11YmKomzmA=="
+crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css"
+integrity="sha512-uVeAgzAmieLUTGba0qr9vXQgVD7fko2kcbYIKIraXUIDg9iJLxveTFUrg3DJhqn3cAf3HFDbgmhq0eGko5wEAA=="
+crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML" integrity="sha256-kZafAc6mZvK3W3v1pHOcUix30OHQN6pU/NO2oFkqZVw=" crossorigin></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>ti.info.tei</code></h1>
+</header>
+<section id="section-intro">
+<h1 id="tei-info">TEI info</h1>
+<p>TI knows the TEI elements, because it will read and parse the complete
+TEI schema. From this the set of complex, mixed elements is distilled.</p>
+<p>If the TEI source conforms to a customised TEI schema, it will be detected and
+the importer will read it and override the generic information of the TEI elements.</p>
+<p>It is also possible to pass a choice of template and adaptation in a processing
+instruction. This does not influence validation, but it may influence further
+processing.</p>
+<p>If the TEI consists of multiple source files, it is possible to specify different
+templates and adaptations for different files.</p>
+<p>The possible values for models, templates, and adaptations should be declared in
+the configuration file.
+For each model there should be a corresponding schema in the schema directory,
+either an RNG or an XSD file.</p>
+<h1 id="configuration-and-customization">Configuration and customization</h1>
+<p>You have to pass a specific additional file to the initializer of the TEI class:</p>
+<ul>
+<li><code>path/tei.yml</code> in which you specify a bunch of values to
+get the conversion off the ground.</li>
+</ul>
+<h2 id="keys-and-values-of-the-teiyml-file">Keys and values of the <code>tei.yml</code> file</h2>
+<h3 id="models-templates-and-adaptations"><code>models</code>, <code>templates</code> and <code>adaptations</code></h3>
+<p>list, optional <code>[]</code></p>
+<p>Which TEI-based schemas and editem templates and adaptations are to be used.</p>
+<h4 id="models"><code>models</code></h4>
+<p>For each <em>model</em> there should be an XSD or RNG file with that name in the <code>schema</code>
+directory. The <code>tei_all</code> schema is known to TF, no need to specify that one.</p>
+<p>We'll try a RelaxNG schema (<code>.rng</code>) first. If that exists, we use it for validation
+with JING, and we also convert it with TRANG to an XSD schema, which we use for
+analysing the schema: we want to know which elements are mixed and pure.</p>
+<p>If there is no RelaxNG schema, we try an XSD schema (<code>.xsd</code>). If that exists,
+we can do the analysis, and we will use it also for validation.</p>
+<div class="admonition note">
+<p class="admonition-title">Problems with RelaxNG validation</p>
+<p>RelaxNG validation is not always reliable when performed with LXML, or any tool
+based on <code>libxml</code>, for that matter. That's why we try to avoid it. Even if we
+translate the RelaxNG schema to an XSD schema by means of TRANG, the resulting
+validation is not always reliable. So we use JING to validate the RelaxNG schema.</p>
+</div>
+<p>See also <a href="https://code.google.com/archive/p/jing-trang/downloads">JING-TRANG</a>.</p>
+<p>Suppose we have a model declared like so:</p>
+<pre><code>models:
+  - suriano
+</code></pre>
+<p>The model is typically referenced in the TEI source file like so (it calls for the
+<code>suriano</code> model):</p>
+<pre><code>&lt;?xml-model
+    href=&quot;https://xmlschema.huygens.knaw.nl/suriano.rng&quot;
+    type=&quot;application/xml&quot;
+    schematypens=&quot;http://relaxng.org/ns/structure/1.0&quot;
+?&gt;
+</code></pre>
+<p>The convertor matches the <code>href</code> attribute with the <code>suriano</code> model by picking the
+trailing part without extension from the href attribute.</p>
+<p>In cases where this fails, you can specify the model as a dict in the yaml file.</p>
+<p>Suppose we have a href attribute like this, which refers to the <code>dracor</code> model:</p>
+<pre><code>&lt;?xml-model
+    href=&quot;https://dracor.org/schema.rng&quot;
+    type=&quot;application/xml&quot;
+    schematypens=&quot;http://relaxng.org/ns/structure/1.0&quot;
+?&gt;
+</code></pre>
+<p>You can specify this in the yaml file as follows:</p>
+<pre><code>models:
+  - dracor: https://dracor.org/schema.rng
+</code></pre>
+<h4 id="templates"><code>templates</code></h4>
+<p>Which template(s) are to be used.
+A template is just a keyword, associated with an XML file, that can be used to switch
+to a specific kind of processing, such as <code>letter</code>, <code>bibliolist</code>, <code>artworklist</code>.</p>
+<p>You may specify an element or processing instruction with an attribute
+that triggers the template for the file in which it is found.</p>
+<p>This will be retrieved from the file before XML parsing starts.
+For example,</p>
+<pre><code class="language-python">    templateTrigger=&quot;?editem@template&quot;
+</code></pre>
+<p>will read the file and extract the value of the <code>template</code> attribute of the <code>editem</code>
+processing instruction and use that as the template for this file.
+If no template is found in this way, the empty template is assumed.</p>
+<h4 id="adaptations"><code>adaptations</code></h4>
+<p>Which adaptations(s) are to be used.
+An adaptation is just a keyword, associated with an XML file, that can be used to switch
+to a specific kind of processing.
+It is meant to trigger tweaks on top of the behaviour of a template.</p>
+<p>You may specify an element or processing instruction with an attribute
+that triggers the adaptation for the file in which it is found.</p>
+<p>This will be retrieved from the file before XML parsing starts.
+For example,</p>
+<pre><code class="language-python">    adaptationTrigger=&quot;?editem@adaptation&quot;
+</code></pre>
+<p>will read the file and extract the value of the <code>adaptation</code> attribute of the <code>editem</code>
+processing instruction and use that as the adaptation for this file.
+If no adaptation is found in this way, the empty adaptation is assumed.</p>
+<h3 id="sectionmodel"><code>sectionModel</code></h3>
+<p>dict, optional <code>{}</code></p>
+<p>In model I, there are three section levels in total.
+The corpus is divided in folders (section level 1), files (section level 2),
+and chunks within files. The parameter <code>levels</code> allows you to choose names for the
+node types of these section levels.</p>
+<p>In model II, there are 2 section levels in total.
+The corpus consists of a single file, and section nodes will be added
+for nodes at various levels, mainly outermost <code>&lt;div&gt;</code> and <code>&lt;p&gt;</code> elements and their
+siblings of other element types.
+The section heading for the second level is taken from elements in the neighbourhood,
+whose name is given in the parameter <code>element</code>, but only if they carry some attributes,
+which can be specified in the <code>attributes</code> parameter.
+These elements should be immediate children of the section elements in question.</p>
+<p>In model III, there are 3 section levels in total.
+The corpus consists of a single folder with several files (section level 1),
+with two levels of sections per file, as in model II.</p>
+<p>If not passed, or an empty dict, section model I is assumed.
+A section model must be specified with the parameters relevant for the
+model:</p>
+<pre><code class="language-python">dict(
+    model=&quot;II&quot;,
+    levels=[&quot;chapter&quot;, &quot;chunk&quot;],
+    element=&quot;head&quot;,
+    attributes=dict(rend=&quot;h3&quot;),
+)
+</code></pre>
+<p>or</p>
+<pre><code class="language-python">dict(
+    model=&quot;III&quot;,
+    levels=[&quot;file&quot;, &quot;part&quot;, &quot;chunk&quot;],
+    element=&quot;head&quot;,
+    attributes=dict(rend=&quot;h3&quot;),
+)
+</code></pre>
+<p>(model I does not require the <em>element</em> and <em>attribute</em> parameters)</p>
+<p>or</p>
+<pre><code class="language-python">dict(
+    model=&quot;I&quot;,
+    levels=[&quot;folder&quot;, &quot;file&quot;, &quot;chunk&quot;],
+)
+</code></pre>
+<p>This section model (I) accepts a few other parameters:</p>
+<pre><code class="language-python">    backMatter=&quot;backmatter&quot;
+</code></pre>
+<p>This is the name of the folder that should not be treated as an ordinary folder, but
+as the folder with the sources for the back-matter, such as references, lists, indices,
+bibliography, biographies, etc.</p>
+<p>For model II, the default parameters are:</p>
+<pre><code class="language-python">element=&quot;head&quot;
+levels=[&quot;chapter&quot;, &quot;chunk&quot;],
+attributes={}
+</code></pre>
+<p>For model III, the default parameters are:</p>
+<pre><code class="language-python">element=&quot;head&quot;
+levels=[&quot;file&quot;, &quot;part&quot;, &quot;chunk&quot;],
+attributes={}
+</code></pre>
+<h3 id="zonebased"><code>zoneBased</code></h3>
+<p>boolean, optional <code>false</code></p>
+<p>Whether the <code>facs</code> attributes in <code>pb</code> elements refer to identifiers of
+<code>surface</code> or <code>zone</code> elements.
+If not, the <code>facs</code> attributes refer directly to file names.</p>
+<p>These <code>surface</code> or <code>zone</code> elements must occur inside a <code>facsimile</code> element just
+after the tei header. Inside that referred element
+is a <code>graphics</code> element whose attribute <code>facs</code> contains the file name of the page
+scan. This file name is a path with or without leading directories but without
+extension.</p>
+<p>On the <code>zone</code> element we expect the attributes <code>ulx</code>, <code>uly</code>, <code>lrx</code>, <code>lry</code> which
+specify a region on the surface by their upper left and lower right points as
+percentages from the origin of the surface. The origin is the upper left corner
+of a surface. We transform these numbers into IIIF region specifications:</p>
+<p><code>pct:</code><em>ulx</em><code>,</code><em>uly</em><code>,</code><em>lrx-ulx</em><code>,</code><em>lry-uly</em></p>
+<p>If we end up at a <code>surface</code>, instead of a <code>zone</code>, we provide the region specifier
+<code>full</code>.
+See the <a href="https://iiif.io/api/image/3.0/#41-region">IIIF Image API 3</a>.</p>
+<p>In either case a report file facs.yml will be generated.</p>
+<p>There is a key for each file for each file, and then a list of all <code>facs</code>
+attribute values on <code>pb</code> elements.</p>
+<p>If <code>zoneBased</code> is true, several more files are generated:</p>
+<ul>
+<li>
+<p><code>facsMapping.yml</code>:
+a key for each file, and then for each declared surface or
+zone id within the fascimile element in that file: the url value of the
+graphics element encountered there, followed by <code>«»</code> and then the IIIF specification
+of the region as explained above.</p>
+</li>
+<li>
+<p><code>facsProblems.yml</code>:
+Two top-level keys: <code>facsNotDeclared</code> and <code>facsNotUsed</code>.
+Under each of these keys we have file keys and then:</p>
+<ul>
+<li>in case of <code>facsNotDeclared</code>: facs-attribute values that have no entry in the
+<code>facsMapping</code>;</li>
+<li>in case of <code>facsNotUsed</code>: graphic-url values that are not referred to by any
+<code>pb</code> element.</li>
+</ul>
+</li>
+<li>
+<p><code>zoneErrors.yml</code>:
+If zones lack one of their required metrics, they are listed here, plus the
+default that has been filled in for them.</p>
+</li>
+</ul>
+<p>Last but not least, if <code>zoneBased</code> is True, the page nodes will get two extra features:</p>
+<ul>
+<li><code>facsfile</code>: the filename without extension of the page scan</li>
+<li><code>facsregion</code>: the region specifier of the page on the page scan
+```</li>
+</ul>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/annotation/text-info/blob/aa439e40f08027e60c76a5bd756adad2f6c3df74/ti/info/tei.py#L1-L1732" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;
+# TEI info
+
+TI knows the TEI elements, because it will read and parse the complete
+TEI schema. From this the set of complex, mixed elements is distilled.
+
+If the TEI source conforms to a customised TEI schema, it will be detected and
+the importer will read it and override the generic information of the TEI elements.
+
+It is also possible to pass a choice of template and adaptation in a processing
+instruction. This does not influence validation, but it may influence further
+processing.
+
+If the TEI consists of multiple source files, it is possible to specify different
+templates and adaptations for different files.
+
+The possible values for models, templates, and adaptations should be declared in
+the configuration file.
+For each model there should be a corresponding schema in the schema directory,
+either an RNG or an XSD file.
+
+# Configuration and customization
+
+You have to pass a specific additional file to the initializer of the TEI class:
+
+*   `path/tei.yml` in which you specify a bunch of values to
+    get the conversion off the ground.
+
+## Keys and values of the `tei.yml` file
+
+### `models`, `templates` and `adaptations`
+
+list, optional `[]`
+
+Which TEI-based schemas and editem templates and adaptations are to be used.
+
+#### `models`
+
+For each *model* there should be an XSD or RNG file with that name in the `schema`
+directory. The `tei_all` schema is known to TF, no need to specify that one.
+
+We&#39;ll try a RelaxNG schema (`.rng`) first. If that exists, we use it for validation
+with JING, and we also convert it with TRANG to an XSD schema, which we use for
+analysing the schema: we want to know which elements are mixed and pure.
+
+If there is no RelaxNG schema, we try an XSD schema (`.xsd`). If that exists,
+we can do the analysis, and we will use it also for validation.
+
+!!! note &#34;Problems with RelaxNG validation&#34;
+    RelaxNG validation is not always reliable when performed with LXML, or any tool
+    based on `libxml`, for that matter. That&#39;s why we try to avoid it. Even if we
+    translate the RelaxNG schema to an XSD schema by means of TRANG, the resulting
+    validation is not always reliable. So we use JING to validate the RelaxNG schema.
+
+See also [JING-TRANG](https://code.google.com/archive/p/jing-trang/downloads).
+
+Suppose we have a model declared like so:
+
+```
+models:
+  - suriano
+```
+
+The model is typically referenced in the TEI source file like so (it calls for the
+`suriano` model):
+
+```
+&lt;?xml-model
+    href=&#34;https://xmlschema.huygens.knaw.nl/suriano.rng&#34;
+    type=&#34;application/xml&#34;
+    schematypens=&#34;http://relaxng.org/ns/structure/1.0&#34;
+?&gt;
+```
+
+The convertor matches the `href` attribute with the `suriano` model by picking the
+trailing part without extension from the href attribute.
+
+In cases where this fails, you can specify the model as a dict in the yaml file.
+
+Suppose we have a href attribute like this, which refers to the `dracor` model:
+
+```
+&lt;?xml-model
+    href=&#34;https://dracor.org/schema.rng&#34;
+    type=&#34;application/xml&#34;
+    schematypens=&#34;http://relaxng.org/ns/structure/1.0&#34;
+?&gt;
+```
+
+You can specify this in the yaml file as follows:
+
+```
+models:
+  - dracor: https://dracor.org/schema.rng
+```
+
+#### `templates`
+
+Which template(s) are to be used.
+A template is just a keyword, associated with an XML file, that can be used to switch
+to a specific kind of processing, such as `letter`, `bibliolist`, `artworklist`.
+
+You may specify an element or processing instruction with an attribute
+that triggers the template for the file in which it is found.
+
+This will be retrieved from the file before XML parsing starts.
+For example,
+
+``` python
+    templateTrigger=&#34;?editem@template&#34;
+```
+
+will read the file and extract the value of the `template` attribute of the `editem`
+processing instruction and use that as the template for this file.
+If no template is found in this way, the empty template is assumed.
+
+#### `adaptations`
+
+Which adaptations(s) are to be used.
+An adaptation is just a keyword, associated with an XML file, that can be used to switch
+to a specific kind of processing.
+It is meant to trigger tweaks on top of the behaviour of a template.
+
+You may specify an element or processing instruction with an attribute
+that triggers the adaptation for the file in which it is found.
+
+This will be retrieved from the file before XML parsing starts.
+For example,
+
+``` python
+    adaptationTrigger=&#34;?editem@adaptation&#34;
+```
+
+will read the file and extract the value of the `adaptation` attribute of the `editem`
+processing instruction and use that as the adaptation for this file.
+If no adaptation is found in this way, the empty adaptation is assumed.
+
+### `sectionModel`
+
+dict, optional `{}`
+
+In model I, there are three section levels in total.
+The corpus is divided in folders (section level 1), files (section level 2),
+and chunks within files. The parameter `levels` allows you to choose names for the
+node types of these section levels.
+
+In model II, there are 2 section levels in total.
+The corpus consists of a single file, and section nodes will be added
+for nodes at various levels, mainly outermost `&lt;div&gt;` and `&lt;p&gt;` elements and their
+siblings of other element types.
+The section heading for the second level is taken from elements in the neighbourhood,
+whose name is given in the parameter `element`, but only if they carry some attributes,
+which can be specified in the `attributes` parameter.
+These elements should be immediate children of the section elements in question.
+
+In model III, there are 3 section levels in total.
+The corpus consists of a single folder with several files (section level 1),
+with two levels of sections per file, as in model II.
+
+If not passed, or an empty dict, section model I is assumed.
+A section model must be specified with the parameters relevant for the
+model:
+
+``` python
+dict(
+    model=&#34;II&#34;,
+    levels=[&#34;chapter&#34;, &#34;chunk&#34;],
+    element=&#34;head&#34;,
+    attributes=dict(rend=&#34;h3&#34;),
+)
+```
+
+or
+
+``` python
+dict(
+    model=&#34;III&#34;,
+    levels=[&#34;file&#34;, &#34;part&#34;, &#34;chunk&#34;],
+    element=&#34;head&#34;,
+    attributes=dict(rend=&#34;h3&#34;),
+)
+```
+
+(model I does not require the *element* and *attribute* parameters)
+
+or
+
+``` python
+dict(
+    model=&#34;I&#34;,
+    levels=[&#34;folder&#34;, &#34;file&#34;, &#34;chunk&#34;],
+)
+```
+
+This section model (I) accepts a few other parameters:
+
+``` python
+    backMatter=&#34;backmatter&#34;
+```
+
+This is the name of the folder that should not be treated as an ordinary folder, but
+as the folder with the sources for the back-matter, such as references, lists, indices,
+bibliography, biographies, etc.
+
+For model II, the default parameters are:
+
+``` python
+element=&#34;head&#34;
+levels=[&#34;chapter&#34;, &#34;chunk&#34;],
+attributes={}
+```
+
+For model III, the default parameters are:
+
+``` python
+element=&#34;head&#34;
+levels=[&#34;file&#34;, &#34;part&#34;, &#34;chunk&#34;],
+attributes={}
+```
+
+### `zoneBased`
+
+boolean, optional `false`
+
+Whether the `facs` attributes in `pb` elements refer to identifiers of
+`surface` or `zone` elements.
+If not, the `facs` attributes refer directly to file names.
+
+These `surface` or `zone` elements must occur inside a `facsimile` element just
+after the tei header. Inside that referred element
+is a `graphics` element whose attribute `facs` contains the file name of the page
+scan. This file name is a path with or without leading directories but without
+extension.
+
+On the `zone` element we expect the attributes `ulx`, `uly`, `lrx`, `lry` which
+specify a region on the surface by their upper left and lower right points as
+percentages from the origin of the surface. The origin is the upper left corner
+of a surface. We transform these numbers into IIIF region specifications:
+
+`pct:`*ulx*`,`*uly*`,`*lrx-ulx*`,`*lry-uly*
+
+If we end up at a `surface`, instead of a `zone`, we provide the region specifier
+`full`.
+See the [IIIF Image API 3](https://iiif.io/api/image/3.0/#41-region).
+
+In either case a report file facs.yml will be generated.
+
+There is a key for each file for each file, and then a list of all `facs`
+attribute values on `pb` elements.
+
+If `zoneBased` is true, several more files are generated:
+
+*   `facsMapping.yml`:
+    a key for each file, and then for each declared surface or
+    zone id within the fascimile element in that file: the url value of the
+    graphics element encountered there, followed by `«»` and then the IIIF specification
+    of the region as explained above.
+
+*   `facsProblems.yml`:
+    Two top-level keys: `facsNotDeclared` and `facsNotUsed`.
+    Under each of these keys we have file keys and then:
+
+    *   in case of `facsNotDeclared`: facs-attribute values that have no entry in the
+        `facsMapping`;
+    *   in case of `facsNotUsed`: graphic-url values that are not referred to by any
+        `pb` element.
+
+*   `zoneErrors.yml`:
+    If zones lack one of their required metrics, they are listed here, plus the
+    default that has been filled in for them.
+
+Last but not least, if `zoneBased` is True, the page nodes will get two extra features:
+
+*   `facsfile`: the filename without extension of the page scan
+*   `facsregion`: the region specifier of the page on the page scan
+```
+
+&#34;&#34;&#34;
+
+import collections
+import re
+from textwrap import wrap
+
+from lxml import etree
+
+from ..kit.helpers import console, versionSort, readCfg
+from ..kit.files import (
+    fileOpen,
+    unexpanduser as ux,
+    initTree,
+    dirExists,
+    fileExists,
+    scanDir,
+    writeYaml,
+)
+
+from .helpers import checkSectionModel
+
+from ..tools.xmlschema import Analysis
+
+
+FACS_MAPPING_YML = &#34;facsMapping.yml&#34;
+
+TASKS_EXCLUDED = {&#34;apptoken&#34;, &#34;browse&#34;}
+
+PROGRESS_LIMIT = 5
+
+REFERENCING = dict(
+    ptr=&#34;target&#34;,
+    ref=&#34;target&#34;,
+    rs=&#34;ref&#34;,
+)
+
+ZONE_ATTS = ((&#34;ulx&#34;, 0), (&#34;uly&#34;, 0), (&#34;lrx&#34;, 100), (&#34;lry&#34;, 100))
+
+
+def getRefs(tag, atts, xmlFile):
+    refAtt = REFERENCING.get(tag, None)
+    result = []
+
+    if refAtt is not None:
+        refVal = atts.get(refAtt, None)
+        if refVal is not None and not refVal.startswith(&#34;http&#34;):
+            for refv in refVal.split():
+                parts = refv.split(&#34;#&#34;, 1)
+                if len(parts) == 1:
+                    targetFile = refv
+                    targetId = &#34;&#34;
+                else:
+                    (targetFile, targetId) = parts
+                if targetFile == &#34;&#34;:
+                    targetFile = xmlFile
+                result.append((refAtt, targetFile, targetId))
+    return result
+
+
+class TEI:
+    def __init__(self, sourceDir, cfgFile, verbose=0):
+        &#34;&#34;&#34;Sets up information retrieval from a TEI source.
+
+        Parameters
+        ----------
+        sourceDir: string
+            Directory of the TEI files.
+            Divided as follows:
+
+            1.  volumes / collections of documents. The subdirectory
+                `__ignore__` is ignored.
+            1.  the TEI documents themselves, conforming to the TEI schema or
+                some customization of it.
+
+        cfgFile: string
+            Path to the configuration file (yaml)
+
+        verbose: integer, optional -1
+            Produce no (-1), some (0) or many (1) progress and reporting messages
+
+        !!! note &#34;Multiple XSD files&#34;
+            When you started with a RNG file and used `ti.tools.xmlschema` to
+            convert it to XSD, you may have got multiple XSD files.
+            One of them has the same base name as the original RNG file,
+            and you should pass that name. It will import the remaining XSD files,
+            so do not throw them away.
+
+        &#34;&#34;&#34;
+        self.sourceDir = sourceDir
+        self.cfgFile = cfgFile
+        self.verbose = verbose
+
+        self.good = True
+        self.severeError = False
+        self.fatalError = False
+
+        (ok, settings) = readCfg(cfgFile, &#34;tei&#34;, verbose=verbose, plain=True)
+        if not ok:
+            self.good = False
+
+        models = settings.get(&#34;models&#34;, [])
+        self.models = models
+
+        procins = settings.get(&#34;procins&#34;, False)
+        self.procins = procins
+
+        zoneBased = settings.get(&#34;zoneBased&#34;, False)
+
+        if zoneBased:
+            self.facsMapping = None
+
+        sectionModel = settings.get(&#34;sectionModel&#34;, {})
+        sectionModel = checkSectionModel(sectionModel, verbose)
+
+        if not sectionModel:
+            self.good = False
+            return
+
+        sectionProperties = sectionModel[&#34;properties&#34;]
+        self.backMatter = sectionProperties.get(&#34;backMatter&#34;, None)
+        sectionModel = sectionModel[&#34;model&#34;]
+        self.sectionModel = sectionModel
+        self.sectionIs23 = sectionModel in {&#34;II&#34;, &#34;III&#34;}
+        self.sectionIs3 = sectionModel == &#34;III&#34;
+        self.sectionProperties = sectionProperties
+
+        templates = settings.get(&#34;templates&#34;, [])
+        self.templates = templates
+
+        adaptations = settings.get(&#34;adaptations&#34;, [])
+        self.adaptations = adaptations
+
+        self.zoneBased = zoneBased
+
+        if not dirExists(sourceDir):
+            console(&#34;Source directory does not exist: {sourceDir}&#34;, error=True)
+            self.good = False
+            return
+
+        templateTrigger = settings.get(&#34;templateTrigger&#34;, None)
+        adaptationTrigger = settings.get(&#34;adaptationTrigger&#34;, None)
+
+        if templateTrigger is None:
+            self.templateAtt = None
+            self.templateTag = None
+        else:
+            (tag, att) = templateTrigger.split(&#34;@&#34;)
+            self.templateAtt = att
+            self.templateTag = tag
+
+        templateTag = self.templateTag
+        templateAtt = self.templateAtt
+
+        if adaptationTrigger is None:
+            self.adaptationAtt = None
+            self.adaptationTag = None
+        else:
+            (tag, att) = adaptationTrigger.split(&#34;@&#34;)
+            self.adaptationAtt = att
+            self.adaptationTag = tag
+
+        adaptationTag = self.adaptationTag
+        adaptationAtt = self.adaptationAtt
+
+        triggers = {}
+        self.triggers = triggers
+
+        for kind, theAtt, theTag in (
+            (&#34;template&#34;, templateAtt, templateTag),
+            (&#34;adaptation&#34;, adaptationAtt, adaptationTag),
+        ):
+            triggerRe = None
+
+            if theAtt is not None and theTag is not None:
+                tagPat = re.escape(theTag)
+                triggerRe = re.compile(
+                    rf&#34;&#34;&#34;&lt;{tagPat}\b[^&gt;]*?{theAtt}=[&#39;&#34;]([^&#39;&#34;]+)[&#39;&#34;]&#34;&#34;&#34;
+                )
+            triggers[kind] = triggerRe
+
+        if not self.good:
+            return
+
+    def inventory(self, schemaDir, reportDir, carryon=False, verbose=None):
+        &#34;&#34;&#34;Implementation of the &#34;check&#34; task.
+
+        It validates the TEI.
+
+        Then it makes an inventory of all elements and attributes in the TEI files.
+
+        If tags are used in multiple namespaces, it will be reported.
+
+        !!! caution &#34;Conflation of namespaces&#34;
+            The TEI to TF conversion does construct node types and attributes
+            without taking namespaces into account.
+            However, the parsing process is namespace aware.
+
+        The inventory lists all elements and attributes, and many attribute values.
+        But is represents any digit with `n`, and some attributes that contain
+        ids or keywords, are reduced to the value `x`.
+
+        This information reduction helps to get a clear overview.
+
+        It writes reports to the `reportDir`:
+
+        *   `errors.txt`: validation errors
+        *   `elements.txt`: element / attribute inventory.
+
+        !!! note &#34;Thoroughness of validation&#34;
+            All xml files for the same model will be validated by a single call
+            to the validator. This is fast, but the
+            consequence is that after a fatal error the process terminates without
+            validating the remaining files. In that case, we&#39;ll redo validation
+            for each file separately.
+
+        Parameters
+        ----------
+        reportDir: string
+            The directory where the report files will be generated
+
+        schemaDir: string
+            Directory of the RNG/XSD schema files.
+
+            We use these files as custom TEI schemas,
+            but to be sure, we still analyse the full TEI schema and
+            use the schemas here as a set of overriding element definitions.
+
+        carryon: boolean, optional False
+            Whether to carryon with making an inventory if validation has failed.
+            Normally, validation errors make it unlikely that further processing of
+            the XML will succeed. But if the validation errors appear to be mild,
+            and you want an inventory, you can pass the `True` to this parameter
+            at your own risk.
+        verbose: integer, optional None
+            Produce no (-1), some (0) or many (1) progress and reporting messages
+            If `None`, the value will be taken from the corresponding object member.
+        &#34;&#34;&#34;
+        if not self.good:
+            return
+
+        if not reportDir:
+            console(&#34;No report directory specified&#34;, error=True)
+            self.good = False
+
+        self.schemaDir = schemaDir
+
+        A = Analysis(verbose=verbose)
+        self.A = A
+        self.readSchemas()
+
+        procins = self.procins
+        modelInfo = self.modelInfo
+        modelInv = self.modelInv
+        modelXsd = self.modelXsd
+
+        sourceDir = self.sourceDir
+        sectionModel = self.sectionModel
+        zoneBased = self.zoneBased
+
+        if verbose == 1:
+            console(f&#34;TEI to TF checking: {ux(sourceDir)} =&gt; {ux(reportDir)}&#34;)
+        if verbose &gt;= 0:
+            console(
+                f&#34;Processing instructions are {&#39;treated&#39; if procins else &#39;ignored&#39;}&#34;
+            )
+            console(&#34;XML validation will be performed&#34;)
+
+        kindLabels = dict(
+            format=&#34;Formatting Attributes&#34;,
+            keyword=&#34;Keyword Attributes&#34;,
+            rest=&#34;Remaining Attributes and Elements&#34;,
+        )
+        getStore = lambda: collections.defaultdict(  # noqa: E731
+            lambda: collections.defaultdict(collections.Counter)
+        )
+        analysis = {x: getStore() for x in kindLabels}
+        errors = []
+        tagByNs = collections.defaultdict(collections.Counter)
+        refs = collections.defaultdict(lambda: collections.Counter())
+        ids = collections.defaultdict(lambda: collections.Counter())
+
+        parser = self.getParser()
+        baseSchema = modelXsd[None]
+        overrides = [
+            override for (model, override) in modelXsd.items() if model is not None
+        ]
+        A.getElementInfo(baseSchema, overrides, verbose=verbose)
+        elementDefs = A.elementDefs
+
+        initTree(reportDir)
+
+        nProcins = 0
+
+        lbParents = collections.Counter()
+
+        pageScans = {}
+
+        facsMapping = {} if zoneBased else {}
+        self.facsMapping = facsMapping
+
+        facsKind = {}
+        self.facsKind = {}
+
+        facsNotDeclared = {}
+        zoneRegionIncomplete = {}
+        facsNoId = {}
+        self.facsNoId = facsNoId
+
+        nPagesNoFacs = 0
+
+        inFacsimile = False
+        surfaceId = None
+        scanFile = None
+        zoneId = None
+        zoneRegion = None
+
+        def analyse(root, analysis, xmlPath):
+            FORMAT_ATTS = set(
+                &#34;&#34;&#34;
+                dim
+                level
+                place
+                rend
+            &#34;&#34;&#34;.strip().split()
+            )
+
+            KEYWORD_ATTS = set(
+                &#34;&#34;&#34;
+                facs
+                form
+                function
+                lang
+                reason
+                type
+                unit
+                who
+            &#34;&#34;&#34;.strip().split()
+            )
+
+            TRIM_ATTS = set(
+                &#34;&#34;&#34;
+                id
+                key
+                target
+                value
+            &#34;&#34;&#34;.strip().split()
+            )
+
+            NUM_RE = re.compile(r&#34;&#34;&#34;[0-9]&#34;&#34;&#34;, re.S)
+
+            def nodeInfo(xnode):
+                nonlocal nProcins
+                nonlocal nPagesNoFacs
+                nonlocal inFacsimile
+                nonlocal surfaceId
+                nonlocal scanFile
+                nonlocal zoneId
+                nonlocal zoneRegion
+
+                if procins and isinstance(xnode, etree._ProcessingInstruction):
+                    target = xnode.target
+                    tag = f&#34;?{target}&#34;
+                    ns = &#34;&#34;
+                    nProcins += 1
+                else:
+                    qName = etree.QName(xnode.tag)
+                    tag = qName.localname
+                    ns = qName.namespace
+
+                atts = {etree.QName(k).localname: v for (k, v) in xnode.attrib.items()}
+
+                tagByNs[tag][ns] += 1
+
+                if tag == &#34;lb&#34;:
+                    parentTag = etree.QName(xnode.getparent().tag).localname
+                    lbParents[parentTag] += 1
+                elif tag == &#34;pb&#34;:
+                    facsv = atts.get(&#34;facs&#34;, &#34;&#34;)
+
+                    if zoneBased:
+                        facsv = facsv.removeprefix(&#34;#&#34;)
+
+                        if facsv:
+                            (scanName, scanRegion) = facsMapping[xmlPath].get(
+                                facsv, [&#34;&#34;, &#34;full&#34;]
+                            )
+
+                            if not scanName:
+                                facsNotDeclared[xmlPath].add(facsv)
+
+                    if facsv:
+                        pageScans[xmlPath].append(facsv)
+                    else:
+                        nPagesNoFacs += 1
+                elif zoneBased:
+                    if tag == &#34;facsimile&#34;:
+                        inFacsimile = True
+                    elif inFacsimile:
+                        if tag == &#34;surface&#34;:
+                            surfaceId = atts.get(&#34;id&#34;, None)
+                            scanFile = None
+
+                            if not surfaceId:
+                                facsNoId[xmlPath][&#34;surface&#34;] += 1
+                        elif tag == &#34;zone&#34;:
+                            zoneId = atts.get(&#34;id&#34;, None)
+
+                            if zoneId:
+                                zoneRegion = []
+
+                                for a, aDefault in ZONE_ATTS:
+                                    aVal = atts.get(a, None)
+
+                                    if aVal is None:
+                                        aVal = aDefault
+                                        zoneRegionIncomplete.setdefault(zoneId, {})[
+                                            a
+                                        ] = f&#34;None =&gt; {aDefault}&#34;
+                                    elif aVal.isdecimal():
+                                        aVal = int(aVal)
+                                    else:
+                                        zoneRegionIncomplete.setdefault(zoneId, {})[
+                                            a
+                                        ] = f&#34;{aVal} =&gt; {aDefault}&#34;
+
+                                    zoneRegion.append(aVal)
+
+                                (ulx, uly, lrx, lry) = zoneRegion
+                                zoneRegion = f&#34;pct:{ulx},{uly},{lrx - ulx},{lry - uly}&#34;
+
+                                if scanFile:
+                                    facsMapping[xmlPath][zoneId] = [
+                                        scanFile,
+                                        zoneRegion,
+                                    ]
+                                    facsKind[xmlPath][zoneId] = &#34;zone&#34;
+                            else:
+                                facsNoId[xmlPath][&#34;zone&#34;] += 1
+
+                        elif tag == &#34;graphic&#34;:
+                            # can be inside zone or inside surface
+                            # if inside surface, it holds for all zones without
+                            # own scanFile
+                            thisScanFile = atts.get(&#34;url&#34;, None)
+
+                            if thisScanFile is not None:
+                                if zoneId:
+                                    facsMapping[xmlPath][zoneId] = [
+                                        thisScanFile,
+                                        zoneRegion,
+                                    ]
+                                    facsKind[xmlPath][zoneId] = &#34;zone&#34;
+                                else:
+                                    # this is a graphic outside the zones
+                                    # we set the surface wide scan file
+                                    # so that subsequent zones without graphic
+                                    # can pick this up
+                                    scanFile = thisScanFile
+                                if surfaceId:
+                                    facsMapping[xmlPath][surfaceId] = [scanFile, &#34;full&#34;]
+                                    facsKind[xmlPath][surfaceId] = &#34;surface&#34;
+
+                if len(atts) == 0:
+                    kind = &#34;rest&#34;
+                    analysis[kind][tag][&#34;&#34;][&#34;&#34;] += 1
+                else:
+                    idv = atts.get(&#34;id&#34;, None)
+
+                    if idv is not None:
+                        ids[xmlPath][idv] += 1
+
+                    for refAtt, targetFile, targetId in getRefs(tag, atts, xmlPath):
+                        refs[xmlPath][(targetFile, targetId)] += 1
+
+                    for k, v in atts.items():
+                        kind = (
+                            &#34;format&#34;
+                            if k in FORMAT_ATTS
+                            else &#34;keyword&#34; if k in KEYWORD_ATTS else &#34;rest&#34;
+                        )
+                        dest = analysis[kind]
+
+                        if kind == &#34;rest&#34;:
+                            vTrim = &#34;X&#34; if k in TRIM_ATTS else NUM_RE.sub(&#34;N&#34;, v)
+                            dest[tag][k][vTrim] += 1
+                        else:
+                            words = v.strip().split()
+                            for w in words:
+                                dest[tag][k][w.strip()] += 1
+
+                for child in xnode.iterchildren(
+                    tag=(
+                        (etree.Element, etree.ProcessingInstruction)
+                        if procins
+                        else etree.Element
+                    )
+                ):
+                    nodeInfo(child)
+
+                if zoneBased:
+                    if tag == &#34;facsimile&#34;:
+                        inFacsimile = False
+                    elif inFacsimile:
+                        if tag == &#34;surface&#34;:
+                            surfaceId = None
+                            scanFile = None
+                        elif tag == &#34;zone&#34;:
+                            zoneId = None
+
+            nodeInfo(root)
+
+        def writeErrors():
+            &#34;&#34;&#34;Write the errors to a file.&#34;&#34;&#34;
+
+            errorFile = f&#34;{reportDir}/errors.txt&#34;
+
+            nErrors = 0
+            nFiles = 0
+
+            with fileOpen(errorFile, mode=&#34;w&#34;) as fh:
+                prevFolder = None
+                prevFile = None
+
+                for folder, file, line, col, kind, text in errors:
+                    newFolder = prevFolder != folder
+                    newFile = newFolder or prevFile != file
+
+                    if newFile:
+                        nFiles += 1
+
+                    if kind in {&#34;error&#34;, &#34;fatal&#34;}:
+                        nErrors += 1
+
+                    indent1 = f&#34;{folder}\n\t&#34; if newFolder else &#34;\t&#34;
+                    indent2 = f&#34;{file}\n\t\t&#34; if newFile else &#34;\t&#34;
+                    loc = f&#34;{line or &#39;&#39;}:{col or &#39;&#39;}&#34;
+                    text = &#34;\n&#34;.join(wrap(text, width=80, subsequent_indent=&#34;\t\t\t&#34;))
+                    fh.write(f&#34;{indent1}{indent2}{loc} {kind or &#39;&#39;} {text}\n&#34;)
+                    prevFolder = folder
+                    prevFile = file
+
+            if nErrors:
+                console(
+                    (
+                        f&#34;{nErrors} validation error(s) in {nFiles} file(s) &#34;
+                        f&#34;written to {errorFile}&#34;
+                    ),
+                    error=True,
+                )
+            else:
+                if verbose &gt;= 0:
+                    console(&#34;Validation OK&#34;)
+
+        def writeFacs():
+            infoFile = f&#34;{reportDir}/facsNoId.yml&#34;
+            writeYaml(
+                {
+                    f: {k: n for (k, n) in v.items() if n}
+                    for (f, v) in facsNoId.items()
+                    if len(v)
+                },
+                asFile=infoFile,
+            )
+
+            nSurfaces = sum(x[&#34;surface&#34;] for x in facsNoId.values())
+            nZones = sum(x[&#34;zone&#34;] for x in facsNoId.values())
+
+            if verbose &gt;= 0:
+                pluralS = &#34;&#34; if nSurfaces == 1 else &#34;s&#34;
+                pluralZ = &#34;&#34; if nZones == 1 else &#34;s&#34;
+
+                if nSurfaces:
+                    console(f&#34;{nSurfaces} surface{pluralS} without id&#34;)
+
+                if nZones:
+                    console(f&#34;{nZones} zone{pluralZ} without id&#34;)
+
+            infoFile = f&#34;{reportDir}/facs.yml&#34;
+            nItems = sum(len(x) for x in pageScans.values())
+            nUnique = sum(len(set(x)) for x in pageScans.values())
+
+            writeYaml(pageScans, asFile=infoFile)
+
+            if verbose &gt;= 0:
+                plural = &#34;&#34; if nPagesNoFacs == 1 else &#34;s&#34;
+                console(f&#34;{nPagesNoFacs} pagebreak{plural} without facs attribute.&#34;)
+
+                plural = &#34;&#34; if nItems == 1 else &#34;s&#34;
+                console(f&#34;{nItems} pagebreak{plural} encountered.&#34;)
+                plural = &#34;&#34; if nUnique == 1 else &#34;s&#34;
+                console(f&#34;{nUnique} distinct scan{plural} referred to by pagebreaks.&#34;)
+
+            if not zoneBased:
+                return
+
+            infoFile = f&#34;{reportDir}/facsKind.yml&#34;
+            writeYaml(facsKind, asFile=infoFile)
+            infoFile = f&#34;{reportDir}/{FACS_MAPPING_YML}&#34;
+            writeYaml(facsMapping, asFile=infoFile)
+
+            if verbose &gt;= 0:
+                nSurfaces = sum(
+                    sum(1 for y in x.values() if y == &#34;surface&#34;)
+                    for x in facsKind.values()
+                )
+                nZones = sum(
+                    sum(1 for y in x.values() if y == &#34;zone&#34;) for x in facsKind.values()
+                )
+                plural = &#34;&#34; if nSurfaces == 1 else &#34;s&#34;
+                console(f&#34;{nSurfaces} surface{plural} declared&#34;)
+                plural = &#34;&#34; if nZones == 1 else &#34;s&#34;
+                console(f&#34;{nZones} zone{plural} declared&#34;)
+
+                nItems = sum(len(x) for x in facsMapping.values())
+                plural = &#34;&#34; if nItems == 1 else &#34;s&#34;
+                console(f&#34;{nItems} scan{plural} declared and mapped.&#34;)
+
+            infoFile = f&#34;{reportDir}/facsProblems.yml&#34;
+            facsNotUsed = {}
+
+            for xmlPath, mapping in facsMapping.items():
+                facsEncountered = set(pageScans[xmlPath])
+                thisFacsNotUsed = {}
+
+                for facs in mapping:
+                    if facs not in facsEncountered:
+                        kind = facsKind[xmlPath][facs]
+                        thisFacsNotUsed.setdefault(kind, []).append(facs)
+
+                if len(thisFacsNotUsed):
+                    facsNotUsed[xmlPath] = thisFacsNotUsed
+
+            facsProblems = {}
+
+            nFacsNotDeclared = sum(len(x) for x in facsNotDeclared.values())
+            nSurfacesNotUsed = sum(
+                len(x.get(&#34;surface&#34;, [])) for x in facsNotUsed.values()
+            )
+            nZonesNotUsed = sum(len(x.get(&#34;zone&#34;, [])) for x in facsNotUsed.values())
+
+            if nFacsNotDeclared:
+                plural = &#34;&#34; if nFacsNotDeclared == 1 else &#34;s&#34;
+                console(f&#34;{nFacsNotDeclared} undeclared scan{plural}&#34;, error=True)
+                facsProblems[&#34;facsNotDeclared&#34;] = {
+                    xmlPath: sorted(x)
+                    for (xmlPath, x) in facsNotDeclared.items()
+                    if len(x)
+                }
+
+            if nSurfacesNotUsed:
+                plural = &#34;&#34; if nSurfacesNotUsed == 1 else &#34;s&#34;
+                console(f&#34;{nSurfacesNotUsed} unused surface{plural}&#34;, error=True)
+            if nZonesNotUsed:
+                plural = &#34;&#34; if nZonesNotUsed == 1 else &#34;s&#34;
+                console(f&#34;{nZonesNotUsed} unused zone{plural}&#34;, error=True)
+
+            facsProblems[&#34;facsNotUsed&#34;] = facsNotUsed
+
+            writeYaml(facsProblems, asFile=infoFile)
+
+            infoFile = f&#34;{reportDir}/zoneErrors.yml&#34;
+            nIncomplete = len(zoneRegionIncomplete)
+            plural = &#34;&#34; if nIncomplete == 1 else &#34;s&#34;
+
+            if nIncomplete:
+                console(
+                    f&#34;{nIncomplete} missing zone region specifier{plural}&#34;, error=True
+                )
+
+                console(f&#34;See {infoFile}&#34;, error=True)
+
+            writeYaml(zoneRegionIncomplete, asFile=infoFile)
+
+        def writeNamespaces():
+            errorFile = f&#34;{reportDir}/namespaces.txt&#34;
+
+            nErrors = 0
+
+            nTags = len(tagByNs)
+
+            with fileOpen(errorFile, mode=&#34;w&#34;) as fh:
+                for tag, nsInfo in sorted(
+                    tagByNs.items(), key=lambda x: (-len(x[1]), x[0])
+                ):
+                    label = &#34;OK&#34;
+                    nNs = len(nsInfo)
+                    if nNs &gt; 1:
+                        nErrors += 1
+                        label = &#34;XX&#34;
+
+                    for ns, amount in sorted(
+                        nsInfo.items(), key=lambda x: (-x[1], x[0])
+                    ):
+                        fh.write(
+                            f&#34;{label} {nNs:&gt;2} namespace for &#34;
+                            f&#34;{tag:&lt;16} : {amount:&gt;5}x {ns}\n&#34;
+                        )
+
+            if verbose &gt;= 0:
+                if procins:
+                    plural = &#34;&#34; if nProcins == 1 else &#34;s&#34;
+                    console(f&#34;{nProcins} processing instruction{plural} encountered.&#34;)
+
+                console(
+                    (
+                        f&#34;{nTags} tags of which {nErrors} with multiple namespaces &#34;
+                        f&#34;written to {errorFile}&#34;
+                        if verbose &gt;= 0 or nErrors
+                        else &#34;Namespaces OK&#34;
+                    ),
+                    error=nErrors &gt; 0,
+                )
+
+        def writeReport():
+            reportFile = f&#34;{reportDir}/elements.txt&#34;
+
+            with fileOpen(reportFile, mode=&#34;w&#34;) as fh:
+                fh.write(
+                    &#34;Inventory of tags and attributes in the source XML file(s).\n&#34;
+                    &#34;Contains the following sections:\n&#34;
+                )
+                for label in kindLabels.values():
+                    fh.write(f&#34;\t{label}\n&#34;)
+                fh.write(&#34;\n\n&#34;)
+
+                infoLines = 0
+
+                def writeAttInfo(tag, att, attInfo):
+                    nonlocal infoLines
+                    nl = &#34;&#34; if tag == &#34;&#34; else &#34;\n&#34;
+                    tagRep = &#34;&#34; if tag == &#34;&#34; else f&#34;&lt;{tag}&gt;&#34;
+                    attRep = &#34;&#34; if att == &#34;&#34; else f&#34;{att}=&#34;
+                    atts = sorted(attInfo.items())
+                    (val, amount) = atts[0]
+                    fh.write(
+                        f&#34;{nl}\t{tagRep:&lt;18} &#34; f&#34;{attRep:&lt;11} {amount:&gt;7}x {val}\n&#34;
+                    )
+                    infoLines += 1
+
+                    for val, amount in atts[1:]:
+                        fh.write(f&#34;&#34;&#34;\t{&#39;&#39;:&lt;18} {&#39;&#39;:&lt;11} {amount:&gt;7}x {val}\n&#34;&#34;&#34;)
+                        infoLines += 1
+
+                def writeTagInfo(tag, tagInfo):
+                    nonlocal infoLines
+                    tags = sorted(tagInfo.items())
+                    (att, attInfo) = tags[0]
+                    writeAttInfo(tag, att, attInfo)
+                    infoLines += 1
+                    for att, attInfo in tags[1:]:
+                        writeAttInfo(&#34;&#34;, att, attInfo)
+
+                for kind, label in kindLabels.items():
+                    fh.write(f&#34;\n{label}\n&#34;)
+                    for tag, tagInfo in sorted(analysis[kind].items()):
+                        writeTagInfo(tag, tagInfo)
+
+            if verbose &gt;= 0:
+                console(f&#34;{infoLines} info line(s) written to {reportFile}&#34;)
+
+        def writeElemTypes():
+            elemsCombined = {}
+
+            modelSet = set()
+
+            for schemaOverride, eDefs in elementDefs.items():
+                model = modelInv[schemaOverride]
+                modelSet.add(model)
+                for tag, (typ, mixed) in eDefs.items():
+                    elemsCombined.setdefault(tag, {}).setdefault(model, {})
+                    elemsCombined[tag][model][&#34;typ&#34;] = typ
+                    elemsCombined[tag][model][&#34;mixed&#34;] = mixed
+
+            tagReport = {}
+
+            for tag, tagInfo in elemsCombined.items():
+                tagLines = []
+                tagReport[tag] = tagLines
+
+                if None in tagInfo:
+                    teiInfo = tagInfo[None]
+                    teiTyp = teiInfo[&#34;typ&#34;]
+                    teiMixed = teiInfo[&#34;mixed&#34;]
+                    teiTypRep = &#34;??&#34; if teiTyp is None else typ
+                    teiMixedRep = (
+                        &#34;??&#34; if teiMixed is None else &#34;mixed&#34; if teiMixed else &#34;pure&#34;
+                    )
+                    mds = [&#34;TEI&#34;]
+
+                    for model in sorted(x for x in tagInfo if x is not None):
+                        info = tagInfo[model]
+                        typ = info[&#34;typ&#34;]
+                        mixed = info[&#34;mixed&#34;]
+                        if typ == teiTyp and mixed == teiMixed:
+                            mds.append(model)
+                        else:
+                            typRep = (
+                                &#34;&#34; if typ == teiTyp else &#34;??&#34; if typ is None else typ
+                            )
+                            mixedRep = (
+                                &#34;&#34;
+                                if mixed == teiMixed
+                                else (
+                                    &#34;??&#34;
+                                    if mixed is None
+                                    else &#34;mixed&#34; if mixed else &#34;pure&#34;
+                                )
+                            )
+                            tagLines.append((tag, [model], typRep, mixedRep))
+                    tagLines.insert(0, (tag, mds, teiTypRep, teiMixedRep))
+                else:
+                    for model in sorted(tagInfo):
+                        info = tagInfo[model]
+                        typ = info[&#34;typ&#34;]
+                        mixed = info[&#34;mixed&#34;]
+                        typRep = &#34;??&#34; if typ is None else typ
+                        mixedRep = (
+                            &#34;??&#34; if mixed is None else &#34;mixed&#34; if mixed else &#34;pure&#34;
+                        )
+                        tagLines.append((tag, [model], typRep, mixedRep))
+
+            reportFile = f&#34;{reportDir}/types.txt&#34;
+
+            with fileOpen(reportFile, mode=&#34;w&#34;) as fh:
+                for tag in sorted(tagReport):
+                    tagLines = tagReport[tag]
+
+                    for tag, mds, typ, mixed in tagLines:
+                        model = &#34;,&#34;.join(mds)
+                        fh.write(
+                            f&#34;{tag:&lt;18} {model:&lt;18} {typ or &#39;&#39;:&lt;7} {mixed or &#39;&#39;:&lt;5}\n&#34;
+                        )
+
+            if verbose &gt;= 0:
+                console(
+                    f&#34;{len(elemsCombined)} tag(s) type info written to {reportFile}&#34;
+                )
+
+        def writeLbParents():
+            reportFile = f&#34;{reportDir}/lb-parents.txt&#34;
+
+            with fileOpen(reportFile, &#34;w&#34;) as fh:
+                for parent, n in sorted(lbParents.items()):
+                    fh.write(f&#34;{n:&gt;5} x {parent}\n&#34;)
+
+            if verbose &gt;= 0:
+                console(f&#34;lb-parent info written to {reportFile}&#34;)
+
+        def writeIdRefs():
+            reportIdFile = f&#34;{reportDir}/ids.txt&#34;
+            reportRefFile = f&#34;{reportDir}/refs.txt&#34;
+
+            ih = fileOpen(reportIdFile, mode=&#34;w&#34;)
+            rh = fileOpen(reportRefFile, mode=&#34;w&#34;)
+
+            refdIds = collections.Counter()
+            missingIds = set()
+
+            totalRefs = 0
+            totalRefsU = 0
+
+            totalResolvable = 0
+            totalResolvableU = 0
+            totalDangling = 0
+            totalDanglingU = 0
+
+            seenItems = set()
+
+            for file, items in refs.items():
+                rh.write(f&#34;{file}\n&#34;)
+
+                resolvable = 0
+                resolvableU = 0
+                dangling = 0
+                danglingU = 0
+
+                for item, n in sorted(items.items()):
+                    totalRefs += n
+
+                    if item in seenItems:
+                        newItem = False
+                    else:
+                        seenItems.add(item)
+                        newItem = True
+                        totalRefsU += 1
+
+                    (target, idv) = item
+
+                    if target not in ids or idv not in ids[target]:
+                        status = &#34;dangling&#34;
+                        dangling += n
+
+                        if newItem:
+                            missingIds.add((target, idv))
+                            danglingU += 1
+                    else:
+                        status = &#34;ok&#34;
+                        resolvable += n
+                        refdIds[(target, idv)] += n
+
+                        if newItem:
+                            resolvableU += 1
+                    rh.write(f&#34;\t{status:&lt;10} {n:&gt;5} x {target} # {idv}\n&#34;)
+
+                msgs = (
+                    f&#34;\tDangling:   {dangling:&gt;4} x {danglingU:&gt;4}&#34;,
+                    f&#34;\tResolvable: {resolvable:&gt;4} x {resolvableU:&gt;4}&#34;,
+                )
+                for msg in msgs:
+                    rh.write(f&#34;{msg}\n&#34;)
+
+                totalResolvable += resolvable
+                totalResolvableU += resolvableU
+                totalDangling += dangling
+                totalDanglingU += danglingU
+
+            if verbose &gt;= 0:
+                console(f&#34;Refs written to {reportRefFile}&#34;)
+                msgs = (
+                    f&#34;\tresolvable: {totalResolvableU:&gt;4} in {totalResolvable:&gt;4}&#34;,
+                    f&#34;\tdangling:   {totalDanglingU:&gt;4} in {totalDangling:&gt;4}&#34;,
+                    f&#34;\tALL:        {totalRefsU:&gt;4} in {totalRefs:&gt;4} &#34;,
+                )
+                for msg in msgs:
+                    console(msg)
+
+            totalIds = 0
+            totalIdsU = 0
+            totalIdsM = 0
+            totalIdsRefd = 0
+            totalIdsRefdU = 0
+            totalIdsUnused = 0
+
+            for file, items in ids.items():
+                totalIds += len(items)
+
+                ih.write(f&#34;{file}\n&#34;)
+
+                unique = 0
+                multiple = 0
+                refd = 0
+                refdU = 0
+                unused = 0
+
+                for item, n in sorted(items.items()):
+                    nRefs = refdIds.get((file, item), 0)
+
+                    if n == 1:
+                        unique += 1
+                    else:
+                        multiple += 1
+
+                    if nRefs == 0:
+                        unused += 1
+                    else:
+                        refd += nRefs
+                        refdU += 1
+
+                    status1 = f&#34;{n}x&#34;
+                    plural = &#34;&#34; if nRefs == 1 else &#34;s&#34;
+                    status2 = f&#34;{nRefs}ref{plural}&#34;
+
+                    ih.write(f&#34;\t{status1:&lt;8} {status2:&lt;8} {item}\n&#34;)
+
+                msgs = (
+                    f&#34;\tUnique:     {unique:&gt;4}&#34;,
+                    f&#34;\tNon-unique: {multiple:&gt;4}&#34;,
+                    f&#34;\tUnused:     {unused:&gt;4}&#34;,
+                    f&#34;\tReferenced: {refd:&gt;4} x {refdU:&gt;4}&#34;,
+                )
+                for msg in msgs:
+                    ih.write(f&#34;{msg}\n&#34;)
+
+                totalIdsU += unique
+                totalIdsM += multiple
+                totalIdsRefdU += refdU
+                totalIdsRefd += refd
+                totalIdsUnused += unused
+
+            if verbose &gt;= 0:
+                console(f&#34;Ids written to {reportIdFile}&#34;)
+                msgs = (
+                    f&#34;\treferenced: {totalIdsRefdU:&gt;4} by {totalIdsRefd:&gt;4}&#34;,
+                    f&#34;\tnon-unique: {totalIdsM:&gt;4}&#34;,
+                    f&#34;\tunused:     {totalIdsUnused:&gt;4}&#34;,
+                    f&#34;\tALL:        {totalIdsU:&gt;4} in {totalIds:&gt;4}&#34;,
+                )
+                for msg in msgs:
+                    console(msg)
+
+        def filterError(msg):
+            return msg == (
+                &#34;Element &#39;graphic&#39;, attribute &#39;url&#39;: [facet &#39;pattern&#39;] &#34;
+                &#34;The value &#39;&#39; is not accepted by the pattern &#39;\\S+&#39;.&#34;
+            )
+
+        def doXMLFile(xmlPath):
+            xmlFullPath = f&#34;{sourceDir}/{xmlPath}&#34;
+            pageScans[xmlPath] = []
+            facsMapping[xmlPath] = {}
+            facsKind[xmlPath] = {}
+            facsNotDeclared[xmlPath] = set()
+            facsNoId[xmlPath] = collections.Counter()
+
+            root = self.parseXML(xmlPath, xmlFullPath, parser)
+
+            if root is None:
+                return
+
+            ids[xmlFile][&#34;&#34;] = 1
+            analyse(root, analysis, xmlPath)
+
+        xmlFilesByModel = collections.defaultdict(list)
+
+        if sectionModel == &#34;I&#34;:
+            for xmlFolder, xmlFiles in self.getXML():
+                msg = &#34;Start &#34; if verbose &gt;= 0 else &#34;\t&#34;
+
+                if verbose &gt;= 0:
+                    console(f&#34;\t{msg}folder {xmlFolder}&#34;)
+
+                for xmlFile in xmlFiles:
+                    xmlPath = f&#34;{xmlFolder}/{xmlFile}&#34;
+                    xmlFullPath = f&#34;{sourceDir}/{xmlPath}&#34;
+                    (model, adapt, tpl) = self.getSwitches(xmlFullPath)
+                    xmlFilesByModel[model].append(xmlPath)
+
+        elif sectionModel == &#34;II&#34;:
+            xmlFile = self.getXML()
+
+            if xmlFile is None:
+                console(&#34;No XML files found!&#34;, error=True)
+                return False
+
+            xmlFullPath = f&#34;{sourceDir}/{xmlFile}&#34;
+            (model, adapt, tpl) = self.getSwitches(xmlFullPath)
+            xmlFilesByModel[model].append(xmlFile)
+
+        elif sectionModel == &#34;III&#34;:
+            for xmlFile in self.getXML():
+                xmlFullPath = f&#34;{sourceDir}/{xmlFile}&#34;
+                (model, adapt, tpl) = self.getSwitches(xmlFullPath)
+                xmlFilesByModel[model].append(xmlFile)
+
+        good = True
+        severeError = False
+        fatalError = False
+
+        for model, xmlPaths in xmlFilesByModel.items():
+            if verbose &gt;= 0:
+                console(f&#34;{len(xmlPaths)} {model or &#39;TEI&#39;} file(s) ...&#34;)
+
+            thisGood = True
+
+            if verbose &gt;= 0:
+                console(&#34;\tValidating ...&#34;)
+
+            schemaFile = modelInfo.get(model, None)
+
+            if schemaFile is None:
+                if verbose &gt;= 0:
+                    console(f&#34;\t\tNo schema file for {model}&#34;)
+                if good is not None and good is not False:
+                    good = None
+                continue
+
+            (thisGood, info, theseErrors) = A.validate(
+                True,
+                schemaFile,
+                [f&#34;{sourceDir}/{xmlPath}&#34; for xmlPath in xmlPaths],
+            )
+            if thisGood == -1:  # severe error, validation machinery not good
+                severeError = True
+
+            elif thisGood is None:
+                fatalError = True
+
+                # redo validation for each file separately in order to get all
+                # fatal errors
+                console(&#34;Fatal error in one of the XML files&#34;, error=True)
+
+                rInfo = [*info]
+                rTheseErrors = [*theseErrors]
+                rXmlPaths = [*xmlPaths]
+
+                iteration = 0
+                maxIter = 20
+
+                while True:
+                    iteration += 1
+
+                    if iteration &gt; maxIter:
+                        console(
+                            &#34;Stopped looking for more fatal errors after &#34;
+                            f&#34;{maxIter} iterations&#34;,
+                            error=True,
+                        )
+                        break
+
+                    fatalPath = None
+
+                    for e in rTheseErrors:
+                        kind = e[4]
+
+                        if kind == &#34;fatal&#34;:
+                            (folder, file) = e[0:2]
+                            fatalPath = f&#34;{folder}/{file}&#34;
+
+                    if fatalPath is None:
+                        console(&#34;No more fatal errors&#34;, error=True)
+                        break
+
+                    console(
+                        &#34;Check for more fatal errors &#34;
+                        f&#34;(iteration {iteration} of up to {maxIter}) &#34;
+                        f&#34;after {fatalPath}&#34;,
+                        error=True,
+                    )
+                    newRXmlPaths = []
+
+                    skipping = True
+
+                    for xmlPath in rXmlPaths:
+                        if skipping:
+                            if xmlPath == fatalPath:
+                                skipping = False
+                        else:
+                            newRXmlPaths.append(xmlPath)
+
+                    if not len(newRXmlPaths):
+                        console(&#34;No more files to examine&#34;, error=True)
+                        break
+
+                    rXmlPaths = newRXmlPaths
+                    (thisRGood, rInfo, rTheseErrors) = A.validate(
+                        True,
+                        schemaFile,
+                        [f&#34;{sourceDir}/{xmlPath}&#34; for xmlPath in rXmlPaths],
+                        verbose=True,
+                    )
+
+                    info.extend(rInfo)
+                    theseErrors.extend(rTheseErrors)
+
+                    if thisRGood is not None:
+                        console(&#34;Last fatal error encountered&#34;, error=True)
+                        break
+
+            for line in info:
+                if verbose &gt;= 0:
+                    console(f&#34;\t\t{line}&#34;)
+
+            if severeError:
+                for err in theseErrors:
+                    console(err, error=True)
+
+                self.severeError = True
+                break
+
+            if fatalError:
+                self.fatalError = True
+
+            if not thisGood:
+                good = False
+
+                errors.extend(theseErrors)
+
+                if not carryon:
+                    continue
+
+            if (good or carryon) and verbose &gt;= 0:
+                console(&#34;\tMaking inventory ...&#34;)
+
+            for xmlPath in xmlPaths:
+                doXMLFile(xmlPath)
+
+        if not good:
+            self.good = False
+
+        if verbose &gt;= 0:
+            console(&#34;&#34;)
+
+        writeElemTypes()
+
+        if not self.severeError:
+            writeErrors()
+
+        if good or carryon:
+            writeFacs()
+            writeNamespaces()
+            writeReport()
+            writeIdRefs()
+            writeLbParents()
+
+    def readSchemas(self):
+        schemaDir = self.schemaDir
+        models = self.models
+        modelMap = {}
+        newModels = []
+        self.modelMap = modelMap
+
+        A = self.A
+
+        schemaFiles = dict(rng={}, xsd={})
+        self.schemaFiles = schemaFiles
+        modelInfo = {}
+        self.modelInfo = modelInfo
+        modelXsd = {}
+        self.modelXsd = modelXsd
+        modelInv = {}
+        self.modelInv = modelInv
+
+        for model in [None] + models:
+            if type(model) is dict:
+                (model, href) = list(model.items())[0]
+                modelMap[href] = model
+
+            if model is not None:
+                newModels.append(model)
+
+            for kind in (&#34;rng&#34;, &#34;xsd&#34;):
+                schemaFile = (
+                    A.getBaseSchema()[kind]
+                    if model is None
+                    else f&#34;{schemaDir}/{model}.{kind}&#34;
+                )
+                if fileExists(schemaFile):
+                    schemaFiles[kind][model] = schemaFile
+                    if (
+                        kind == &#34;rng&#34;
+                        or kind == &#34;xsd&#34;
+                        and model not in schemaFiles[&#34;rng&#34;]
+                    ):
+                        modelInfo[model] = schemaFile
+
+            if model in schemaFiles[&#34;rng&#34;] and model not in schemaFiles[&#34;xsd&#34;]:
+                schemaFileXsd = f&#34;{schemaDir}/{model}.xsd&#34;
+                result = A.fromrelax(schemaFiles[&#34;rng&#34;][model], schemaFileXsd)
+
+                if not result:
+                    console(
+                        f&#34;Could not convert relax schema {model} to xsd&#34;, error=True
+                    )
+                    self.good = False
+
+                    if result is None:
+                        self.severeError = True
+                        return
+
+                schemaFiles[&#34;xsd&#34;][model] = schemaFileXsd
+
+        models = newModels
+        self.models = models
+
+        baseSchema = schemaFiles[&#34;xsd&#34;][None]
+        modelXsd[None] = baseSchema
+        modelInv[(baseSchema, None)] = None
+
+        for model in models:
+            override = schemaFiles[&#34;xsd&#34;][model]
+            modelXsd[model] = override
+            modelInv[(baseSchema, override)] = model
+
+    def getSwitches(self, xmlPath):
+        verbose = self.verbose
+        models = self.models
+        modelMap = self.modelMap
+        adaptations = self.adaptations
+        templates = self.templates
+        triggers = self.triggers
+        A = self.A
+
+        text = None
+
+        found = {}
+
+        for kind, allOfKind in (
+            (&#34;model&#34;, models),
+            (&#34;adaptation&#34;, adaptations),
+            (&#34;template&#34;, templates),
+        ):
+            if text is None:
+                with fileOpen(xmlPath) as fh:
+                    text = fh.read()
+
+            found[kind] = None
+
+            if kind == &#34;model&#34;:
+                result = A.getModel(text, modelMap)
+                if result is None or result == &#34;tei_all&#34;:
+                    result = None
+            else:
+                result = None
+                triggerRe = triggers[kind]
+                if triggerRe is not None:
+                    match = triggerRe.search(text)
+                    result = match.group(1) if match else None
+
+            if result is not None and result not in allOfKind:
+                if verbose &gt;= 0:
+                    console(f&#34;unavailable {kind} {result} in {ux(xmlPath)}&#34;)
+                result = None
+            found[kind] = result
+
+        return (found[&#34;model&#34;], found[&#34;adaptation&#34;], found[&#34;template&#34;])
+
+    def getParser(self):
+        &#34;&#34;&#34;Configure the LXML parser.
+
+        See [parser options](https://lxml.de/parsing.html#parser-options).
+
+        Returns
+        -------
+        object
+            A configured LXML parse object.
+        &#34;&#34;&#34;
+        procins = self.procins
+
+        return etree.XMLParser(
+            remove_blank_text=False,
+            collect_ids=False,
+            remove_comments=True,
+            remove_pis=not procins,
+            huge_tree=True,
+        )
+
+    def parseXML(self, fileName, fileOrText, parser):
+        &#34;&#34;&#34;Parse an XML source.
+
+        This is not meant to validate the XML, only to parse the XML into elements,
+        attributes, and processing instructions, etc. Validity can be checked by means
+        of `tff.tools.xmlschema.Analysis.validate` as is done in the check task.
+
+        Parameters
+        ----------
+        fileName: indicator of the file name, does not have to be the full path,
+            only used in error messages.
+        fileOrText: string
+            Either the full path of an XML file, or a string of raw XML text.
+        parser: object
+            A configured LXML parser object.
+
+        Returns
+        -------
+        object | void
+            The root of the resulting parse tree if the parsing succeeded, else None.
+            If the parsing failed, a message is written to stderr.
+        &#34;&#34;&#34;
+        try:
+            tree = etree.parse(fileOrText, parser)
+            result = tree.getroot()
+        except Exception as e:
+            console(f&#34;{fileName}: {str(e)}&#34;, error=True)
+            result = None
+
+        return result
+
+    def getXML(self):
+        &#34;&#34;&#34;Make an inventory of the TEI source files.
+
+        Returns
+        -------
+        tuple of tuple | tuple of string | string
+            If section model I is in force:
+
+            The outer tuple has sorted entries corresponding to folders under the
+            TEI input directory.
+            Each such entry consists of the folder name and an inner tuple
+            that contains the file names in that folder, sorted.
+
+            If section model II is in force:
+
+            It is the name of the single XML file.
+
+            If section model III is in force:
+
+            It is a tuple of multiple XML files
+        &#34;&#34;&#34;
+        verbose = self.verbose
+        sourceDir = self.sourceDir
+        sectionModel = self.sectionModel
+
+        if verbose == 1:
+            console(f&#34;Section model {sectionModel}&#34;)
+
+        if sectionModel == &#34;I&#34;:
+            backMatter = self.backMatter
+
+            IGNORE = &#34;__ignore__&#34;
+
+            xmlFilesRaw = collections.defaultdict(list)
+
+            with scanDir(sourceDir) as dh:
+                for folder in dh:
+                    folderName = folder.name
+
+                    if folderName == IGNORE:
+                        continue
+                    if not folder.is_dir():
+                        continue
+                    with scanDir(f&#34;{sourceDir}/{folderName}&#34;) as fh:
+                        for file in fh:
+                            fileName = file.name
+
+                            if not (
+                                fileName.lower().endswith(&#34;.xml&#34;) and file.is_file()
+                            ):
+                                continue
+                            xmlFilesRaw[folderName].append(fileName)
+
+            xmlFiles = []
+            hasBackMatter = False
+
+            for folderName in sorted(xmlFilesRaw, key=versionSort):
+                if folderName == backMatter:
+                    hasBackMatter = True
+                else:
+                    fileNames = xmlFilesRaw[folderName]
+                    xmlFiles.append((folderName, tuple(sorted(fileNames))))
+
+            if hasBackMatter:
+                fileNames = xmlFilesRaw[backMatter]
+                xmlFiles.append((backMatter, tuple(sorted(fileNames))))
+
+            xmlFiles = tuple(xmlFiles)
+
+            return xmlFiles
+
+        if sectionModel == &#34;II&#34;:
+            xmlFile = None
+
+            with scanDir(sourceDir) as fh:
+                for file in fh:
+                    fileName = file.name
+
+                    if not (fileName.lower().endswith(&#34;.xml&#34;) and file.is_file()):
+                        continue
+
+                    xmlFile = fileName
+                    break
+            return xmlFile
+
+        if sectionModel == &#34;III&#34;:
+            xmlFiles = []
+
+            with scanDir(sourceDir) as fh:
+                for file in fh:
+                    fileName = file.name
+
+                    if not (fileName.lower().endswith(&#34;.xml&#34;) and file.is_file()):
+                        continue
+
+                    xmlFiles.append(fileName)
+
+            return tuple(sorted(xmlFiles))</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="ti.info.tei.getRefs"><code class="name flex">
+<span>def <span class="ident">getRefs</span></span>(<span>tag, atts, xmlFile)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/annotation/text-info/blob/aa439e40f08027e60c76a5bd756adad2f6c3df74/ti/info/tei.py#L317-L334" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def getRefs(tag, atts, xmlFile):
+    refAtt = REFERENCING.get(tag, None)
+    result = []
+
+    if refAtt is not None:
+        refVal = atts.get(refAtt, None)
+        if refVal is not None and not refVal.startswith(&#34;http&#34;):
+            for refv in refVal.split():
+                parts = refv.split(&#34;#&#34;, 1)
+                if len(parts) == 1:
+                    targetFile = refv
+                    targetId = &#34;&#34;
+                else:
+                    (targetFile, targetId) = parts
+                if targetFile == &#34;&#34;:
+                    targetFile = xmlFile
+                result.append((refAtt, targetFile, targetId))
+    return result</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="ti.info.tei.TEI"><code class="flex name class">
+<span>class <span class="ident">TEI</span></span>
+<span>(</span><span>sourceDir, cfgFile, verbose=0)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Sets up information retrieval from a TEI source.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>sourceDir</code></strong> :&ensp;<code>string</code></dt>
+<dd>
+<p>Directory of the TEI files.
+Divided as follows:</p>
+<ol>
+<li>volumes / collections of documents. The subdirectory
+<code>__ignore__</code> is ignored.</li>
+<li>the TEI documents themselves, conforming to the TEI schema or
+some customization of it.</li>
+</ol>
+</dd>
+<dt><strong><code>cfgFile</code></strong> :&ensp;<code>string</code></dt>
+<dd>Path to the configuration file (yaml)</dd>
+<dt><strong><code>verbose</code></strong> :&ensp;<code>integer</code>, optional <code>-1</code></dt>
+<dd>Produce no (-1), some (0) or many (1) progress and reporting messages</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Multiple XSD files</p>
+<p>When you started with a RNG file and used <code><a title="ti.tools.xmlschema" href="../tools/xmlschema.html">ti.tools.xmlschema</a></code> to
+convert it to XSD, you may have got multiple XSD files.
+One of them has the same base name as the original RNG file,
+and you should pass that name. It will import the remaining XSD files,
+so do not throw them away.</p>
+</div></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/annotation/text-info/blob/aa439e40f08027e60c76a5bd756adad2f6c3df74/ti/info/tei.py#L337-L1732" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class TEI:
+    def __init__(self, sourceDir, cfgFile, verbose=0):
+        &#34;&#34;&#34;Sets up information retrieval from a TEI source.
+
+        Parameters
+        ----------
+        sourceDir: string
+            Directory of the TEI files.
+            Divided as follows:
+
+            1.  volumes / collections of documents. The subdirectory
+                `__ignore__` is ignored.
+            1.  the TEI documents themselves, conforming to the TEI schema or
+                some customization of it.
+
+        cfgFile: string
+            Path to the configuration file (yaml)
+
+        verbose: integer, optional -1
+            Produce no (-1), some (0) or many (1) progress and reporting messages
+
+        !!! note &#34;Multiple XSD files&#34;
+            When you started with a RNG file and used `ti.tools.xmlschema` to
+            convert it to XSD, you may have got multiple XSD files.
+            One of them has the same base name as the original RNG file,
+            and you should pass that name. It will import the remaining XSD files,
+            so do not throw them away.
+
+        &#34;&#34;&#34;
+        self.sourceDir = sourceDir
+        self.cfgFile = cfgFile
+        self.verbose = verbose
+
+        self.good = True
+        self.severeError = False
+        self.fatalError = False
+
+        (ok, settings) = readCfg(cfgFile, &#34;tei&#34;, verbose=verbose, plain=True)
+        if not ok:
+            self.good = False
+
+        models = settings.get(&#34;models&#34;, [])
+        self.models = models
+
+        procins = settings.get(&#34;procins&#34;, False)
+        self.procins = procins
+
+        zoneBased = settings.get(&#34;zoneBased&#34;, False)
+
+        if zoneBased:
+            self.facsMapping = None
+
+        sectionModel = settings.get(&#34;sectionModel&#34;, {})
+        sectionModel = checkSectionModel(sectionModel, verbose)
+
+        if not sectionModel:
+            self.good = False
+            return
+
+        sectionProperties = sectionModel[&#34;properties&#34;]
+        self.backMatter = sectionProperties.get(&#34;backMatter&#34;, None)
+        sectionModel = sectionModel[&#34;model&#34;]
+        self.sectionModel = sectionModel
+        self.sectionIs23 = sectionModel in {&#34;II&#34;, &#34;III&#34;}
+        self.sectionIs3 = sectionModel == &#34;III&#34;
+        self.sectionProperties = sectionProperties
+
+        templates = settings.get(&#34;templates&#34;, [])
+        self.templates = templates
+
+        adaptations = settings.get(&#34;adaptations&#34;, [])
+        self.adaptations = adaptations
+
+        self.zoneBased = zoneBased
+
+        if not dirExists(sourceDir):
+            console(&#34;Source directory does not exist: {sourceDir}&#34;, error=True)
+            self.good = False
+            return
+
+        templateTrigger = settings.get(&#34;templateTrigger&#34;, None)
+        adaptationTrigger = settings.get(&#34;adaptationTrigger&#34;, None)
+
+        if templateTrigger is None:
+            self.templateAtt = None
+            self.templateTag = None
+        else:
+            (tag, att) = templateTrigger.split(&#34;@&#34;)
+            self.templateAtt = att
+            self.templateTag = tag
+
+        templateTag = self.templateTag
+        templateAtt = self.templateAtt
+
+        if adaptationTrigger is None:
+            self.adaptationAtt = None
+            self.adaptationTag = None
+        else:
+            (tag, att) = adaptationTrigger.split(&#34;@&#34;)
+            self.adaptationAtt = att
+            self.adaptationTag = tag
+
+        adaptationTag = self.adaptationTag
+        adaptationAtt = self.adaptationAtt
+
+        triggers = {}
+        self.triggers = triggers
+
+        for kind, theAtt, theTag in (
+            (&#34;template&#34;, templateAtt, templateTag),
+            (&#34;adaptation&#34;, adaptationAtt, adaptationTag),
+        ):
+            triggerRe = None
+
+            if theAtt is not None and theTag is not None:
+                tagPat = re.escape(theTag)
+                triggerRe = re.compile(
+                    rf&#34;&#34;&#34;&lt;{tagPat}\b[^&gt;]*?{theAtt}=[&#39;&#34;]([^&#39;&#34;]+)[&#39;&#34;]&#34;&#34;&#34;
+                )
+            triggers[kind] = triggerRe
+
+        if not self.good:
+            return
+
+    def inventory(self, schemaDir, reportDir, carryon=False, verbose=None):
+        &#34;&#34;&#34;Implementation of the &#34;check&#34; task.
+
+        It validates the TEI.
+
+        Then it makes an inventory of all elements and attributes in the TEI files.
+
+        If tags are used in multiple namespaces, it will be reported.
+
+        !!! caution &#34;Conflation of namespaces&#34;
+            The TEI to TF conversion does construct node types and attributes
+            without taking namespaces into account.
+            However, the parsing process is namespace aware.
+
+        The inventory lists all elements and attributes, and many attribute values.
+        But is represents any digit with `n`, and some attributes that contain
+        ids or keywords, are reduced to the value `x`.
+
+        This information reduction helps to get a clear overview.
+
+        It writes reports to the `reportDir`:
+
+        *   `errors.txt`: validation errors
+        *   `elements.txt`: element / attribute inventory.
+
+        !!! note &#34;Thoroughness of validation&#34;
+            All xml files for the same model will be validated by a single call
+            to the validator. This is fast, but the
+            consequence is that after a fatal error the process terminates without
+            validating the remaining files. In that case, we&#39;ll redo validation
+            for each file separately.
+
+        Parameters
+        ----------
+        reportDir: string
+            The directory where the report files will be generated
+
+        schemaDir: string
+            Directory of the RNG/XSD schema files.
+
+            We use these files as custom TEI schemas,
+            but to be sure, we still analyse the full TEI schema and
+            use the schemas here as a set of overriding element definitions.
+
+        carryon: boolean, optional False
+            Whether to carryon with making an inventory if validation has failed.
+            Normally, validation errors make it unlikely that further processing of
+            the XML will succeed. But if the validation errors appear to be mild,
+            and you want an inventory, you can pass the `True` to this parameter
+            at your own risk.
+        verbose: integer, optional None
+            Produce no (-1), some (0) or many (1) progress and reporting messages
+            If `None`, the value will be taken from the corresponding object member.
+        &#34;&#34;&#34;
+        if not self.good:
+            return
+
+        if not reportDir:
+            console(&#34;No report directory specified&#34;, error=True)
+            self.good = False
+
+        self.schemaDir = schemaDir
+
+        A = Analysis(verbose=verbose)
+        self.A = A
+        self.readSchemas()
+
+        procins = self.procins
+        modelInfo = self.modelInfo
+        modelInv = self.modelInv
+        modelXsd = self.modelXsd
+
+        sourceDir = self.sourceDir
+        sectionModel = self.sectionModel
+        zoneBased = self.zoneBased
+
+        if verbose == 1:
+            console(f&#34;TEI to TF checking: {ux(sourceDir)} =&gt; {ux(reportDir)}&#34;)
+        if verbose &gt;= 0:
+            console(
+                f&#34;Processing instructions are {&#39;treated&#39; if procins else &#39;ignored&#39;}&#34;
+            )
+            console(&#34;XML validation will be performed&#34;)
+
+        kindLabels = dict(
+            format=&#34;Formatting Attributes&#34;,
+            keyword=&#34;Keyword Attributes&#34;,
+            rest=&#34;Remaining Attributes and Elements&#34;,
+        )
+        getStore = lambda: collections.defaultdict(  # noqa: E731
+            lambda: collections.defaultdict(collections.Counter)
+        )
+        analysis = {x: getStore() for x in kindLabels}
+        errors = []
+        tagByNs = collections.defaultdict(collections.Counter)
+        refs = collections.defaultdict(lambda: collections.Counter())
+        ids = collections.defaultdict(lambda: collections.Counter())
+
+        parser = self.getParser()
+        baseSchema = modelXsd[None]
+        overrides = [
+            override for (model, override) in modelXsd.items() if model is not None
+        ]
+        A.getElementInfo(baseSchema, overrides, verbose=verbose)
+        elementDefs = A.elementDefs
+
+        initTree(reportDir)
+
+        nProcins = 0
+
+        lbParents = collections.Counter()
+
+        pageScans = {}
+
+        facsMapping = {} if zoneBased else {}
+        self.facsMapping = facsMapping
+
+        facsKind = {}
+        self.facsKind = {}
+
+        facsNotDeclared = {}
+        zoneRegionIncomplete = {}
+        facsNoId = {}
+        self.facsNoId = facsNoId
+
+        nPagesNoFacs = 0
+
+        inFacsimile = False
+        surfaceId = None
+        scanFile = None
+        zoneId = None
+        zoneRegion = None
+
+        def analyse(root, analysis, xmlPath):
+            FORMAT_ATTS = set(
+                &#34;&#34;&#34;
+                dim
+                level
+                place
+                rend
+            &#34;&#34;&#34;.strip().split()
+            )
+
+            KEYWORD_ATTS = set(
+                &#34;&#34;&#34;
+                facs
+                form
+                function
+                lang
+                reason
+                type
+                unit
+                who
+            &#34;&#34;&#34;.strip().split()
+            )
+
+            TRIM_ATTS = set(
+                &#34;&#34;&#34;
+                id
+                key
+                target
+                value
+            &#34;&#34;&#34;.strip().split()
+            )
+
+            NUM_RE = re.compile(r&#34;&#34;&#34;[0-9]&#34;&#34;&#34;, re.S)
+
+            def nodeInfo(xnode):
+                nonlocal nProcins
+                nonlocal nPagesNoFacs
+                nonlocal inFacsimile
+                nonlocal surfaceId
+                nonlocal scanFile
+                nonlocal zoneId
+                nonlocal zoneRegion
+
+                if procins and isinstance(xnode, etree._ProcessingInstruction):
+                    target = xnode.target
+                    tag = f&#34;?{target}&#34;
+                    ns = &#34;&#34;
+                    nProcins += 1
+                else:
+                    qName = etree.QName(xnode.tag)
+                    tag = qName.localname
+                    ns = qName.namespace
+
+                atts = {etree.QName(k).localname: v for (k, v) in xnode.attrib.items()}
+
+                tagByNs[tag][ns] += 1
+
+                if tag == &#34;lb&#34;:
+                    parentTag = etree.QName(xnode.getparent().tag).localname
+                    lbParents[parentTag] += 1
+                elif tag == &#34;pb&#34;:
+                    facsv = atts.get(&#34;facs&#34;, &#34;&#34;)
+
+                    if zoneBased:
+                        facsv = facsv.removeprefix(&#34;#&#34;)
+
+                        if facsv:
+                            (scanName, scanRegion) = facsMapping[xmlPath].get(
+                                facsv, [&#34;&#34;, &#34;full&#34;]
+                            )
+
+                            if not scanName:
+                                facsNotDeclared[xmlPath].add(facsv)
+
+                    if facsv:
+                        pageScans[xmlPath].append(facsv)
+                    else:
+                        nPagesNoFacs += 1
+                elif zoneBased:
+                    if tag == &#34;facsimile&#34;:
+                        inFacsimile = True
+                    elif inFacsimile:
+                        if tag == &#34;surface&#34;:
+                            surfaceId = atts.get(&#34;id&#34;, None)
+                            scanFile = None
+
+                            if not surfaceId:
+                                facsNoId[xmlPath][&#34;surface&#34;] += 1
+                        elif tag == &#34;zone&#34;:
+                            zoneId = atts.get(&#34;id&#34;, None)
+
+                            if zoneId:
+                                zoneRegion = []
+
+                                for a, aDefault in ZONE_ATTS:
+                                    aVal = atts.get(a, None)
+
+                                    if aVal is None:
+                                        aVal = aDefault
+                                        zoneRegionIncomplete.setdefault(zoneId, {})[
+                                            a
+                                        ] = f&#34;None =&gt; {aDefault}&#34;
+                                    elif aVal.isdecimal():
+                                        aVal = int(aVal)
+                                    else:
+                                        zoneRegionIncomplete.setdefault(zoneId, {})[
+                                            a
+                                        ] = f&#34;{aVal} =&gt; {aDefault}&#34;
+
+                                    zoneRegion.append(aVal)
+
+                                (ulx, uly, lrx, lry) = zoneRegion
+                                zoneRegion = f&#34;pct:{ulx},{uly},{lrx - ulx},{lry - uly}&#34;
+
+                                if scanFile:
+                                    facsMapping[xmlPath][zoneId] = [
+                                        scanFile,
+                                        zoneRegion,
+                                    ]
+                                    facsKind[xmlPath][zoneId] = &#34;zone&#34;
+                            else:
+                                facsNoId[xmlPath][&#34;zone&#34;] += 1
+
+                        elif tag == &#34;graphic&#34;:
+                            # can be inside zone or inside surface
+                            # if inside surface, it holds for all zones without
+                            # own scanFile
+                            thisScanFile = atts.get(&#34;url&#34;, None)
+
+                            if thisScanFile is not None:
+                                if zoneId:
+                                    facsMapping[xmlPath][zoneId] = [
+                                        thisScanFile,
+                                        zoneRegion,
+                                    ]
+                                    facsKind[xmlPath][zoneId] = &#34;zone&#34;
+                                else:
+                                    # this is a graphic outside the zones
+                                    # we set the surface wide scan file
+                                    # so that subsequent zones without graphic
+                                    # can pick this up
+                                    scanFile = thisScanFile
+                                if surfaceId:
+                                    facsMapping[xmlPath][surfaceId] = [scanFile, &#34;full&#34;]
+                                    facsKind[xmlPath][surfaceId] = &#34;surface&#34;
+
+                if len(atts) == 0:
+                    kind = &#34;rest&#34;
+                    analysis[kind][tag][&#34;&#34;][&#34;&#34;] += 1
+                else:
+                    idv = atts.get(&#34;id&#34;, None)
+
+                    if idv is not None:
+                        ids[xmlPath][idv] += 1
+
+                    for refAtt, targetFile, targetId in getRefs(tag, atts, xmlPath):
+                        refs[xmlPath][(targetFile, targetId)] += 1
+
+                    for k, v in atts.items():
+                        kind = (
+                            &#34;format&#34;
+                            if k in FORMAT_ATTS
+                            else &#34;keyword&#34; if k in KEYWORD_ATTS else &#34;rest&#34;
+                        )
+                        dest = analysis[kind]
+
+                        if kind == &#34;rest&#34;:
+                            vTrim = &#34;X&#34; if k in TRIM_ATTS else NUM_RE.sub(&#34;N&#34;, v)
+                            dest[tag][k][vTrim] += 1
+                        else:
+                            words = v.strip().split()
+                            for w in words:
+                                dest[tag][k][w.strip()] += 1
+
+                for child in xnode.iterchildren(
+                    tag=(
+                        (etree.Element, etree.ProcessingInstruction)
+                        if procins
+                        else etree.Element
+                    )
+                ):
+                    nodeInfo(child)
+
+                if zoneBased:
+                    if tag == &#34;facsimile&#34;:
+                        inFacsimile = False
+                    elif inFacsimile:
+                        if tag == &#34;surface&#34;:
+                            surfaceId = None
+                            scanFile = None
+                        elif tag == &#34;zone&#34;:
+                            zoneId = None
+
+            nodeInfo(root)
+
+        def writeErrors():
+            &#34;&#34;&#34;Write the errors to a file.&#34;&#34;&#34;
+
+            errorFile = f&#34;{reportDir}/errors.txt&#34;
+
+            nErrors = 0
+            nFiles = 0
+
+            with fileOpen(errorFile, mode=&#34;w&#34;) as fh:
+                prevFolder = None
+                prevFile = None
+
+                for folder, file, line, col, kind, text in errors:
+                    newFolder = prevFolder != folder
+                    newFile = newFolder or prevFile != file
+
+                    if newFile:
+                        nFiles += 1
+
+                    if kind in {&#34;error&#34;, &#34;fatal&#34;}:
+                        nErrors += 1
+
+                    indent1 = f&#34;{folder}\n\t&#34; if newFolder else &#34;\t&#34;
+                    indent2 = f&#34;{file}\n\t\t&#34; if newFile else &#34;\t&#34;
+                    loc = f&#34;{line or &#39;&#39;}:{col or &#39;&#39;}&#34;
+                    text = &#34;\n&#34;.join(wrap(text, width=80, subsequent_indent=&#34;\t\t\t&#34;))
+                    fh.write(f&#34;{indent1}{indent2}{loc} {kind or &#39;&#39;} {text}\n&#34;)
+                    prevFolder = folder
+                    prevFile = file
+
+            if nErrors:
+                console(
+                    (
+                        f&#34;{nErrors} validation error(s) in {nFiles} file(s) &#34;
+                        f&#34;written to {errorFile}&#34;
+                    ),
+                    error=True,
+                )
+            else:
+                if verbose &gt;= 0:
+                    console(&#34;Validation OK&#34;)
+
+        def writeFacs():
+            infoFile = f&#34;{reportDir}/facsNoId.yml&#34;
+            writeYaml(
+                {
+                    f: {k: n for (k, n) in v.items() if n}
+                    for (f, v) in facsNoId.items()
+                    if len(v)
+                },
+                asFile=infoFile,
+            )
+
+            nSurfaces = sum(x[&#34;surface&#34;] for x in facsNoId.values())
+            nZones = sum(x[&#34;zone&#34;] for x in facsNoId.values())
+
+            if verbose &gt;= 0:
+                pluralS = &#34;&#34; if nSurfaces == 1 else &#34;s&#34;
+                pluralZ = &#34;&#34; if nZones == 1 else &#34;s&#34;
+
+                if nSurfaces:
+                    console(f&#34;{nSurfaces} surface{pluralS} without id&#34;)
+
+                if nZones:
+                    console(f&#34;{nZones} zone{pluralZ} without id&#34;)
+
+            infoFile = f&#34;{reportDir}/facs.yml&#34;
+            nItems = sum(len(x) for x in pageScans.values())
+            nUnique = sum(len(set(x)) for x in pageScans.values())
+
+            writeYaml(pageScans, asFile=infoFile)
+
+            if verbose &gt;= 0:
+                plural = &#34;&#34; if nPagesNoFacs == 1 else &#34;s&#34;
+                console(f&#34;{nPagesNoFacs} pagebreak{plural} without facs attribute.&#34;)
+
+                plural = &#34;&#34; if nItems == 1 else &#34;s&#34;
+                console(f&#34;{nItems} pagebreak{plural} encountered.&#34;)
+                plural = &#34;&#34; if nUnique == 1 else &#34;s&#34;
+                console(f&#34;{nUnique} distinct scan{plural} referred to by pagebreaks.&#34;)
+
+            if not zoneBased:
+                return
+
+            infoFile = f&#34;{reportDir}/facsKind.yml&#34;
+            writeYaml(facsKind, asFile=infoFile)
+            infoFile = f&#34;{reportDir}/{FACS_MAPPING_YML}&#34;
+            writeYaml(facsMapping, asFile=infoFile)
+
+            if verbose &gt;= 0:
+                nSurfaces = sum(
+                    sum(1 for y in x.values() if y == &#34;surface&#34;)
+                    for x in facsKind.values()
+                )
+                nZones = sum(
+                    sum(1 for y in x.values() if y == &#34;zone&#34;) for x in facsKind.values()
+                )
+                plural = &#34;&#34; if nSurfaces == 1 else &#34;s&#34;
+                console(f&#34;{nSurfaces} surface{plural} declared&#34;)
+                plural = &#34;&#34; if nZones == 1 else &#34;s&#34;
+                console(f&#34;{nZones} zone{plural} declared&#34;)
+
+                nItems = sum(len(x) for x in facsMapping.values())
+                plural = &#34;&#34; if nItems == 1 else &#34;s&#34;
+                console(f&#34;{nItems} scan{plural} declared and mapped.&#34;)
+
+            infoFile = f&#34;{reportDir}/facsProblems.yml&#34;
+            facsNotUsed = {}
+
+            for xmlPath, mapping in facsMapping.items():
+                facsEncountered = set(pageScans[xmlPath])
+                thisFacsNotUsed = {}
+
+                for facs in mapping:
+                    if facs not in facsEncountered:
+                        kind = facsKind[xmlPath][facs]
+                        thisFacsNotUsed.setdefault(kind, []).append(facs)
+
+                if len(thisFacsNotUsed):
+                    facsNotUsed[xmlPath] = thisFacsNotUsed
+
+            facsProblems = {}
+
+            nFacsNotDeclared = sum(len(x) for x in facsNotDeclared.values())
+            nSurfacesNotUsed = sum(
+                len(x.get(&#34;surface&#34;, [])) for x in facsNotUsed.values()
+            )
+            nZonesNotUsed = sum(len(x.get(&#34;zone&#34;, [])) for x in facsNotUsed.values())
+
+            if nFacsNotDeclared:
+                plural = &#34;&#34; if nFacsNotDeclared == 1 else &#34;s&#34;
+                console(f&#34;{nFacsNotDeclared} undeclared scan{plural}&#34;, error=True)
+                facsProblems[&#34;facsNotDeclared&#34;] = {
+                    xmlPath: sorted(x)
+                    for (xmlPath, x) in facsNotDeclared.items()
+                    if len(x)
+                }
+
+            if nSurfacesNotUsed:
+                plural = &#34;&#34; if nSurfacesNotUsed == 1 else &#34;s&#34;
+                console(f&#34;{nSurfacesNotUsed} unused surface{plural}&#34;, error=True)
+            if nZonesNotUsed:
+                plural = &#34;&#34; if nZonesNotUsed == 1 else &#34;s&#34;
+                console(f&#34;{nZonesNotUsed} unused zone{plural}&#34;, error=True)
+
+            facsProblems[&#34;facsNotUsed&#34;] = facsNotUsed
+
+            writeYaml(facsProblems, asFile=infoFile)
+
+            infoFile = f&#34;{reportDir}/zoneErrors.yml&#34;
+            nIncomplete = len(zoneRegionIncomplete)
+            plural = &#34;&#34; if nIncomplete == 1 else &#34;s&#34;
+
+            if nIncomplete:
+                console(
+                    f&#34;{nIncomplete} missing zone region specifier{plural}&#34;, error=True
+                )
+
+                console(f&#34;See {infoFile}&#34;, error=True)
+
+            writeYaml(zoneRegionIncomplete, asFile=infoFile)
+
+        def writeNamespaces():
+            errorFile = f&#34;{reportDir}/namespaces.txt&#34;
+
+            nErrors = 0
+
+            nTags = len(tagByNs)
+
+            with fileOpen(errorFile, mode=&#34;w&#34;) as fh:
+                for tag, nsInfo in sorted(
+                    tagByNs.items(), key=lambda x: (-len(x[1]), x[0])
+                ):
+                    label = &#34;OK&#34;
+                    nNs = len(nsInfo)
+                    if nNs &gt; 1:
+                        nErrors += 1
+                        label = &#34;XX&#34;
+
+                    for ns, amount in sorted(
+                        nsInfo.items(), key=lambda x: (-x[1], x[0])
+                    ):
+                        fh.write(
+                            f&#34;{label} {nNs:&gt;2} namespace for &#34;
+                            f&#34;{tag:&lt;16} : {amount:&gt;5}x {ns}\n&#34;
+                        )
+
+            if verbose &gt;= 0:
+                if procins:
+                    plural = &#34;&#34; if nProcins == 1 else &#34;s&#34;
+                    console(f&#34;{nProcins} processing instruction{plural} encountered.&#34;)
+
+                console(
+                    (
+                        f&#34;{nTags} tags of which {nErrors} with multiple namespaces &#34;
+                        f&#34;written to {errorFile}&#34;
+                        if verbose &gt;= 0 or nErrors
+                        else &#34;Namespaces OK&#34;
+                    ),
+                    error=nErrors &gt; 0,
+                )
+
+        def writeReport():
+            reportFile = f&#34;{reportDir}/elements.txt&#34;
+
+            with fileOpen(reportFile, mode=&#34;w&#34;) as fh:
+                fh.write(
+                    &#34;Inventory of tags and attributes in the source XML file(s).\n&#34;
+                    &#34;Contains the following sections:\n&#34;
+                )
+                for label in kindLabels.values():
+                    fh.write(f&#34;\t{label}\n&#34;)
+                fh.write(&#34;\n\n&#34;)
+
+                infoLines = 0
+
+                def writeAttInfo(tag, att, attInfo):
+                    nonlocal infoLines
+                    nl = &#34;&#34; if tag == &#34;&#34; else &#34;\n&#34;
+                    tagRep = &#34;&#34; if tag == &#34;&#34; else f&#34;&lt;{tag}&gt;&#34;
+                    attRep = &#34;&#34; if att == &#34;&#34; else f&#34;{att}=&#34;
+                    atts = sorted(attInfo.items())
+                    (val, amount) = atts[0]
+                    fh.write(
+                        f&#34;{nl}\t{tagRep:&lt;18} &#34; f&#34;{attRep:&lt;11} {amount:&gt;7}x {val}\n&#34;
+                    )
+                    infoLines += 1
+
+                    for val, amount in atts[1:]:
+                        fh.write(f&#34;&#34;&#34;\t{&#39;&#39;:&lt;18} {&#39;&#39;:&lt;11} {amount:&gt;7}x {val}\n&#34;&#34;&#34;)
+                        infoLines += 1
+
+                def writeTagInfo(tag, tagInfo):
+                    nonlocal infoLines
+                    tags = sorted(tagInfo.items())
+                    (att, attInfo) = tags[0]
+                    writeAttInfo(tag, att, attInfo)
+                    infoLines += 1
+                    for att, attInfo in tags[1:]:
+                        writeAttInfo(&#34;&#34;, att, attInfo)
+
+                for kind, label in kindLabels.items():
+                    fh.write(f&#34;\n{label}\n&#34;)
+                    for tag, tagInfo in sorted(analysis[kind].items()):
+                        writeTagInfo(tag, tagInfo)
+
+            if verbose &gt;= 0:
+                console(f&#34;{infoLines} info line(s) written to {reportFile}&#34;)
+
+        def writeElemTypes():
+            elemsCombined = {}
+
+            modelSet = set()
+
+            for schemaOverride, eDefs in elementDefs.items():
+                model = modelInv[schemaOverride]
+                modelSet.add(model)
+                for tag, (typ, mixed) in eDefs.items():
+                    elemsCombined.setdefault(tag, {}).setdefault(model, {})
+                    elemsCombined[tag][model][&#34;typ&#34;] = typ
+                    elemsCombined[tag][model][&#34;mixed&#34;] = mixed
+
+            tagReport = {}
+
+            for tag, tagInfo in elemsCombined.items():
+                tagLines = []
+                tagReport[tag] = tagLines
+
+                if None in tagInfo:
+                    teiInfo = tagInfo[None]
+                    teiTyp = teiInfo[&#34;typ&#34;]
+                    teiMixed = teiInfo[&#34;mixed&#34;]
+                    teiTypRep = &#34;??&#34; if teiTyp is None else typ
+                    teiMixedRep = (
+                        &#34;??&#34; if teiMixed is None else &#34;mixed&#34; if teiMixed else &#34;pure&#34;
+                    )
+                    mds = [&#34;TEI&#34;]
+
+                    for model in sorted(x for x in tagInfo if x is not None):
+                        info = tagInfo[model]
+                        typ = info[&#34;typ&#34;]
+                        mixed = info[&#34;mixed&#34;]
+                        if typ == teiTyp and mixed == teiMixed:
+                            mds.append(model)
+                        else:
+                            typRep = (
+                                &#34;&#34; if typ == teiTyp else &#34;??&#34; if typ is None else typ
+                            )
+                            mixedRep = (
+                                &#34;&#34;
+                                if mixed == teiMixed
+                                else (
+                                    &#34;??&#34;
+                                    if mixed is None
+                                    else &#34;mixed&#34; if mixed else &#34;pure&#34;
+                                )
+                            )
+                            tagLines.append((tag, [model], typRep, mixedRep))
+                    tagLines.insert(0, (tag, mds, teiTypRep, teiMixedRep))
+                else:
+                    for model in sorted(tagInfo):
+                        info = tagInfo[model]
+                        typ = info[&#34;typ&#34;]
+                        mixed = info[&#34;mixed&#34;]
+                        typRep = &#34;??&#34; if typ is None else typ
+                        mixedRep = (
+                            &#34;??&#34; if mixed is None else &#34;mixed&#34; if mixed else &#34;pure&#34;
+                        )
+                        tagLines.append((tag, [model], typRep, mixedRep))
+
+            reportFile = f&#34;{reportDir}/types.txt&#34;
+
+            with fileOpen(reportFile, mode=&#34;w&#34;) as fh:
+                for tag in sorted(tagReport):
+                    tagLines = tagReport[tag]
+
+                    for tag, mds, typ, mixed in tagLines:
+                        model = &#34;,&#34;.join(mds)
+                        fh.write(
+                            f&#34;{tag:&lt;18} {model:&lt;18} {typ or &#39;&#39;:&lt;7} {mixed or &#39;&#39;:&lt;5}\n&#34;
+                        )
+
+            if verbose &gt;= 0:
+                console(
+                    f&#34;{len(elemsCombined)} tag(s) type info written to {reportFile}&#34;
+                )
+
+        def writeLbParents():
+            reportFile = f&#34;{reportDir}/lb-parents.txt&#34;
+
+            with fileOpen(reportFile, &#34;w&#34;) as fh:
+                for parent, n in sorted(lbParents.items()):
+                    fh.write(f&#34;{n:&gt;5} x {parent}\n&#34;)
+
+            if verbose &gt;= 0:
+                console(f&#34;lb-parent info written to {reportFile}&#34;)
+
+        def writeIdRefs():
+            reportIdFile = f&#34;{reportDir}/ids.txt&#34;
+            reportRefFile = f&#34;{reportDir}/refs.txt&#34;
+
+            ih = fileOpen(reportIdFile, mode=&#34;w&#34;)
+            rh = fileOpen(reportRefFile, mode=&#34;w&#34;)
+
+            refdIds = collections.Counter()
+            missingIds = set()
+
+            totalRefs = 0
+            totalRefsU = 0
+
+            totalResolvable = 0
+            totalResolvableU = 0
+            totalDangling = 0
+            totalDanglingU = 0
+
+            seenItems = set()
+
+            for file, items in refs.items():
+                rh.write(f&#34;{file}\n&#34;)
+
+                resolvable = 0
+                resolvableU = 0
+                dangling = 0
+                danglingU = 0
+
+                for item, n in sorted(items.items()):
+                    totalRefs += n
+
+                    if item in seenItems:
+                        newItem = False
+                    else:
+                        seenItems.add(item)
+                        newItem = True
+                        totalRefsU += 1
+
+                    (target, idv) = item
+
+                    if target not in ids or idv not in ids[target]:
+                        status = &#34;dangling&#34;
+                        dangling += n
+
+                        if newItem:
+                            missingIds.add((target, idv))
+                            danglingU += 1
+                    else:
+                        status = &#34;ok&#34;
+                        resolvable += n
+                        refdIds[(target, idv)] += n
+
+                        if newItem:
+                            resolvableU += 1
+                    rh.write(f&#34;\t{status:&lt;10} {n:&gt;5} x {target} # {idv}\n&#34;)
+
+                msgs = (
+                    f&#34;\tDangling:   {dangling:&gt;4} x {danglingU:&gt;4}&#34;,
+                    f&#34;\tResolvable: {resolvable:&gt;4} x {resolvableU:&gt;4}&#34;,
+                )
+                for msg in msgs:
+                    rh.write(f&#34;{msg}\n&#34;)
+
+                totalResolvable += resolvable
+                totalResolvableU += resolvableU
+                totalDangling += dangling
+                totalDanglingU += danglingU
+
+            if verbose &gt;= 0:
+                console(f&#34;Refs written to {reportRefFile}&#34;)
+                msgs = (
+                    f&#34;\tresolvable: {totalResolvableU:&gt;4} in {totalResolvable:&gt;4}&#34;,
+                    f&#34;\tdangling:   {totalDanglingU:&gt;4} in {totalDangling:&gt;4}&#34;,
+                    f&#34;\tALL:        {totalRefsU:&gt;4} in {totalRefs:&gt;4} &#34;,
+                )
+                for msg in msgs:
+                    console(msg)
+
+            totalIds = 0
+            totalIdsU = 0
+            totalIdsM = 0
+            totalIdsRefd = 0
+            totalIdsRefdU = 0
+            totalIdsUnused = 0
+
+            for file, items in ids.items():
+                totalIds += len(items)
+
+                ih.write(f&#34;{file}\n&#34;)
+
+                unique = 0
+                multiple = 0
+                refd = 0
+                refdU = 0
+                unused = 0
+
+                for item, n in sorted(items.items()):
+                    nRefs = refdIds.get((file, item), 0)
+
+                    if n == 1:
+                        unique += 1
+                    else:
+                        multiple += 1
+
+                    if nRefs == 0:
+                        unused += 1
+                    else:
+                        refd += nRefs
+                        refdU += 1
+
+                    status1 = f&#34;{n}x&#34;
+                    plural = &#34;&#34; if nRefs == 1 else &#34;s&#34;
+                    status2 = f&#34;{nRefs}ref{plural}&#34;
+
+                    ih.write(f&#34;\t{status1:&lt;8} {status2:&lt;8} {item}\n&#34;)
+
+                msgs = (
+                    f&#34;\tUnique:     {unique:&gt;4}&#34;,
+                    f&#34;\tNon-unique: {multiple:&gt;4}&#34;,
+                    f&#34;\tUnused:     {unused:&gt;4}&#34;,
+                    f&#34;\tReferenced: {refd:&gt;4} x {refdU:&gt;4}&#34;,
+                )
+                for msg in msgs:
+                    ih.write(f&#34;{msg}\n&#34;)
+
+                totalIdsU += unique
+                totalIdsM += multiple
+                totalIdsRefdU += refdU
+                totalIdsRefd += refd
+                totalIdsUnused += unused
+
+            if verbose &gt;= 0:
+                console(f&#34;Ids written to {reportIdFile}&#34;)
+                msgs = (
+                    f&#34;\treferenced: {totalIdsRefdU:&gt;4} by {totalIdsRefd:&gt;4}&#34;,
+                    f&#34;\tnon-unique: {totalIdsM:&gt;4}&#34;,
+                    f&#34;\tunused:     {totalIdsUnused:&gt;4}&#34;,
+                    f&#34;\tALL:        {totalIdsU:&gt;4} in {totalIds:&gt;4}&#34;,
+                )
+                for msg in msgs:
+                    console(msg)
+
+        def filterError(msg):
+            return msg == (
+                &#34;Element &#39;graphic&#39;, attribute &#39;url&#39;: [facet &#39;pattern&#39;] &#34;
+                &#34;The value &#39;&#39; is not accepted by the pattern &#39;\\S+&#39;.&#34;
+            )
+
+        def doXMLFile(xmlPath):
+            xmlFullPath = f&#34;{sourceDir}/{xmlPath}&#34;
+            pageScans[xmlPath] = []
+            facsMapping[xmlPath] = {}
+            facsKind[xmlPath] = {}
+            facsNotDeclared[xmlPath] = set()
+            facsNoId[xmlPath] = collections.Counter()
+
+            root = self.parseXML(xmlPath, xmlFullPath, parser)
+
+            if root is None:
+                return
+
+            ids[xmlFile][&#34;&#34;] = 1
+            analyse(root, analysis, xmlPath)
+
+        xmlFilesByModel = collections.defaultdict(list)
+
+        if sectionModel == &#34;I&#34;:
+            for xmlFolder, xmlFiles in self.getXML():
+                msg = &#34;Start &#34; if verbose &gt;= 0 else &#34;\t&#34;
+
+                if verbose &gt;= 0:
+                    console(f&#34;\t{msg}folder {xmlFolder}&#34;)
+
+                for xmlFile in xmlFiles:
+                    xmlPath = f&#34;{xmlFolder}/{xmlFile}&#34;
+                    xmlFullPath = f&#34;{sourceDir}/{xmlPath}&#34;
+                    (model, adapt, tpl) = self.getSwitches(xmlFullPath)
+                    xmlFilesByModel[model].append(xmlPath)
+
+        elif sectionModel == &#34;II&#34;:
+            xmlFile = self.getXML()
+
+            if xmlFile is None:
+                console(&#34;No XML files found!&#34;, error=True)
+                return False
+
+            xmlFullPath = f&#34;{sourceDir}/{xmlFile}&#34;
+            (model, adapt, tpl) = self.getSwitches(xmlFullPath)
+            xmlFilesByModel[model].append(xmlFile)
+
+        elif sectionModel == &#34;III&#34;:
+            for xmlFile in self.getXML():
+                xmlFullPath = f&#34;{sourceDir}/{xmlFile}&#34;
+                (model, adapt, tpl) = self.getSwitches(xmlFullPath)
+                xmlFilesByModel[model].append(xmlFile)
+
+        good = True
+        severeError = False
+        fatalError = False
+
+        for model, xmlPaths in xmlFilesByModel.items():
+            if verbose &gt;= 0:
+                console(f&#34;{len(xmlPaths)} {model or &#39;TEI&#39;} file(s) ...&#34;)
+
+            thisGood = True
+
+            if verbose &gt;= 0:
+                console(&#34;\tValidating ...&#34;)
+
+            schemaFile = modelInfo.get(model, None)
+
+            if schemaFile is None:
+                if verbose &gt;= 0:
+                    console(f&#34;\t\tNo schema file for {model}&#34;)
+                if good is not None and good is not False:
+                    good = None
+                continue
+
+            (thisGood, info, theseErrors) = A.validate(
+                True,
+                schemaFile,
+                [f&#34;{sourceDir}/{xmlPath}&#34; for xmlPath in xmlPaths],
+            )
+            if thisGood == -1:  # severe error, validation machinery not good
+                severeError = True
+
+            elif thisGood is None:
+                fatalError = True
+
+                # redo validation for each file separately in order to get all
+                # fatal errors
+                console(&#34;Fatal error in one of the XML files&#34;, error=True)
+
+                rInfo = [*info]
+                rTheseErrors = [*theseErrors]
+                rXmlPaths = [*xmlPaths]
+
+                iteration = 0
+                maxIter = 20
+
+                while True:
+                    iteration += 1
+
+                    if iteration &gt; maxIter:
+                        console(
+                            &#34;Stopped looking for more fatal errors after &#34;
+                            f&#34;{maxIter} iterations&#34;,
+                            error=True,
+                        )
+                        break
+
+                    fatalPath = None
+
+                    for e in rTheseErrors:
+                        kind = e[4]
+
+                        if kind == &#34;fatal&#34;:
+                            (folder, file) = e[0:2]
+                            fatalPath = f&#34;{folder}/{file}&#34;
+
+                    if fatalPath is None:
+                        console(&#34;No more fatal errors&#34;, error=True)
+                        break
+
+                    console(
+                        &#34;Check for more fatal errors &#34;
+                        f&#34;(iteration {iteration} of up to {maxIter}) &#34;
+                        f&#34;after {fatalPath}&#34;,
+                        error=True,
+                    )
+                    newRXmlPaths = []
+
+                    skipping = True
+
+                    for xmlPath in rXmlPaths:
+                        if skipping:
+                            if xmlPath == fatalPath:
+                                skipping = False
+                        else:
+                            newRXmlPaths.append(xmlPath)
+
+                    if not len(newRXmlPaths):
+                        console(&#34;No more files to examine&#34;, error=True)
+                        break
+
+                    rXmlPaths = newRXmlPaths
+                    (thisRGood, rInfo, rTheseErrors) = A.validate(
+                        True,
+                        schemaFile,
+                        [f&#34;{sourceDir}/{xmlPath}&#34; for xmlPath in rXmlPaths],
+                        verbose=True,
+                    )
+
+                    info.extend(rInfo)
+                    theseErrors.extend(rTheseErrors)
+
+                    if thisRGood is not None:
+                        console(&#34;Last fatal error encountered&#34;, error=True)
+                        break
+
+            for line in info:
+                if verbose &gt;= 0:
+                    console(f&#34;\t\t{line}&#34;)
+
+            if severeError:
+                for err in theseErrors:
+                    console(err, error=True)
+
+                self.severeError = True
+                break
+
+            if fatalError:
+                self.fatalError = True
+
+            if not thisGood:
+                good = False
+
+                errors.extend(theseErrors)
+
+                if not carryon:
+                    continue
+
+            if (good or carryon) and verbose &gt;= 0:
+                console(&#34;\tMaking inventory ...&#34;)
+
+            for xmlPath in xmlPaths:
+                doXMLFile(xmlPath)
+
+        if not good:
+            self.good = False
+
+        if verbose &gt;= 0:
+            console(&#34;&#34;)
+
+        writeElemTypes()
+
+        if not self.severeError:
+            writeErrors()
+
+        if good or carryon:
+            writeFacs()
+            writeNamespaces()
+            writeReport()
+            writeIdRefs()
+            writeLbParents()
+
+    def readSchemas(self):
+        schemaDir = self.schemaDir
+        models = self.models
+        modelMap = {}
+        newModels = []
+        self.modelMap = modelMap
+
+        A = self.A
+
+        schemaFiles = dict(rng={}, xsd={})
+        self.schemaFiles = schemaFiles
+        modelInfo = {}
+        self.modelInfo = modelInfo
+        modelXsd = {}
+        self.modelXsd = modelXsd
+        modelInv = {}
+        self.modelInv = modelInv
+
+        for model in [None] + models:
+            if type(model) is dict:
+                (model, href) = list(model.items())[0]
+                modelMap[href] = model
+
+            if model is not None:
+                newModels.append(model)
+
+            for kind in (&#34;rng&#34;, &#34;xsd&#34;):
+                schemaFile = (
+                    A.getBaseSchema()[kind]
+                    if model is None
+                    else f&#34;{schemaDir}/{model}.{kind}&#34;
+                )
+                if fileExists(schemaFile):
+                    schemaFiles[kind][model] = schemaFile
+                    if (
+                        kind == &#34;rng&#34;
+                        or kind == &#34;xsd&#34;
+                        and model not in schemaFiles[&#34;rng&#34;]
+                    ):
+                        modelInfo[model] = schemaFile
+
+            if model in schemaFiles[&#34;rng&#34;] and model not in schemaFiles[&#34;xsd&#34;]:
+                schemaFileXsd = f&#34;{schemaDir}/{model}.xsd&#34;
+                result = A.fromrelax(schemaFiles[&#34;rng&#34;][model], schemaFileXsd)
+
+                if not result:
+                    console(
+                        f&#34;Could not convert relax schema {model} to xsd&#34;, error=True
+                    )
+                    self.good = False
+
+                    if result is None:
+                        self.severeError = True
+                        return
+
+                schemaFiles[&#34;xsd&#34;][model] = schemaFileXsd
+
+        models = newModels
+        self.models = models
+
+        baseSchema = schemaFiles[&#34;xsd&#34;][None]
+        modelXsd[None] = baseSchema
+        modelInv[(baseSchema, None)] = None
+
+        for model in models:
+            override = schemaFiles[&#34;xsd&#34;][model]
+            modelXsd[model] = override
+            modelInv[(baseSchema, override)] = model
+
+    def getSwitches(self, xmlPath):
+        verbose = self.verbose
+        models = self.models
+        modelMap = self.modelMap
+        adaptations = self.adaptations
+        templates = self.templates
+        triggers = self.triggers
+        A = self.A
+
+        text = None
+
+        found = {}
+
+        for kind, allOfKind in (
+            (&#34;model&#34;, models),
+            (&#34;adaptation&#34;, adaptations),
+            (&#34;template&#34;, templates),
+        ):
+            if text is None:
+                with fileOpen(xmlPath) as fh:
+                    text = fh.read()
+
+            found[kind] = None
+
+            if kind == &#34;model&#34;:
+                result = A.getModel(text, modelMap)
+                if result is None or result == &#34;tei_all&#34;:
+                    result = None
+            else:
+                result = None
+                triggerRe = triggers[kind]
+                if triggerRe is not None:
+                    match = triggerRe.search(text)
+                    result = match.group(1) if match else None
+
+            if result is not None and result not in allOfKind:
+                if verbose &gt;= 0:
+                    console(f&#34;unavailable {kind} {result} in {ux(xmlPath)}&#34;)
+                result = None
+            found[kind] = result
+
+        return (found[&#34;model&#34;], found[&#34;adaptation&#34;], found[&#34;template&#34;])
+
+    def getParser(self):
+        &#34;&#34;&#34;Configure the LXML parser.
+
+        See [parser options](https://lxml.de/parsing.html#parser-options).
+
+        Returns
+        -------
+        object
+            A configured LXML parse object.
+        &#34;&#34;&#34;
+        procins = self.procins
+
+        return etree.XMLParser(
+            remove_blank_text=False,
+            collect_ids=False,
+            remove_comments=True,
+            remove_pis=not procins,
+            huge_tree=True,
+        )
+
+    def parseXML(self, fileName, fileOrText, parser):
+        &#34;&#34;&#34;Parse an XML source.
+
+        This is not meant to validate the XML, only to parse the XML into elements,
+        attributes, and processing instructions, etc. Validity can be checked by means
+        of `tff.tools.xmlschema.Analysis.validate` as is done in the check task.
+
+        Parameters
+        ----------
+        fileName: indicator of the file name, does not have to be the full path,
+            only used in error messages.
+        fileOrText: string
+            Either the full path of an XML file, or a string of raw XML text.
+        parser: object
+            A configured LXML parser object.
+
+        Returns
+        -------
+        object | void
+            The root of the resulting parse tree if the parsing succeeded, else None.
+            If the parsing failed, a message is written to stderr.
+        &#34;&#34;&#34;
+        try:
+            tree = etree.parse(fileOrText, parser)
+            result = tree.getroot()
+        except Exception as e:
+            console(f&#34;{fileName}: {str(e)}&#34;, error=True)
+            result = None
+
+        return result
+
+    def getXML(self):
+        &#34;&#34;&#34;Make an inventory of the TEI source files.
+
+        Returns
+        -------
+        tuple of tuple | tuple of string | string
+            If section model I is in force:
+
+            The outer tuple has sorted entries corresponding to folders under the
+            TEI input directory.
+            Each such entry consists of the folder name and an inner tuple
+            that contains the file names in that folder, sorted.
+
+            If section model II is in force:
+
+            It is the name of the single XML file.
+
+            If section model III is in force:
+
+            It is a tuple of multiple XML files
+        &#34;&#34;&#34;
+        verbose = self.verbose
+        sourceDir = self.sourceDir
+        sectionModel = self.sectionModel
+
+        if verbose == 1:
+            console(f&#34;Section model {sectionModel}&#34;)
+
+        if sectionModel == &#34;I&#34;:
+            backMatter = self.backMatter
+
+            IGNORE = &#34;__ignore__&#34;
+
+            xmlFilesRaw = collections.defaultdict(list)
+
+            with scanDir(sourceDir) as dh:
+                for folder in dh:
+                    folderName = folder.name
+
+                    if folderName == IGNORE:
+                        continue
+                    if not folder.is_dir():
+                        continue
+                    with scanDir(f&#34;{sourceDir}/{folderName}&#34;) as fh:
+                        for file in fh:
+                            fileName = file.name
+
+                            if not (
+                                fileName.lower().endswith(&#34;.xml&#34;) and file.is_file()
+                            ):
+                                continue
+                            xmlFilesRaw[folderName].append(fileName)
+
+            xmlFiles = []
+            hasBackMatter = False
+
+            for folderName in sorted(xmlFilesRaw, key=versionSort):
+                if folderName == backMatter:
+                    hasBackMatter = True
+                else:
+                    fileNames = xmlFilesRaw[folderName]
+                    xmlFiles.append((folderName, tuple(sorted(fileNames))))
+
+            if hasBackMatter:
+                fileNames = xmlFilesRaw[backMatter]
+                xmlFiles.append((backMatter, tuple(sorted(fileNames))))
+
+            xmlFiles = tuple(xmlFiles)
+
+            return xmlFiles
+
+        if sectionModel == &#34;II&#34;:
+            xmlFile = None
+
+            with scanDir(sourceDir) as fh:
+                for file in fh:
+                    fileName = file.name
+
+                    if not (fileName.lower().endswith(&#34;.xml&#34;) and file.is_file()):
+                        continue
+
+                    xmlFile = fileName
+                    break
+            return xmlFile
+
+        if sectionModel == &#34;III&#34;:
+            xmlFiles = []
+
+            with scanDir(sourceDir) as fh:
+                for file in fh:
+                    fileName = file.name
+
+                    if not (fileName.lower().endswith(&#34;.xml&#34;) and file.is_file()):
+                        continue
+
+                    xmlFiles.append(fileName)
+
+            return tuple(sorted(xmlFiles))</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="ti.info.tei.TEI.getParser"><code class="name flex">
+<span>def <span class="ident">getParser</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Configure the LXML parser.</p>
+<p>See <a href="https://lxml.de/parsing.html#parser-options">parser options</a>.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>object</code></dt>
+<dd>A configured LXML parse object.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/annotation/text-info/blob/aa439e40f08027e60c76a5bd756adad2f6c3df74/ti/info/tei.py#L1584-L1602" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def getParser(self):
+    &#34;&#34;&#34;Configure the LXML parser.
+
+    See [parser options](https://lxml.de/parsing.html#parser-options).
+
+    Returns
+    -------
+    object
+        A configured LXML parse object.
+    &#34;&#34;&#34;
+    procins = self.procins
+
+    return etree.XMLParser(
+        remove_blank_text=False,
+        collect_ids=False,
+        remove_comments=True,
+        remove_pis=not procins,
+        huge_tree=True,
+    )</code></pre>
+</details>
+</dd>
+<dt id="ti.info.tei.TEI.getSwitches"><code class="name flex">
+<span>def <span class="ident">getSwitches</span></span>(<span>self, xmlPath)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/annotation/text-info/blob/aa439e40f08027e60c76a5bd756adad2f6c3df74/ti/info/tei.py#L1541-L1582" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def getSwitches(self, xmlPath):
+    verbose = self.verbose
+    models = self.models
+    modelMap = self.modelMap
+    adaptations = self.adaptations
+    templates = self.templates
+    triggers = self.triggers
+    A = self.A
+
+    text = None
+
+    found = {}
+
+    for kind, allOfKind in (
+        (&#34;model&#34;, models),
+        (&#34;adaptation&#34;, adaptations),
+        (&#34;template&#34;, templates),
+    ):
+        if text is None:
+            with fileOpen(xmlPath) as fh:
+                text = fh.read()
+
+        found[kind] = None
+
+        if kind == &#34;model&#34;:
+            result = A.getModel(text, modelMap)
+            if result is None or result == &#34;tei_all&#34;:
+                result = None
+        else:
+            result = None
+            triggerRe = triggers[kind]
+            if triggerRe is not None:
+                match = triggerRe.search(text)
+                result = match.group(1) if match else None
+
+        if result is not None and result not in allOfKind:
+            if verbose &gt;= 0:
+                console(f&#34;unavailable {kind} {result} in {ux(xmlPath)}&#34;)
+            result = None
+        found[kind] = result
+
+    return (found[&#34;model&#34;], found[&#34;adaptation&#34;], found[&#34;template&#34;])</code></pre>
+</details>
+</dd>
+<dt id="ti.info.tei.TEI.getXML"><code class="name flex">
+<span>def <span class="ident">getXML</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Make an inventory of the TEI source files.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>tuple</code> of <code>tuple | tuple</code> of <code>string | string</code></dt>
+<dd>
+<p>If section model I is in force:</p>
+<p>The outer tuple has sorted entries corresponding to folders under the
+TEI input directory.
+Each such entry consists of the folder name and an inner tuple
+that contains the file names in that folder, sorted.</p>
+<p>If section model II is in force:</p>
+<p>It is the name of the single XML file.</p>
+<p>If section model III is in force:</p>
+<p>It is a tuple of multiple XML files</p>
+</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/annotation/text-info/blob/aa439e40f08027e60c76a5bd756adad2f6c3df74/ti/info/tei.py#L1635-L1732" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def getXML(self):
+    &#34;&#34;&#34;Make an inventory of the TEI source files.
+
+    Returns
+    -------
+    tuple of tuple | tuple of string | string
+        If section model I is in force:
+
+        The outer tuple has sorted entries corresponding to folders under the
+        TEI input directory.
+        Each such entry consists of the folder name and an inner tuple
+        that contains the file names in that folder, sorted.
+
+        If section model II is in force:
+
+        It is the name of the single XML file.
+
+        If section model III is in force:
+
+        It is a tuple of multiple XML files
+    &#34;&#34;&#34;
+    verbose = self.verbose
+    sourceDir = self.sourceDir
+    sectionModel = self.sectionModel
+
+    if verbose == 1:
+        console(f&#34;Section model {sectionModel}&#34;)
+
+    if sectionModel == &#34;I&#34;:
+        backMatter = self.backMatter
+
+        IGNORE = &#34;__ignore__&#34;
+
+        xmlFilesRaw = collections.defaultdict(list)
+
+        with scanDir(sourceDir) as dh:
+            for folder in dh:
+                folderName = folder.name
+
+                if folderName == IGNORE:
+                    continue
+                if not folder.is_dir():
+                    continue
+                with scanDir(f&#34;{sourceDir}/{folderName}&#34;) as fh:
+                    for file in fh:
+                        fileName = file.name
+
+                        if not (
+                            fileName.lower().endswith(&#34;.xml&#34;) and file.is_file()
+                        ):
+                            continue
+                        xmlFilesRaw[folderName].append(fileName)
+
+        xmlFiles = []
+        hasBackMatter = False
+
+        for folderName in sorted(xmlFilesRaw, key=versionSort):
+            if folderName == backMatter:
+                hasBackMatter = True
+            else:
+                fileNames = xmlFilesRaw[folderName]
+                xmlFiles.append((folderName, tuple(sorted(fileNames))))
+
+        if hasBackMatter:
+            fileNames = xmlFilesRaw[backMatter]
+            xmlFiles.append((backMatter, tuple(sorted(fileNames))))
+
+        xmlFiles = tuple(xmlFiles)
+
+        return xmlFiles
+
+    if sectionModel == &#34;II&#34;:
+        xmlFile = None
+
+        with scanDir(sourceDir) as fh:
+            for file in fh:
+                fileName = file.name
+
+                if not (fileName.lower().endswith(&#34;.xml&#34;) and file.is_file()):
+                    continue
+
+                xmlFile = fileName
+                break
+        return xmlFile
+
+    if sectionModel == &#34;III&#34;:
+        xmlFiles = []
+
+        with scanDir(sourceDir) as fh:
+            for file in fh:
+                fileName = file.name
+
+                if not (fileName.lower().endswith(&#34;.xml&#34;) and file.is_file()):
+                    continue
+
+                xmlFiles.append(fileName)
+
+        return tuple(sorted(xmlFiles))</code></pre>
+</details>
+</dd>
+<dt id="ti.info.tei.TEI.inventory"><code class="name flex">
+<span>def <span class="ident">inventory</span></span>(<span>self, schemaDir, reportDir, carryon=False, verbose=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Implementation of the "check" task.</p>
+<p>It validates the TEI.</p>
+<p>Then it makes an inventory of all elements and attributes in the TEI files.</p>
+<p>If tags are used in multiple namespaces, it will be reported.</p>
+<div class="admonition caution">
+<p class="admonition-title">Conflation of namespaces</p>
+<p>The TEI to TF conversion does construct node types and attributes
+without taking namespaces into account.
+However, the parsing process is namespace aware.</p>
+</div>
+<p>The inventory lists all elements and attributes, and many attribute values.
+But is represents any digit with <code>n</code>, and some attributes that contain
+ids or keywords, are reduced to the value <code>x</code>.</p>
+<p>This information reduction helps to get a clear overview.</p>
+<p>It writes reports to the <code>reportDir</code>:</p>
+<ul>
+<li><code>errors.txt</code>: validation errors</li>
+<li><code>elements.txt</code>: element / attribute inventory.</li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Thoroughness of validation</p>
+<p>All xml files for the same model will be validated by a single call
+to the validator. This is fast, but the
+consequence is that after a fatal error the process terminates without
+validating the remaining files. In that case, we'll redo validation
+for each file separately.</p>
+</div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>reportDir</code></strong> :&ensp;<code>string</code></dt>
+<dd>The directory where the report files will be generated</dd>
+<dt><strong><code>schemaDir</code></strong> :&ensp;<code>string</code></dt>
+<dd>
+<p>Directory of the RNG/XSD schema files.</p>
+<p>We use these files as custom TEI schemas,
+but to be sure, we still analyse the full TEI schema and
+use the schemas here as a set of overriding element definitions.</p>
+</dd>
+<dt><strong><code>carryon</code></strong> :&ensp;<code>boolean</code>, optional <code>False</code></dt>
+<dd>Whether to carryon with making an inventory if validation has failed.
+Normally, validation errors make it unlikely that further processing of
+the XML will succeed. But if the validation errors appear to be mild,
+and you want an inventory, you can pass the <code>True</code> to this parameter
+at your own risk.</dd>
+<dt><strong><code>verbose</code></strong> :&ensp;<code>integer</code>, optional <code>None</code></dt>
+<dd>Produce no (-1), some (0) or many (1) progress and reporting messages
+If <code>None</code>, the value will be taken from the corresponding object member.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/annotation/text-info/blob/aa439e40f08027e60c76a5bd756adad2f6c3df74/ti/info/tei.py#L461-L1470" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def inventory(self, schemaDir, reportDir, carryon=False, verbose=None):
+    &#34;&#34;&#34;Implementation of the &#34;check&#34; task.
+
+    It validates the TEI.
+
+    Then it makes an inventory of all elements and attributes in the TEI files.
+
+    If tags are used in multiple namespaces, it will be reported.
+
+    !!! caution &#34;Conflation of namespaces&#34;
+        The TEI to TF conversion does construct node types and attributes
+        without taking namespaces into account.
+        However, the parsing process is namespace aware.
+
+    The inventory lists all elements and attributes, and many attribute values.
+    But is represents any digit with `n`, and some attributes that contain
+    ids or keywords, are reduced to the value `x`.
+
+    This information reduction helps to get a clear overview.
+
+    It writes reports to the `reportDir`:
+
+    *   `errors.txt`: validation errors
+    *   `elements.txt`: element / attribute inventory.
+
+    !!! note &#34;Thoroughness of validation&#34;
+        All xml files for the same model will be validated by a single call
+        to the validator. This is fast, but the
+        consequence is that after a fatal error the process terminates without
+        validating the remaining files. In that case, we&#39;ll redo validation
+        for each file separately.
+
+    Parameters
+    ----------
+    reportDir: string
+        The directory where the report files will be generated
+
+    schemaDir: string
+        Directory of the RNG/XSD schema files.
+
+        We use these files as custom TEI schemas,
+        but to be sure, we still analyse the full TEI schema and
+        use the schemas here as a set of overriding element definitions.
+
+    carryon: boolean, optional False
+        Whether to carryon with making an inventory if validation has failed.
+        Normally, validation errors make it unlikely that further processing of
+        the XML will succeed. But if the validation errors appear to be mild,
+        and you want an inventory, you can pass the `True` to this parameter
+        at your own risk.
+    verbose: integer, optional None
+        Produce no (-1), some (0) or many (1) progress and reporting messages
+        If `None`, the value will be taken from the corresponding object member.
+    &#34;&#34;&#34;
+    if not self.good:
+        return
+
+    if not reportDir:
+        console(&#34;No report directory specified&#34;, error=True)
+        self.good = False
+
+    self.schemaDir = schemaDir
+
+    A = Analysis(verbose=verbose)
+    self.A = A
+    self.readSchemas()
+
+    procins = self.procins
+    modelInfo = self.modelInfo
+    modelInv = self.modelInv
+    modelXsd = self.modelXsd
+
+    sourceDir = self.sourceDir
+    sectionModel = self.sectionModel
+    zoneBased = self.zoneBased
+
+    if verbose == 1:
+        console(f&#34;TEI to TF checking: {ux(sourceDir)} =&gt; {ux(reportDir)}&#34;)
+    if verbose &gt;= 0:
+        console(
+            f&#34;Processing instructions are {&#39;treated&#39; if procins else &#39;ignored&#39;}&#34;
+        )
+        console(&#34;XML validation will be performed&#34;)
+
+    kindLabels = dict(
+        format=&#34;Formatting Attributes&#34;,
+        keyword=&#34;Keyword Attributes&#34;,
+        rest=&#34;Remaining Attributes and Elements&#34;,
+    )
+    getStore = lambda: collections.defaultdict(  # noqa: E731
+        lambda: collections.defaultdict(collections.Counter)
+    )
+    analysis = {x: getStore() for x in kindLabels}
+    errors = []
+    tagByNs = collections.defaultdict(collections.Counter)
+    refs = collections.defaultdict(lambda: collections.Counter())
+    ids = collections.defaultdict(lambda: collections.Counter())
+
+    parser = self.getParser()
+    baseSchema = modelXsd[None]
+    overrides = [
+        override for (model, override) in modelXsd.items() if model is not None
+    ]
+    A.getElementInfo(baseSchema, overrides, verbose=verbose)
+    elementDefs = A.elementDefs
+
+    initTree(reportDir)
+
+    nProcins = 0
+
+    lbParents = collections.Counter()
+
+    pageScans = {}
+
+    facsMapping = {} if zoneBased else {}
+    self.facsMapping = facsMapping
+
+    facsKind = {}
+    self.facsKind = {}
+
+    facsNotDeclared = {}
+    zoneRegionIncomplete = {}
+    facsNoId = {}
+    self.facsNoId = facsNoId
+
+    nPagesNoFacs = 0
+
+    inFacsimile = False
+    surfaceId = None
+    scanFile = None
+    zoneId = None
+    zoneRegion = None
+
+    def analyse(root, analysis, xmlPath):
+        FORMAT_ATTS = set(
+            &#34;&#34;&#34;
+            dim
+            level
+            place
+            rend
+        &#34;&#34;&#34;.strip().split()
+        )
+
+        KEYWORD_ATTS = set(
+            &#34;&#34;&#34;
+            facs
+            form
+            function
+            lang
+            reason
+            type
+            unit
+            who
+        &#34;&#34;&#34;.strip().split()
+        )
+
+        TRIM_ATTS = set(
+            &#34;&#34;&#34;
+            id
+            key
+            target
+            value
+        &#34;&#34;&#34;.strip().split()
+        )
+
+        NUM_RE = re.compile(r&#34;&#34;&#34;[0-9]&#34;&#34;&#34;, re.S)
+
+        def nodeInfo(xnode):
+            nonlocal nProcins
+            nonlocal nPagesNoFacs
+            nonlocal inFacsimile
+            nonlocal surfaceId
+            nonlocal scanFile
+            nonlocal zoneId
+            nonlocal zoneRegion
+
+            if procins and isinstance(xnode, etree._ProcessingInstruction):
+                target = xnode.target
+                tag = f&#34;?{target}&#34;
+                ns = &#34;&#34;
+                nProcins += 1
+            else:
+                qName = etree.QName(xnode.tag)
+                tag = qName.localname
+                ns = qName.namespace
+
+            atts = {etree.QName(k).localname: v for (k, v) in xnode.attrib.items()}
+
+            tagByNs[tag][ns] += 1
+
+            if tag == &#34;lb&#34;:
+                parentTag = etree.QName(xnode.getparent().tag).localname
+                lbParents[parentTag] += 1
+            elif tag == &#34;pb&#34;:
+                facsv = atts.get(&#34;facs&#34;, &#34;&#34;)
+
+                if zoneBased:
+                    facsv = facsv.removeprefix(&#34;#&#34;)
+
+                    if facsv:
+                        (scanName, scanRegion) = facsMapping[xmlPath].get(
+                            facsv, [&#34;&#34;, &#34;full&#34;]
+                        )
+
+                        if not scanName:
+                            facsNotDeclared[xmlPath].add(facsv)
+
+                if facsv:
+                    pageScans[xmlPath].append(facsv)
+                else:
+                    nPagesNoFacs += 1
+            elif zoneBased:
+                if tag == &#34;facsimile&#34;:
+                    inFacsimile = True
+                elif inFacsimile:
+                    if tag == &#34;surface&#34;:
+                        surfaceId = atts.get(&#34;id&#34;, None)
+                        scanFile = None
+
+                        if not surfaceId:
+                            facsNoId[xmlPath][&#34;surface&#34;] += 1
+                    elif tag == &#34;zone&#34;:
+                        zoneId = atts.get(&#34;id&#34;, None)
+
+                        if zoneId:
+                            zoneRegion = []
+
+                            for a, aDefault in ZONE_ATTS:
+                                aVal = atts.get(a, None)
+
+                                if aVal is None:
+                                    aVal = aDefault
+                                    zoneRegionIncomplete.setdefault(zoneId, {})[
+                                        a
+                                    ] = f&#34;None =&gt; {aDefault}&#34;
+                                elif aVal.isdecimal():
+                                    aVal = int(aVal)
+                                else:
+                                    zoneRegionIncomplete.setdefault(zoneId, {})[
+                                        a
+                                    ] = f&#34;{aVal} =&gt; {aDefault}&#34;
+
+                                zoneRegion.append(aVal)
+
+                            (ulx, uly, lrx, lry) = zoneRegion
+                            zoneRegion = f&#34;pct:{ulx},{uly},{lrx - ulx},{lry - uly}&#34;
+
+                            if scanFile:
+                                facsMapping[xmlPath][zoneId] = [
+                                    scanFile,
+                                    zoneRegion,
+                                ]
+                                facsKind[xmlPath][zoneId] = &#34;zone&#34;
+                        else:
+                            facsNoId[xmlPath][&#34;zone&#34;] += 1
+
+                    elif tag == &#34;graphic&#34;:
+                        # can be inside zone or inside surface
+                        # if inside surface, it holds for all zones without
+                        # own scanFile
+                        thisScanFile = atts.get(&#34;url&#34;, None)
+
+                        if thisScanFile is not None:
+                            if zoneId:
+                                facsMapping[xmlPath][zoneId] = [
+                                    thisScanFile,
+                                    zoneRegion,
+                                ]
+                                facsKind[xmlPath][zoneId] = &#34;zone&#34;
+                            else:
+                                # this is a graphic outside the zones
+                                # we set the surface wide scan file
+                                # so that subsequent zones without graphic
+                                # can pick this up
+                                scanFile = thisScanFile
+                            if surfaceId:
+                                facsMapping[xmlPath][surfaceId] = [scanFile, &#34;full&#34;]
+                                facsKind[xmlPath][surfaceId] = &#34;surface&#34;
+
+            if len(atts) == 0:
+                kind = &#34;rest&#34;
+                analysis[kind][tag][&#34;&#34;][&#34;&#34;] += 1
+            else:
+                idv = atts.get(&#34;id&#34;, None)
+
+                if idv is not None:
+                    ids[xmlPath][idv] += 1
+
+                for refAtt, targetFile, targetId in getRefs(tag, atts, xmlPath):
+                    refs[xmlPath][(targetFile, targetId)] += 1
+
+                for k, v in atts.items():
+                    kind = (
+                        &#34;format&#34;
+                        if k in FORMAT_ATTS
+                        else &#34;keyword&#34; if k in KEYWORD_ATTS else &#34;rest&#34;
+                    )
+                    dest = analysis[kind]
+
+                    if kind == &#34;rest&#34;:
+                        vTrim = &#34;X&#34; if k in TRIM_ATTS else NUM_RE.sub(&#34;N&#34;, v)
+                        dest[tag][k][vTrim] += 1
+                    else:
+                        words = v.strip().split()
+                        for w in words:
+                            dest[tag][k][w.strip()] += 1
+
+            for child in xnode.iterchildren(
+                tag=(
+                    (etree.Element, etree.ProcessingInstruction)
+                    if procins
+                    else etree.Element
+                )
+            ):
+                nodeInfo(child)
+
+            if zoneBased:
+                if tag == &#34;facsimile&#34;:
+                    inFacsimile = False
+                elif inFacsimile:
+                    if tag == &#34;surface&#34;:
+                        surfaceId = None
+                        scanFile = None
+                    elif tag == &#34;zone&#34;:
+                        zoneId = None
+
+        nodeInfo(root)
+
+    def writeErrors():
+        &#34;&#34;&#34;Write the errors to a file.&#34;&#34;&#34;
+
+        errorFile = f&#34;{reportDir}/errors.txt&#34;
+
+        nErrors = 0
+        nFiles = 0
+
+        with fileOpen(errorFile, mode=&#34;w&#34;) as fh:
+            prevFolder = None
+            prevFile = None
+
+            for folder, file, line, col, kind, text in errors:
+                newFolder = prevFolder != folder
+                newFile = newFolder or prevFile != file
+
+                if newFile:
+                    nFiles += 1
+
+                if kind in {&#34;error&#34;, &#34;fatal&#34;}:
+                    nErrors += 1
+
+                indent1 = f&#34;{folder}\n\t&#34; if newFolder else &#34;\t&#34;
+                indent2 = f&#34;{file}\n\t\t&#34; if newFile else &#34;\t&#34;
+                loc = f&#34;{line or &#39;&#39;}:{col or &#39;&#39;}&#34;
+                text = &#34;\n&#34;.join(wrap(text, width=80, subsequent_indent=&#34;\t\t\t&#34;))
+                fh.write(f&#34;{indent1}{indent2}{loc} {kind or &#39;&#39;} {text}\n&#34;)
+                prevFolder = folder
+                prevFile = file
+
+        if nErrors:
+            console(
+                (
+                    f&#34;{nErrors} validation error(s) in {nFiles} file(s) &#34;
+                    f&#34;written to {errorFile}&#34;
+                ),
+                error=True,
+            )
+        else:
+            if verbose &gt;= 0:
+                console(&#34;Validation OK&#34;)
+
+    def writeFacs():
+        infoFile = f&#34;{reportDir}/facsNoId.yml&#34;
+        writeYaml(
+            {
+                f: {k: n for (k, n) in v.items() if n}
+                for (f, v) in facsNoId.items()
+                if len(v)
+            },
+            asFile=infoFile,
+        )
+
+        nSurfaces = sum(x[&#34;surface&#34;] for x in facsNoId.values())
+        nZones = sum(x[&#34;zone&#34;] for x in facsNoId.values())
+
+        if verbose &gt;= 0:
+            pluralS = &#34;&#34; if nSurfaces == 1 else &#34;s&#34;
+            pluralZ = &#34;&#34; if nZones == 1 else &#34;s&#34;
+
+            if nSurfaces:
+                console(f&#34;{nSurfaces} surface{pluralS} without id&#34;)
+
+            if nZones:
+                console(f&#34;{nZones} zone{pluralZ} without id&#34;)
+
+        infoFile = f&#34;{reportDir}/facs.yml&#34;
+        nItems = sum(len(x) for x in pageScans.values())
+        nUnique = sum(len(set(x)) for x in pageScans.values())
+
+        writeYaml(pageScans, asFile=infoFile)
+
+        if verbose &gt;= 0:
+            plural = &#34;&#34; if nPagesNoFacs == 1 else &#34;s&#34;
+            console(f&#34;{nPagesNoFacs} pagebreak{plural} without facs attribute.&#34;)
+
+            plural = &#34;&#34; if nItems == 1 else &#34;s&#34;
+            console(f&#34;{nItems} pagebreak{plural} encountered.&#34;)
+            plural = &#34;&#34; if nUnique == 1 else &#34;s&#34;
+            console(f&#34;{nUnique} distinct scan{plural} referred to by pagebreaks.&#34;)
+
+        if not zoneBased:
+            return
+
+        infoFile = f&#34;{reportDir}/facsKind.yml&#34;
+        writeYaml(facsKind, asFile=infoFile)
+        infoFile = f&#34;{reportDir}/{FACS_MAPPING_YML}&#34;
+        writeYaml(facsMapping, asFile=infoFile)
+
+        if verbose &gt;= 0:
+            nSurfaces = sum(
+                sum(1 for y in x.values() if y == &#34;surface&#34;)
+                for x in facsKind.values()
+            )
+            nZones = sum(
+                sum(1 for y in x.values() if y == &#34;zone&#34;) for x in facsKind.values()
+            )
+            plural = &#34;&#34; if nSurfaces == 1 else &#34;s&#34;
+            console(f&#34;{nSurfaces} surface{plural} declared&#34;)
+            plural = &#34;&#34; if nZones == 1 else &#34;s&#34;
+            console(f&#34;{nZones} zone{plural} declared&#34;)
+
+            nItems = sum(len(x) for x in facsMapping.values())
+            plural = &#34;&#34; if nItems == 1 else &#34;s&#34;
+            console(f&#34;{nItems} scan{plural} declared and mapped.&#34;)
+
+        infoFile = f&#34;{reportDir}/facsProblems.yml&#34;
+        facsNotUsed = {}
+
+        for xmlPath, mapping in facsMapping.items():
+            facsEncountered = set(pageScans[xmlPath])
+            thisFacsNotUsed = {}
+
+            for facs in mapping:
+                if facs not in facsEncountered:
+                    kind = facsKind[xmlPath][facs]
+                    thisFacsNotUsed.setdefault(kind, []).append(facs)
+
+            if len(thisFacsNotUsed):
+                facsNotUsed[xmlPath] = thisFacsNotUsed
+
+        facsProblems = {}
+
+        nFacsNotDeclared = sum(len(x) for x in facsNotDeclared.values())
+        nSurfacesNotUsed = sum(
+            len(x.get(&#34;surface&#34;, [])) for x in facsNotUsed.values()
+        )
+        nZonesNotUsed = sum(len(x.get(&#34;zone&#34;, [])) for x in facsNotUsed.values())
+
+        if nFacsNotDeclared:
+            plural = &#34;&#34; if nFacsNotDeclared == 1 else &#34;s&#34;
+            console(f&#34;{nFacsNotDeclared} undeclared scan{plural}&#34;, error=True)
+            facsProblems[&#34;facsNotDeclared&#34;] = {
+                xmlPath: sorted(x)
+                for (xmlPath, x) in facsNotDeclared.items()
+                if len(x)
+            }
+
+        if nSurfacesNotUsed:
+            plural = &#34;&#34; if nSurfacesNotUsed == 1 else &#34;s&#34;
+            console(f&#34;{nSurfacesNotUsed} unused surface{plural}&#34;, error=True)
+        if nZonesNotUsed:
+            plural = &#34;&#34; if nZonesNotUsed == 1 else &#34;s&#34;
+            console(f&#34;{nZonesNotUsed} unused zone{plural}&#34;, error=True)
+
+        facsProblems[&#34;facsNotUsed&#34;] = facsNotUsed
+
+        writeYaml(facsProblems, asFile=infoFile)
+
+        infoFile = f&#34;{reportDir}/zoneErrors.yml&#34;
+        nIncomplete = len(zoneRegionIncomplete)
+        plural = &#34;&#34; if nIncomplete == 1 else &#34;s&#34;
+
+        if nIncomplete:
+            console(
+                f&#34;{nIncomplete} missing zone region specifier{plural}&#34;, error=True
+            )
+
+            console(f&#34;See {infoFile}&#34;, error=True)
+
+        writeYaml(zoneRegionIncomplete, asFile=infoFile)
+
+    def writeNamespaces():
+        errorFile = f&#34;{reportDir}/namespaces.txt&#34;
+
+        nErrors = 0
+
+        nTags = len(tagByNs)
+
+        with fileOpen(errorFile, mode=&#34;w&#34;) as fh:
+            for tag, nsInfo in sorted(
+                tagByNs.items(), key=lambda x: (-len(x[1]), x[0])
+            ):
+                label = &#34;OK&#34;
+                nNs = len(nsInfo)
+                if nNs &gt; 1:
+                    nErrors += 1
+                    label = &#34;XX&#34;
+
+                for ns, amount in sorted(
+                    nsInfo.items(), key=lambda x: (-x[1], x[0])
+                ):
+                    fh.write(
+                        f&#34;{label} {nNs:&gt;2} namespace for &#34;
+                        f&#34;{tag:&lt;16} : {amount:&gt;5}x {ns}\n&#34;
+                    )
+
+        if verbose &gt;= 0:
+            if procins:
+                plural = &#34;&#34; if nProcins == 1 else &#34;s&#34;
+                console(f&#34;{nProcins} processing instruction{plural} encountered.&#34;)
+
+            console(
+                (
+                    f&#34;{nTags} tags of which {nErrors} with multiple namespaces &#34;
+                    f&#34;written to {errorFile}&#34;
+                    if verbose &gt;= 0 or nErrors
+                    else &#34;Namespaces OK&#34;
+                ),
+                error=nErrors &gt; 0,
+            )
+
+    def writeReport():
+        reportFile = f&#34;{reportDir}/elements.txt&#34;
+
+        with fileOpen(reportFile, mode=&#34;w&#34;) as fh:
+            fh.write(
+                &#34;Inventory of tags and attributes in the source XML file(s).\n&#34;
+                &#34;Contains the following sections:\n&#34;
+            )
+            for label in kindLabels.values():
+                fh.write(f&#34;\t{label}\n&#34;)
+            fh.write(&#34;\n\n&#34;)
+
+            infoLines = 0
+
+            def writeAttInfo(tag, att, attInfo):
+                nonlocal infoLines
+                nl = &#34;&#34; if tag == &#34;&#34; else &#34;\n&#34;
+                tagRep = &#34;&#34; if tag == &#34;&#34; else f&#34;&lt;{tag}&gt;&#34;
+                attRep = &#34;&#34; if att == &#34;&#34; else f&#34;{att}=&#34;
+                atts = sorted(attInfo.items())
+                (val, amount) = atts[0]
+                fh.write(
+                    f&#34;{nl}\t{tagRep:&lt;18} &#34; f&#34;{attRep:&lt;11} {amount:&gt;7}x {val}\n&#34;
+                )
+                infoLines += 1
+
+                for val, amount in atts[1:]:
+                    fh.write(f&#34;&#34;&#34;\t{&#39;&#39;:&lt;18} {&#39;&#39;:&lt;11} {amount:&gt;7}x {val}\n&#34;&#34;&#34;)
+                    infoLines += 1
+
+            def writeTagInfo(tag, tagInfo):
+                nonlocal infoLines
+                tags = sorted(tagInfo.items())
+                (att, attInfo) = tags[0]
+                writeAttInfo(tag, att, attInfo)
+                infoLines += 1
+                for att, attInfo in tags[1:]:
+                    writeAttInfo(&#34;&#34;, att, attInfo)
+
+            for kind, label in kindLabels.items():
+                fh.write(f&#34;\n{label}\n&#34;)
+                for tag, tagInfo in sorted(analysis[kind].items()):
+                    writeTagInfo(tag, tagInfo)
+
+        if verbose &gt;= 0:
+            console(f&#34;{infoLines} info line(s) written to {reportFile}&#34;)
+
+    def writeElemTypes():
+        elemsCombined = {}
+
+        modelSet = set()
+
+        for schemaOverride, eDefs in elementDefs.items():
+            model = modelInv[schemaOverride]
+            modelSet.add(model)
+            for tag, (typ, mixed) in eDefs.items():
+                elemsCombined.setdefault(tag, {}).setdefault(model, {})
+                elemsCombined[tag][model][&#34;typ&#34;] = typ
+                elemsCombined[tag][model][&#34;mixed&#34;] = mixed
+
+        tagReport = {}
+
+        for tag, tagInfo in elemsCombined.items():
+            tagLines = []
+            tagReport[tag] = tagLines
+
+            if None in tagInfo:
+                teiInfo = tagInfo[None]
+                teiTyp = teiInfo[&#34;typ&#34;]
+                teiMixed = teiInfo[&#34;mixed&#34;]
+                teiTypRep = &#34;??&#34; if teiTyp is None else typ
+                teiMixedRep = (
+                    &#34;??&#34; if teiMixed is None else &#34;mixed&#34; if teiMixed else &#34;pure&#34;
+                )
+                mds = [&#34;TEI&#34;]
+
+                for model in sorted(x for x in tagInfo if x is not None):
+                    info = tagInfo[model]
+                    typ = info[&#34;typ&#34;]
+                    mixed = info[&#34;mixed&#34;]
+                    if typ == teiTyp and mixed == teiMixed:
+                        mds.append(model)
+                    else:
+                        typRep = (
+                            &#34;&#34; if typ == teiTyp else &#34;??&#34; if typ is None else typ
+                        )
+                        mixedRep = (
+                            &#34;&#34;
+                            if mixed == teiMixed
+                            else (
+                                &#34;??&#34;
+                                if mixed is None
+                                else &#34;mixed&#34; if mixed else &#34;pure&#34;
+                            )
+                        )
+                        tagLines.append((tag, [model], typRep, mixedRep))
+                tagLines.insert(0, (tag, mds, teiTypRep, teiMixedRep))
+            else:
+                for model in sorted(tagInfo):
+                    info = tagInfo[model]
+                    typ = info[&#34;typ&#34;]
+                    mixed = info[&#34;mixed&#34;]
+                    typRep = &#34;??&#34; if typ is None else typ
+                    mixedRep = (
+                        &#34;??&#34; if mixed is None else &#34;mixed&#34; if mixed else &#34;pure&#34;
+                    )
+                    tagLines.append((tag, [model], typRep, mixedRep))
+
+        reportFile = f&#34;{reportDir}/types.txt&#34;
+
+        with fileOpen(reportFile, mode=&#34;w&#34;) as fh:
+            for tag in sorted(tagReport):
+                tagLines = tagReport[tag]
+
+                for tag, mds, typ, mixed in tagLines:
+                    model = &#34;,&#34;.join(mds)
+                    fh.write(
+                        f&#34;{tag:&lt;18} {model:&lt;18} {typ or &#39;&#39;:&lt;7} {mixed or &#39;&#39;:&lt;5}\n&#34;
+                    )
+
+        if verbose &gt;= 0:
+            console(
+                f&#34;{len(elemsCombined)} tag(s) type info written to {reportFile}&#34;
+            )
+
+    def writeLbParents():
+        reportFile = f&#34;{reportDir}/lb-parents.txt&#34;
+
+        with fileOpen(reportFile, &#34;w&#34;) as fh:
+            for parent, n in sorted(lbParents.items()):
+                fh.write(f&#34;{n:&gt;5} x {parent}\n&#34;)
+
+        if verbose &gt;= 0:
+            console(f&#34;lb-parent info written to {reportFile}&#34;)
+
+    def writeIdRefs():
+        reportIdFile = f&#34;{reportDir}/ids.txt&#34;
+        reportRefFile = f&#34;{reportDir}/refs.txt&#34;
+
+        ih = fileOpen(reportIdFile, mode=&#34;w&#34;)
+        rh = fileOpen(reportRefFile, mode=&#34;w&#34;)
+
+        refdIds = collections.Counter()
+        missingIds = set()
+
+        totalRefs = 0
+        totalRefsU = 0
+
+        totalResolvable = 0
+        totalResolvableU = 0
+        totalDangling = 0
+        totalDanglingU = 0
+
+        seenItems = set()
+
+        for file, items in refs.items():
+            rh.write(f&#34;{file}\n&#34;)
+
+            resolvable = 0
+            resolvableU = 0
+            dangling = 0
+            danglingU = 0
+
+            for item, n in sorted(items.items()):
+                totalRefs += n
+
+                if item in seenItems:
+                    newItem = False
+                else:
+                    seenItems.add(item)
+                    newItem = True
+                    totalRefsU += 1
+
+                (target, idv) = item
+
+                if target not in ids or idv not in ids[target]:
+                    status = &#34;dangling&#34;
+                    dangling += n
+
+                    if newItem:
+                        missingIds.add((target, idv))
+                        danglingU += 1
+                else:
+                    status = &#34;ok&#34;
+                    resolvable += n
+                    refdIds[(target, idv)] += n
+
+                    if newItem:
+                        resolvableU += 1
+                rh.write(f&#34;\t{status:&lt;10} {n:&gt;5} x {target} # {idv}\n&#34;)
+
+            msgs = (
+                f&#34;\tDangling:   {dangling:&gt;4} x {danglingU:&gt;4}&#34;,
+                f&#34;\tResolvable: {resolvable:&gt;4} x {resolvableU:&gt;4}&#34;,
+            )
+            for msg in msgs:
+                rh.write(f&#34;{msg}\n&#34;)
+
+            totalResolvable += resolvable
+            totalResolvableU += resolvableU
+            totalDangling += dangling
+            totalDanglingU += danglingU
+
+        if verbose &gt;= 0:
+            console(f&#34;Refs written to {reportRefFile}&#34;)
+            msgs = (
+                f&#34;\tresolvable: {totalResolvableU:&gt;4} in {totalResolvable:&gt;4}&#34;,
+                f&#34;\tdangling:   {totalDanglingU:&gt;4} in {totalDangling:&gt;4}&#34;,
+                f&#34;\tALL:        {totalRefsU:&gt;4} in {totalRefs:&gt;4} &#34;,
+            )
+            for msg in msgs:
+                console(msg)
+
+        totalIds = 0
+        totalIdsU = 0
+        totalIdsM = 0
+        totalIdsRefd = 0
+        totalIdsRefdU = 0
+        totalIdsUnused = 0
+
+        for file, items in ids.items():
+            totalIds += len(items)
+
+            ih.write(f&#34;{file}\n&#34;)
+
+            unique = 0
+            multiple = 0
+            refd = 0
+            refdU = 0
+            unused = 0
+
+            for item, n in sorted(items.items()):
+                nRefs = refdIds.get((file, item), 0)
+
+                if n == 1:
+                    unique += 1
+                else:
+                    multiple += 1
+
+                if nRefs == 0:
+                    unused += 1
+                else:
+                    refd += nRefs
+                    refdU += 1
+
+                status1 = f&#34;{n}x&#34;
+                plural = &#34;&#34; if nRefs == 1 else &#34;s&#34;
+                status2 = f&#34;{nRefs}ref{plural}&#34;
+
+                ih.write(f&#34;\t{status1:&lt;8} {status2:&lt;8} {item}\n&#34;)
+
+            msgs = (
+                f&#34;\tUnique:     {unique:&gt;4}&#34;,
+                f&#34;\tNon-unique: {multiple:&gt;4}&#34;,
+                f&#34;\tUnused:     {unused:&gt;4}&#34;,
+                f&#34;\tReferenced: {refd:&gt;4} x {refdU:&gt;4}&#34;,
+            )
+            for msg in msgs:
+                ih.write(f&#34;{msg}\n&#34;)
+
+            totalIdsU += unique
+            totalIdsM += multiple
+            totalIdsRefdU += refdU
+            totalIdsRefd += refd
+            totalIdsUnused += unused
+
+        if verbose &gt;= 0:
+            console(f&#34;Ids written to {reportIdFile}&#34;)
+            msgs = (
+                f&#34;\treferenced: {totalIdsRefdU:&gt;4} by {totalIdsRefd:&gt;4}&#34;,
+                f&#34;\tnon-unique: {totalIdsM:&gt;4}&#34;,
+                f&#34;\tunused:     {totalIdsUnused:&gt;4}&#34;,
+                f&#34;\tALL:        {totalIdsU:&gt;4} in {totalIds:&gt;4}&#34;,
+            )
+            for msg in msgs:
+                console(msg)
+
+    def filterError(msg):
+        return msg == (
+            &#34;Element &#39;graphic&#39;, attribute &#39;url&#39;: [facet &#39;pattern&#39;] &#34;
+            &#34;The value &#39;&#39; is not accepted by the pattern &#39;\\S+&#39;.&#34;
+        )
+
+    def doXMLFile(xmlPath):
+        xmlFullPath = f&#34;{sourceDir}/{xmlPath}&#34;
+        pageScans[xmlPath] = []
+        facsMapping[xmlPath] = {}
+        facsKind[xmlPath] = {}
+        facsNotDeclared[xmlPath] = set()
+        facsNoId[xmlPath] = collections.Counter()
+
+        root = self.parseXML(xmlPath, xmlFullPath, parser)
+
+        if root is None:
+            return
+
+        ids[xmlFile][&#34;&#34;] = 1
+        analyse(root, analysis, xmlPath)
+
+    xmlFilesByModel = collections.defaultdict(list)
+
+    if sectionModel == &#34;I&#34;:
+        for xmlFolder, xmlFiles in self.getXML():
+            msg = &#34;Start &#34; if verbose &gt;= 0 else &#34;\t&#34;
+
+            if verbose &gt;= 0:
+                console(f&#34;\t{msg}folder {xmlFolder}&#34;)
+
+            for xmlFile in xmlFiles:
+                xmlPath = f&#34;{xmlFolder}/{xmlFile}&#34;
+                xmlFullPath = f&#34;{sourceDir}/{xmlPath}&#34;
+                (model, adapt, tpl) = self.getSwitches(xmlFullPath)
+                xmlFilesByModel[model].append(xmlPath)
+
+    elif sectionModel == &#34;II&#34;:
+        xmlFile = self.getXML()
+
+        if xmlFile is None:
+            console(&#34;No XML files found!&#34;, error=True)
+            return False
+
+        xmlFullPath = f&#34;{sourceDir}/{xmlFile}&#34;
+        (model, adapt, tpl) = self.getSwitches(xmlFullPath)
+        xmlFilesByModel[model].append(xmlFile)
+
+    elif sectionModel == &#34;III&#34;:
+        for xmlFile in self.getXML():
+            xmlFullPath = f&#34;{sourceDir}/{xmlFile}&#34;
+            (model, adapt, tpl) = self.getSwitches(xmlFullPath)
+            xmlFilesByModel[model].append(xmlFile)
+
+    good = True
+    severeError = False
+    fatalError = False
+
+    for model, xmlPaths in xmlFilesByModel.items():
+        if verbose &gt;= 0:
+            console(f&#34;{len(xmlPaths)} {model or &#39;TEI&#39;} file(s) ...&#34;)
+
+        thisGood = True
+
+        if verbose &gt;= 0:
+            console(&#34;\tValidating ...&#34;)
+
+        schemaFile = modelInfo.get(model, None)
+
+        if schemaFile is None:
+            if verbose &gt;= 0:
+                console(f&#34;\t\tNo schema file for {model}&#34;)
+            if good is not None and good is not False:
+                good = None
+            continue
+
+        (thisGood, info, theseErrors) = A.validate(
+            True,
+            schemaFile,
+            [f&#34;{sourceDir}/{xmlPath}&#34; for xmlPath in xmlPaths],
+        )
+        if thisGood == -1:  # severe error, validation machinery not good
+            severeError = True
+
+        elif thisGood is None:
+            fatalError = True
+
+            # redo validation for each file separately in order to get all
+            # fatal errors
+            console(&#34;Fatal error in one of the XML files&#34;, error=True)
+
+            rInfo = [*info]
+            rTheseErrors = [*theseErrors]
+            rXmlPaths = [*xmlPaths]
+
+            iteration = 0
+            maxIter = 20
+
+            while True:
+                iteration += 1
+
+                if iteration &gt; maxIter:
+                    console(
+                        &#34;Stopped looking for more fatal errors after &#34;
+                        f&#34;{maxIter} iterations&#34;,
+                        error=True,
+                    )
+                    break
+
+                fatalPath = None
+
+                for e in rTheseErrors:
+                    kind = e[4]
+
+                    if kind == &#34;fatal&#34;:
+                        (folder, file) = e[0:2]
+                        fatalPath = f&#34;{folder}/{file}&#34;
+
+                if fatalPath is None:
+                    console(&#34;No more fatal errors&#34;, error=True)
+                    break
+
+                console(
+                    &#34;Check for more fatal errors &#34;
+                    f&#34;(iteration {iteration} of up to {maxIter}) &#34;
+                    f&#34;after {fatalPath}&#34;,
+                    error=True,
+                )
+                newRXmlPaths = []
+
+                skipping = True
+
+                for xmlPath in rXmlPaths:
+                    if skipping:
+                        if xmlPath == fatalPath:
+                            skipping = False
+                    else:
+                        newRXmlPaths.append(xmlPath)
+
+                if not len(newRXmlPaths):
+                    console(&#34;No more files to examine&#34;, error=True)
+                    break
+
+                rXmlPaths = newRXmlPaths
+                (thisRGood, rInfo, rTheseErrors) = A.validate(
+                    True,
+                    schemaFile,
+                    [f&#34;{sourceDir}/{xmlPath}&#34; for xmlPath in rXmlPaths],
+                    verbose=True,
+                )
+
+                info.extend(rInfo)
+                theseErrors.extend(rTheseErrors)
+
+                if thisRGood is not None:
+                    console(&#34;Last fatal error encountered&#34;, error=True)
+                    break
+
+        for line in info:
+            if verbose &gt;= 0:
+                console(f&#34;\t\t{line}&#34;)
+
+        if severeError:
+            for err in theseErrors:
+                console(err, error=True)
+
+            self.severeError = True
+            break
+
+        if fatalError:
+            self.fatalError = True
+
+        if not thisGood:
+            good = False
+
+            errors.extend(theseErrors)
+
+            if not carryon:
+                continue
+
+        if (good or carryon) and verbose &gt;= 0:
+            console(&#34;\tMaking inventory ...&#34;)
+
+        for xmlPath in xmlPaths:
+            doXMLFile(xmlPath)
+
+    if not good:
+        self.good = False
+
+    if verbose &gt;= 0:
+        console(&#34;&#34;)
+
+    writeElemTypes()
+
+    if not self.severeError:
+        writeErrors()
+
+    if good or carryon:
+        writeFacs()
+        writeNamespaces()
+        writeReport()
+        writeIdRefs()
+        writeLbParents()</code></pre>
+</details>
+</dd>
+<dt id="ti.info.tei.TEI.parseXML"><code class="name flex">
+<span>def <span class="ident">parseXML</span></span>(<span>self, fileName, fileOrText, parser)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Parse an XML source.</p>
+<p>This is not meant to validate the XML, only to parse the XML into elements,
+attributes, and processing instructions, etc. Validity can be checked by means
+of <code>tff.tools.xmlschema.Analysis.validate</code> as is done in the check task.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>fileName</code></strong> :&ensp;<code>indicator</code> of <code>the file name, does not have to be the full path,</code></dt>
+<dd>only used in error messages.</dd>
+<dt><strong><code>fileOrText</code></strong> :&ensp;<code>string</code></dt>
+<dd>Either the full path of an XML file, or a string of raw XML text.</dd>
+<dt><strong><code>parser</code></strong> :&ensp;<code>object</code></dt>
+<dd>A configured LXML parser object.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>object | void</code></dt>
+<dd>The root of the resulting parse tree if the parsing succeeded, else None.
+If the parsing failed, a message is written to stderr.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/annotation/text-info/blob/aa439e40f08027e60c76a5bd756adad2f6c3df74/ti/info/tei.py#L1604-L1633" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def parseXML(self, fileName, fileOrText, parser):
+    &#34;&#34;&#34;Parse an XML source.
+
+    This is not meant to validate the XML, only to parse the XML into elements,
+    attributes, and processing instructions, etc. Validity can be checked by means
+    of `tff.tools.xmlschema.Analysis.validate` as is done in the check task.
+
+    Parameters
+    ----------
+    fileName: indicator of the file name, does not have to be the full path,
+        only used in error messages.
+    fileOrText: string
+        Either the full path of an XML file, or a string of raw XML text.
+    parser: object
+        A configured LXML parser object.
+
+    Returns
+    -------
+    object | void
+        The root of the resulting parse tree if the parsing succeeded, else None.
+        If the parsing failed, a message is written to stderr.
+    &#34;&#34;&#34;
+    try:
+        tree = etree.parse(fileOrText, parser)
+        result = tree.getroot()
+    except Exception as e:
+        console(f&#34;{fileName}: {str(e)}&#34;, error=True)
+        result = None
+
+    return result</code></pre>
+</details>
+</dd>
+<dt id="ti.info.tei.TEI.readSchemas"><code class="name flex">
+<span>def <span class="ident">readSchemas</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/annotation/text-info/blob/aa439e40f08027e60c76a5bd756adad2f6c3df74/ti/info/tei.py#L1472-L1539" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def readSchemas(self):
+    schemaDir = self.schemaDir
+    models = self.models
+    modelMap = {}
+    newModels = []
+    self.modelMap = modelMap
+
+    A = self.A
+
+    schemaFiles = dict(rng={}, xsd={})
+    self.schemaFiles = schemaFiles
+    modelInfo = {}
+    self.modelInfo = modelInfo
+    modelXsd = {}
+    self.modelXsd = modelXsd
+    modelInv = {}
+    self.modelInv = modelInv
+
+    for model in [None] + models:
+        if type(model) is dict:
+            (model, href) = list(model.items())[0]
+            modelMap[href] = model
+
+        if model is not None:
+            newModels.append(model)
+
+        for kind in (&#34;rng&#34;, &#34;xsd&#34;):
+            schemaFile = (
+                A.getBaseSchema()[kind]
+                if model is None
+                else f&#34;{schemaDir}/{model}.{kind}&#34;
+            )
+            if fileExists(schemaFile):
+                schemaFiles[kind][model] = schemaFile
+                if (
+                    kind == &#34;rng&#34;
+                    or kind == &#34;xsd&#34;
+                    and model not in schemaFiles[&#34;rng&#34;]
+                ):
+                    modelInfo[model] = schemaFile
+
+        if model in schemaFiles[&#34;rng&#34;] and model not in schemaFiles[&#34;xsd&#34;]:
+            schemaFileXsd = f&#34;{schemaDir}/{model}.xsd&#34;
+            result = A.fromrelax(schemaFiles[&#34;rng&#34;][model], schemaFileXsd)
+
+            if not result:
+                console(
+                    f&#34;Could not convert relax schema {model} to xsd&#34;, error=True
+                )
+                self.good = False
+
+                if result is None:
+                    self.severeError = True
+                    return
+
+            schemaFiles[&#34;xsd&#34;][model] = schemaFileXsd
+
+    models = newModels
+    self.models = models
+
+    baseSchema = schemaFiles[&#34;xsd&#34;][None]
+    modelXsd[None] = baseSchema
+    modelInv[(baseSchema, None)] = None
+
+    for model in models:
+        override = schemaFiles[&#34;xsd&#34;][model]
+        modelXsd[model] = override
+        modelInv[(baseSchema, override)] = model</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<p><a href="https://github.com/annotation" title="annotation on GitHub"><img src="../../ti/images/tf-small.png" alt="annotation"></a></p>
+<p><a href="../../ti/index.html">ti home</a> -
+<a href="../../ti/cheatsheet.html">cheat sheet</a> -
+<a href="https://github.com/annotation/text-info" title="GitHub repo"><img src="../../ti/images/GitHub_Logo.png" alt="GitHub" width="50"></a></p>
+</p>
+<form>
+<input id="lunr-search" name="q" placeholder="🔎 Search ..." aria-label="Search"
+disabled minlength="2">
+</form>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.15.3/tingle.min.css" integrity="sha512-j1u8eUJ4f23xPPxwOrLUPQaCD2dwzNqqmDDcWS4deWsMv2ohLqmXXuP3hU7g8TyzbMSakP/mMqoNBYWj8AEIFg==" crossorigin>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.15.3/tingle.min.js" integrity="sha512-plGUER9JkeEWPPqQBE4sdLqBoQug5Ap+BCGMc7bJ8BXkm+VVj6QzkpBz5Yv2yPkkq+cqg9IpkBaGCas6uDbW8g==" crossorigin></script>
+<style>
+.modal-dialog iframe {
+width: 100vw;
+height: calc(100vh - 80px);
+}
+@media screen and (min-width: 700px) {
+.modal-dialog iframe {
+width: 70vw;
+height: 80vh;
+}
+}
+.modal-dialog .tingle-modal-box {width: auto;}
+.modal-dialog .tingle-modal-box__content {padding: 0;}
+</style>
+<script>
+const input = document.getElementById('lunr-search');
+input.disabled = false;
+input.form.addEventListener('submit', (ev) => {
+ev.preventDefault();
+const url = new URL(window.location);
+url.searchParams.set('q', input.value);
+history.replaceState({}, null, url.toString());
+search(input.value);
+});
+const query = new URL(window.location).searchParams.get('q');
+if (query)
+search(query);
+function search(query) {
+const url = '../../doc-search.html#' + encodeURIComponent(query);
+new tingle.modal({
+cssClass: ['modal-dialog'],
+onClose: () => {
+const url = new URL(window.location);
+url.searchParams.delete('q');
+history.replaceState({}, null, url.toString());
+setTimeout(() => input.focus(), 100);
+}
+}).setContent('<iframe src="' + url + '"></iframe>').open();
+}
+</script>
+<h1>Index</h1>
+<div class="toc">
+<ul>
+<li><a href="#tei-info">TEI info</a></li>
+<li><a href="#configuration-and-customization">Configuration and customization</a><ul>
+<li><a href="#keys-and-values-of-the-teiyml-file">Keys and values of the tei.yml file</a><ul>
+<li><a href="#models-templates-and-adaptations">models, templates and adaptations</a><ul>
+<li><a href="#models">models</a></li>
+<li><a href="#templates">templates</a></li>
+<li><a href="#adaptations">adaptations</a></li>
+</ul>
+</li>
+<li><a href="#sectionmodel">sectionModel</a></li>
+<li><a href="#zonebased">zoneBased</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="ti.info" href="index.html">ti.info</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="ti.info.tei.getRefs" href="#ti.info.tei.getRefs">getRefs</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="ti.info.tei.TEI" href="#ti.info.tei.TEI">TEI</a></code></h4>
+<ul class="two-column">
+<li><code><a title="ti.info.tei.TEI.getParser" href="#ti.info.tei.TEI.getParser">getParser</a></code></li>
+<li><code><a title="ti.info.tei.TEI.getSwitches" href="#ti.info.tei.TEI.getSwitches">getSwitches</a></code></li>
+<li><code><a title="ti.info.tei.TEI.getXML" href="#ti.info.tei.TEI.getXML">getXML</a></code></li>
+<li><code><a title="ti.info.tei.TEI.inventory" href="#ti.info.tei.TEI.inventory">inventory</a></code></li>
+<li><code><a title="ti.info.tei.TEI.parseXML" href="#ti.info.tei.TEI.parseXML">parseXML</a></code></li>
+<li><code><a title="ti.info.tei.TEI.readSchemas" href="#ti.info.tei.TEI.readSchemas">readSchemas</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<a href="https://pure.knaw.nl/portal/en/persons/dirk-roorda">Dirk Roorda</a>
+<a href="https://huc.knaw.nl"><img alt="HuC" src="../../ti/images/huc.png" width="200" alt="Humanities Cluster"></a>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.11.6</a>.</p>
+</footer>
+</body>
+</html>
