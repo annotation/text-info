@@ -293,6 +293,7 @@ from ..kit.files import (
     scanDir,
     writeYaml,
 )
+from ..kit.generic import AttrDict
 
 from .helpers import checkSectionModel
 
@@ -367,6 +368,11 @@ class TEI:
         self.cfgFile = cfgFile
         self.verbose = verbose
 
+        if not dirExists(sourceDir):
+            console("Source directory does not exist: {sourceDir}", error=True)
+            self.good = False
+            return
+
         self.good = True
         self.severeError = False
         self.fatalError = False
@@ -375,16 +381,12 @@ class TEI:
         if not ok:
             self.good = False
 
-        models = settings.get("models", [])
-        self.models = models
+        param = AttrDict()
+        self.param = param
 
-        procins = settings.get("procins", False)
-        self.procins = procins
-
-        zoneBased = settings.get("zoneBased", False)
-
-        if zoneBased:
-            self.facsMapping = None
+        param.models = settings.get("models", [])
+        param.procins = settings.get("procins", False)
+        param.zoneBased = settings.get("zoneBased", False)
 
         sectionModel = settings.get("sectionModel", {})
         sectionModel = checkSectionModel(sectionModel, verbose)
@@ -394,53 +396,32 @@ class TEI:
             return
 
         sectionProperties = sectionModel["properties"]
-        self.backMatter = sectionProperties.get("backMatter", None)
-        sectionModel = sectionModel["model"]
-        self.sectionModel = sectionModel
-        self.sectionIs23 = sectionModel in {"II", "III"}
-        self.sectionIs3 = sectionModel == "III"
-        self.sectionProperties = sectionProperties
-
-        templates = settings.get("templates", [])
-        self.templates = templates
-
-        adaptations = settings.get("adaptations", [])
-        self.adaptations = adaptations
-
-        self.zoneBased = zoneBased
-
-        if not dirExists(sourceDir):
-            console("Source directory does not exist: {sourceDir}", error=True)
-            self.good = False
-            return
+        param.sectionModel = sectionModel["model"]
+        param.backMatter = sectionProperties.get("backMatter", None)
+        param.templates = settings.get("templates", [])
+        param.adaptations = settings.get("adaptations", [])
 
         templateTrigger = settings.get("templateTrigger", None)
         adaptationTrigger = settings.get("adaptationTrigger", None)
 
         if templateTrigger is None:
-            self.templateAtt = None
-            self.templateTag = None
+            templateAtt = None
+            templateTag = None
         else:
             (tag, att) = templateTrigger.split("@")
-            self.templateAtt = att
-            self.templateTag = tag
-
-        templateTag = self.templateTag
-        templateAtt = self.templateAtt
+            templateAtt = att
+            templateTag = tag
 
         if adaptationTrigger is None:
-            self.adaptationAtt = None
-            self.adaptationTag = None
+            adaptationAtt = None
+            adaptationTag = None
         else:
             (tag, att) = adaptationTrigger.split("@")
-            self.adaptationAtt = att
-            self.adaptationTag = tag
-
-        adaptationTag = self.adaptationTag
-        adaptationAtt = self.adaptationAtt
+            adaptationAtt = att
+            adaptationTag = tag
 
         triggers = {}
-        self.triggers = triggers
+        param.triggers = triggers
 
         for kind, theAtt, theTag in (
             ("template", templateAtt, templateTag),
@@ -519,20 +500,35 @@ class TEI:
             console("No report directory specified", error=True)
             self.good = False
 
-        self.schemaDir = schemaDir
-
-        A = Analysis(verbose=verbose)
-        self.A = A
-        self.readSchemas()
-
-        procins = self.procins
-        modelInfo = self.modelInfo
-        modelInv = self.modelInv
-        modelXsd = self.modelXsd
-
         sourceDir = self.sourceDir
-        sectionModel = self.sectionModel
-        zoneBased = self.zoneBased
+        self.schemaDir = schemaDir
+        self.reportDir = reportDir
+        self.carryon = carryon
+
+        if verbose is None:
+            verbose = self.verbose
+
+        param = self.param
+        procins = param.procins
+        zoneBased = param.zoneBased
+
+        param.kindLabels = dict(
+            format="Formatting Attributes",
+            keyword="Keyword Attributes",
+            rest="Remaining Attributes and Elements",
+        )
+
+        out = AttrDict()
+        self.out = out
+
+        self.readSchemas(verbose=verbose)
+        A = self.A
+        self.parser = self.getParser()
+
+        modelXsd = out.modelXsd
+
+        if verbose is None:
+            verbose = self.verbose
 
         if verbose == 1:
             console(f"TEI to TF checking: {ux(sourceDir)} => {ux(reportDir)}")
@@ -542,750 +538,73 @@ class TEI:
             )
             console("XML validation will be performed")
 
-        kindLabels = dict(
-            format="Formatting Attributes",
-            keyword="Keyword Attributes",
-            rest="Remaining Attributes and Elements",
-        )
-        getStore = lambda: collections.defaultdict(  # noqa: E731
-            lambda: collections.defaultdict(collections.Counter)
-        )
-        analysis = {x: getStore() for x in kindLabels}
-        errors = []
-        tagByNs = collections.defaultdict(collections.Counter)
-        refs = collections.defaultdict(lambda: collections.Counter())
-        ids = collections.defaultdict(lambda: collections.Counter())
-
-        parser = self.getParser()
         baseSchema = modelXsd[None]
         overrides = [
             override for (model, override) in modelXsd.items() if model is not None
         ]
         A.getElementInfo(baseSchema, overrides, verbose=verbose)
-        elementDefs = A.elementDefs
+        out.elementDefs = A.elementDefs
+
+        getStore = lambda: collections.defaultdict(  # noqa: E731
+            lambda: collections.defaultdict(collections.Counter)
+        )
+        out.report = {x: getStore() for x in param.kindLabels}
+        out.errors = []
+        out.tagByNs = collections.defaultdict(collections.Counter)
+        out.refs = collections.defaultdict(lambda: collections.Counter())
+        out.ids = collections.defaultdict(lambda: collections.Counter())
+        out.lbParents = collections.Counter()
+        out.pageScans = {}
+        out.facsMapping = {} if zoneBased else {}
+        out.facsKind = {}
+        out.facsNotDeclared = {}
+        out.facsNoId = {}
+        out.zoneRegionIncomplete = {}
+        out.nProcins = 0
+        out.nPagesNoFacs = 0
+        out.inFacsimile = False
+        out.surfaceId = None
+        out.scanFile = None
+        out.zoneId = None
+        out.zoneRegion = None
 
         initTree(reportDir)
 
-        nProcins = 0
+        self.validate(verbose=verbose)
 
-        lbParents = collections.Counter()
+        for xmlPath in out.toBeInventoried:
+            self.fileInventory(xmlPath)
 
-        pageScans = {}
+        if not self.good:
+            self.good = False
 
-        facsMapping = {} if zoneBased else {}
-        self.facsMapping = facsMapping
+        if verbose >= 0:
+            console("")
 
-        facsKind = {}
-        self.facsKind = {}
+        self.writeElemTypes(verbose=verbose)
 
-        facsNotDeclared = {}
-        zoneRegionIncomplete = {}
-        facsNoId = {}
-        self.facsNoId = facsNoId
+        if not self.severeError:
+            self.writeErrors(verbose=verbose)
 
-        nPagesNoFacs = 0
+        if self.good or carryon:
+            self.writeFacs(verbose=verbose)
+            self.writeNamespaces(verbose=verbose)
+            self.writeReport(verbose=verbose)
+            self.writeIdRefs(verbose=verbose)
+            self.writeLbParents(verbose=verbose)
 
-        inFacsimile = False
-        surfaceId = None
-        scanFile = None
-        zoneId = None
-        zoneRegion = None
+    def validate(self, verbose=0):
+        sourceDir = self.sourceDir
+        carryon = self.carryon
+        A = self.A
 
-        def analyse(root, analysis, xmlPath):
-            FORMAT_ATTS = set(
-                """
-                dim
-                level
-                place
-                rend
-            """.strip().split()
-            )
+        param = self.param
+        sectionModel = param.sectionModel
 
-            KEYWORD_ATTS = set(
-                """
-                facs
-                form
-                function
-                lang
-                reason
-                type
-                unit
-                who
-            """.strip().split()
-            )
-
-            TRIM_ATTS = set(
-                """
-                id
-                key
-                target
-                value
-            """.strip().split()
-            )
-
-            NUM_RE = re.compile(r"""[0-9]""", re.S)
-
-            def nodeInfo(xnode):
-                nonlocal nProcins
-                nonlocal nPagesNoFacs
-                nonlocal inFacsimile
-                nonlocal surfaceId
-                nonlocal scanFile
-                nonlocal zoneId
-                nonlocal zoneRegion
-
-                if procins and isinstance(xnode, etree._ProcessingInstruction):
-                    target = xnode.target
-                    tag = f"?{target}"
-                    ns = ""
-                    nProcins += 1
-                else:
-                    qName = etree.QName(xnode.tag)
-                    tag = qName.localname
-                    ns = qName.namespace
-
-                atts = {etree.QName(k).localname: v for (k, v) in xnode.attrib.items()}
-
-                tagByNs[tag][ns] += 1
-
-                if tag == "lb":
-                    parentTag = etree.QName(xnode.getparent().tag).localname
-                    lbParents[parentTag] += 1
-                elif tag == "pb":
-                    facsv = atts.get("facs", "")
-
-                    if zoneBased:
-                        facsv = facsv.removeprefix("#")
-
-                        if facsv:
-                            (scanName, scanRegion) = facsMapping[xmlPath].get(
-                                facsv, ["", "full"]
-                            )
-
-                            if not scanName:
-                                facsNotDeclared[xmlPath].add(facsv)
-
-                    if facsv:
-                        pageScans[xmlPath].append(facsv)
-                    else:
-                        nPagesNoFacs += 1
-                elif zoneBased:
-                    if tag == "facsimile":
-                        inFacsimile = True
-                    elif inFacsimile:
-                        if tag == "surface":
-                            surfaceId = atts.get("id", None)
-                            scanFile = None
-
-                            if not surfaceId:
-                                facsNoId[xmlPath]["surface"] += 1
-                        elif tag == "zone":
-                            zoneId = atts.get("id", None)
-
-                            if zoneId:
-                                zoneRegion = []
-
-                                for a, aDefault in ZONE_ATTS:
-                                    aVal = atts.get(a, None)
-
-                                    if aVal is None:
-                                        aVal = aDefault
-                                        zoneRegionIncomplete.setdefault(zoneId, {})[
-                                            a
-                                        ] = f"None => {aDefault}"
-                                    elif aVal.isdecimal():
-                                        aVal = int(aVal)
-                                    else:
-                                        zoneRegionIncomplete.setdefault(zoneId, {})[
-                                            a
-                                        ] = f"{aVal} => {aDefault}"
-
-                                    zoneRegion.append(aVal)
-
-                                (ulx, uly, lrx, lry) = zoneRegion
-                                zoneRegion = f"pct:{ulx},{uly},{lrx - ulx},{lry - uly}"
-
-                                if scanFile:
-                                    facsMapping[xmlPath][zoneId] = [
-                                        scanFile,
-                                        zoneRegion,
-                                    ]
-                                    facsKind[xmlPath][zoneId] = "zone"
-                            else:
-                                facsNoId[xmlPath]["zone"] += 1
-
-                        elif tag == "graphic":
-                            # can be inside zone or inside surface
-                            # if inside surface, it holds for all zones without
-                            # own scanFile
-                            thisScanFile = atts.get("url", None)
-
-                            if thisScanFile is not None:
-                                if zoneId:
-                                    facsMapping[xmlPath][zoneId] = [
-                                        thisScanFile,
-                                        zoneRegion,
-                                    ]
-                                    facsKind[xmlPath][zoneId] = "zone"
-                                else:
-                                    # this is a graphic outside the zones
-                                    # we set the surface wide scan file
-                                    # so that subsequent zones without graphic
-                                    # can pick this up
-                                    scanFile = thisScanFile
-                                if surfaceId:
-                                    facsMapping[xmlPath][surfaceId] = [scanFile, "full"]
-                                    facsKind[xmlPath][surfaceId] = "surface"
-
-                if len(atts) == 0:
-                    kind = "rest"
-                    analysis[kind][tag][""][""] += 1
-                else:
-                    idv = atts.get("id", None)
-
-                    if idv is not None:
-                        ids[xmlPath][idv] += 1
-
-                    for refAtt, targetFile, targetId in getRefs(tag, atts, xmlPath):
-                        refs[xmlPath][(targetFile, targetId)] += 1
-
-                    for k, v in atts.items():
-                        kind = (
-                            "format"
-                            if k in FORMAT_ATTS
-                            else "keyword" if k in KEYWORD_ATTS else "rest"
-                        )
-                        dest = analysis[kind]
-
-                        if kind == "rest":
-                            vTrim = "X" if k in TRIM_ATTS else NUM_RE.sub("N", v)
-                            dest[tag][k][vTrim] += 1
-                        else:
-                            words = v.strip().split()
-                            for w in words:
-                                dest[tag][k][w.strip()] += 1
-
-                for child in xnode.iterchildren(
-                    tag=(
-                        (etree.Element, etree.ProcessingInstruction)
-                        if procins
-                        else etree.Element
-                    )
-                ):
-                    nodeInfo(child)
-
-                if zoneBased:
-                    if tag == "facsimile":
-                        inFacsimile = False
-                    elif inFacsimile:
-                        if tag == "surface":
-                            surfaceId = None
-                            scanFile = None
-                        elif tag == "zone":
-                            zoneId = None
-
-            nodeInfo(root)
-
-        def writeErrors():
-            """Write the errors to a file."""
-
-            errorFile = f"{reportDir}/errors.txt"
-
-            nErrors = 0
-            nFiles = 0
-
-            with fileOpen(errorFile, mode="w") as fh:
-                prevFolder = None
-                prevFile = None
-
-                for folder, file, line, col, kind, text in errors:
-                    newFolder = prevFolder != folder
-                    newFile = newFolder or prevFile != file
-
-                    if newFile:
-                        nFiles += 1
-
-                    if kind in {"error", "fatal"}:
-                        nErrors += 1
-
-                    indent1 = f"{folder}\n\t" if newFolder else "\t"
-                    indent2 = f"{file}\n\t\t" if newFile else "\t"
-                    loc = f"{line or ''}:{col or ''}"
-                    text = "\n".join(wrap(text, width=80, subsequent_indent="\t\t\t"))
-                    fh.write(f"{indent1}{indent2}{loc} {kind or ''} {text}\n")
-                    prevFolder = folder
-                    prevFile = file
-
-            if nErrors:
-                console(
-                    (
-                        f"{nErrors} validation error(s) in {nFiles} file(s) "
-                        f"written to {errorFile}"
-                    ),
-                    error=True,
-                )
-            else:
-                if verbose >= 0:
-                    console("Validation OK")
-
-        def writeFacs():
-            infoFile = f"{reportDir}/facsNoId.yml"
-            writeYaml(
-                {
-                    f: {k: n for (k, n) in v.items() if n}
-                    for (f, v) in facsNoId.items()
-                    if len(v)
-                },
-                asFile=infoFile,
-            )
-
-            nSurfaces = sum(x["surface"] for x in facsNoId.values())
-            nZones = sum(x["zone"] for x in facsNoId.values())
-
-            if verbose >= 0:
-                pluralS = "" if nSurfaces == 1 else "s"
-                pluralZ = "" if nZones == 1 else "s"
-
-                if nSurfaces:
-                    console(f"{nSurfaces} surface{pluralS} without id")
-
-                if nZones:
-                    console(f"{nZones} zone{pluralZ} without id")
-
-            infoFile = f"{reportDir}/facs.yml"
-            nItems = sum(len(x) for x in pageScans.values())
-            nUnique = sum(len(set(x)) for x in pageScans.values())
-
-            writeYaml(pageScans, asFile=infoFile)
-
-            if verbose >= 0:
-                plural = "" if nPagesNoFacs == 1 else "s"
-                console(f"{nPagesNoFacs} pagebreak{plural} without facs attribute.")
-
-                plural = "" if nItems == 1 else "s"
-                console(f"{nItems} pagebreak{plural} encountered.")
-                plural = "" if nUnique == 1 else "s"
-                console(f"{nUnique} distinct scan{plural} referred to by pagebreaks.")
-
-            if not zoneBased:
-                return
-
-            infoFile = f"{reportDir}/facsKind.yml"
-            writeYaml(facsKind, asFile=infoFile)
-            infoFile = f"{reportDir}/{FACS_MAPPING_YML}"
-            writeYaml(facsMapping, asFile=infoFile)
-
-            if verbose >= 0:
-                nSurfaces = sum(
-                    sum(1 for y in x.values() if y == "surface")
-                    for x in facsKind.values()
-                )
-                nZones = sum(
-                    sum(1 for y in x.values() if y == "zone") for x in facsKind.values()
-                )
-                plural = "" if nSurfaces == 1 else "s"
-                console(f"{nSurfaces} surface{plural} declared")
-                plural = "" if nZones == 1 else "s"
-                console(f"{nZones} zone{plural} declared")
-
-                nItems = sum(len(x) for x in facsMapping.values())
-                plural = "" if nItems == 1 else "s"
-                console(f"{nItems} scan{plural} declared and mapped.")
-
-            infoFile = f"{reportDir}/facsProblems.yml"
-            facsNotUsed = {}
-
-            for xmlPath, mapping in facsMapping.items():
-                facsEncountered = set(pageScans[xmlPath])
-                thisFacsNotUsed = {}
-
-                for facs in mapping:
-                    if facs not in facsEncountered:
-                        kind = facsKind[xmlPath][facs]
-                        thisFacsNotUsed.setdefault(kind, []).append(facs)
-
-                if len(thisFacsNotUsed):
-                    facsNotUsed[xmlPath] = thisFacsNotUsed
-
-            facsProblems = {}
-
-            nFacsNotDeclared = sum(len(x) for x in facsNotDeclared.values())
-            nSurfacesNotUsed = sum(
-                len(x.get("surface", [])) for x in facsNotUsed.values()
-            )
-            nZonesNotUsed = sum(len(x.get("zone", [])) for x in facsNotUsed.values())
-
-            if nFacsNotDeclared:
-                plural = "" if nFacsNotDeclared == 1 else "s"
-                console(f"{nFacsNotDeclared} undeclared scan{plural}", error=True)
-                facsProblems["facsNotDeclared"] = {
-                    xmlPath: sorted(x)
-                    for (xmlPath, x) in facsNotDeclared.items()
-                    if len(x)
-                }
-
-            if nSurfacesNotUsed:
-                plural = "" if nSurfacesNotUsed == 1 else "s"
-                console(f"{nSurfacesNotUsed} unused surface{plural}", error=True)
-            if nZonesNotUsed:
-                plural = "" if nZonesNotUsed == 1 else "s"
-                console(f"{nZonesNotUsed} unused zone{plural}", error=True)
-
-            facsProblems["facsNotUsed"] = facsNotUsed
-
-            writeYaml(facsProblems, asFile=infoFile)
-
-            infoFile = f"{reportDir}/zoneErrors.yml"
-            nIncomplete = len(zoneRegionIncomplete)
-            plural = "" if nIncomplete == 1 else "s"
-
-            if nIncomplete:
-                console(
-                    f"{nIncomplete} missing zone region specifier{plural}", error=True
-                )
-
-                console(f"See {infoFile}", error=True)
-
-            writeYaml(zoneRegionIncomplete, asFile=infoFile)
-
-        def writeNamespaces():
-            errorFile = f"{reportDir}/namespaces.txt"
-
-            nErrors = 0
-
-            nTags = len(tagByNs)
-
-            with fileOpen(errorFile, mode="w") as fh:
-                for tag, nsInfo in sorted(
-                    tagByNs.items(), key=lambda x: (-len(x[1]), x[0])
-                ):
-                    label = "OK"
-                    nNs = len(nsInfo)
-                    if nNs > 1:
-                        nErrors += 1
-                        label = "XX"
-
-                    for ns, amount in sorted(
-                        nsInfo.items(), key=lambda x: (-x[1], x[0])
-                    ):
-                        fh.write(
-                            f"{label} {nNs:>2} namespace for "
-                            f"{tag:<16} : {amount:>5}x {ns}\n"
-                        )
-
-            if verbose >= 0:
-                if procins:
-                    plural = "" if nProcins == 1 else "s"
-                    console(f"{nProcins} processing instruction{plural} encountered.")
-
-                console(
-                    (
-                        f"{nTags} tags of which {nErrors} with multiple namespaces "
-                        f"written to {errorFile}"
-                        if verbose >= 0 or nErrors
-                        else "Namespaces OK"
-                    ),
-                    error=nErrors > 0,
-                )
-
-        def writeReport():
-            reportFile = f"{reportDir}/elements.txt"
-
-            with fileOpen(reportFile, mode="w") as fh:
-                fh.write(
-                    "Inventory of tags and attributes in the source XML file(s).\n"
-                    "Contains the following sections:\n"
-                )
-                for label in kindLabels.values():
-                    fh.write(f"\t{label}\n")
-                fh.write("\n\n")
-
-                infoLines = 0
-
-                def writeAttInfo(tag, att, attInfo):
-                    nonlocal infoLines
-                    nl = "" if tag == "" else "\n"
-                    tagRep = "" if tag == "" else f"<{tag}>"
-                    attRep = "" if att == "" else f"{att}="
-                    atts = sorted(attInfo.items())
-                    (val, amount) = atts[0]
-                    fh.write(
-                        f"{nl}\t{tagRep:<18} " f"{attRep:<11} {amount:>7}x {val}\n"
-                    )
-                    infoLines += 1
-
-                    for val, amount in atts[1:]:
-                        fh.write(f"""\t{'':<18} {'':<11} {amount:>7}x {val}\n""")
-                        infoLines += 1
-
-                def writeTagInfo(tag, tagInfo):
-                    nonlocal infoLines
-                    tags = sorted(tagInfo.items())
-                    (att, attInfo) = tags[0]
-                    writeAttInfo(tag, att, attInfo)
-                    infoLines += 1
-                    for att, attInfo in tags[1:]:
-                        writeAttInfo("", att, attInfo)
-
-                for kind, label in kindLabels.items():
-                    fh.write(f"\n{label}\n")
-                    for tag, tagInfo in sorted(analysis[kind].items()):
-                        writeTagInfo(tag, tagInfo)
-
-            if verbose >= 0:
-                console(f"{infoLines} info line(s) written to {reportFile}")
-
-        def writeElemTypes():
-            elemsCombined = {}
-
-            modelSet = set()
-
-            for schemaOverride, eDefs in elementDefs.items():
-                model = modelInv[schemaOverride]
-                modelSet.add(model)
-                for tag, (typ, mixed) in eDefs.items():
-                    elemsCombined.setdefault(tag, {}).setdefault(model, {})
-                    elemsCombined[tag][model]["typ"] = typ
-                    elemsCombined[tag][model]["mixed"] = mixed
-
-            tagReport = {}
-
-            for tag, tagInfo in elemsCombined.items():
-                tagLines = []
-                tagReport[tag] = tagLines
-
-                if None in tagInfo:
-                    teiInfo = tagInfo[None]
-                    teiTyp = teiInfo["typ"]
-                    teiMixed = teiInfo["mixed"]
-                    teiTypRep = "??" if teiTyp is None else typ
-                    teiMixedRep = (
-                        "??" if teiMixed is None else "mixed" if teiMixed else "pure"
-                    )
-                    mds = ["TEI"]
-
-                    for model in sorted(x for x in tagInfo if x is not None):
-                        info = tagInfo[model]
-                        typ = info["typ"]
-                        mixed = info["mixed"]
-                        if typ == teiTyp and mixed == teiMixed:
-                            mds.append(model)
-                        else:
-                            typRep = (
-                                "" if typ == teiTyp else "??" if typ is None else typ
-                            )
-                            mixedRep = (
-                                ""
-                                if mixed == teiMixed
-                                else (
-                                    "??"
-                                    if mixed is None
-                                    else "mixed" if mixed else "pure"
-                                )
-                            )
-                            tagLines.append((tag, [model], typRep, mixedRep))
-                    tagLines.insert(0, (tag, mds, teiTypRep, teiMixedRep))
-                else:
-                    for model in sorted(tagInfo):
-                        info = tagInfo[model]
-                        typ = info["typ"]
-                        mixed = info["mixed"]
-                        typRep = "??" if typ is None else typ
-                        mixedRep = (
-                            "??" if mixed is None else "mixed" if mixed else "pure"
-                        )
-                        tagLines.append((tag, [model], typRep, mixedRep))
-
-            reportFile = f"{reportDir}/types.txt"
-
-            with fileOpen(reportFile, mode="w") as fh:
-                for tag in sorted(tagReport):
-                    tagLines = tagReport[tag]
-
-                    for tag, mds, typ, mixed in tagLines:
-                        model = ",".join(mds)
-                        fh.write(
-                            f"{tag:<18} {model:<18} {typ or '':<7} {mixed or '':<5}\n"
-                        )
-
-            if verbose >= 0:
-                console(
-                    f"{len(elemsCombined)} tag(s) type info written to {reportFile}"
-                )
-
-        def writeLbParents():
-            reportFile = f"{reportDir}/lb-parents.txt"
-
-            with fileOpen(reportFile, "w") as fh:
-                for parent, n in sorted(lbParents.items()):
-                    fh.write(f"{n:>5} x {parent}\n")
-
-            if verbose >= 0:
-                console(f"lb-parent info written to {reportFile}")
-
-        def writeIdRefs():
-            reportIdFile = f"{reportDir}/ids.txt"
-            reportRefFile = f"{reportDir}/refs.txt"
-
-            ih = fileOpen(reportIdFile, mode="w")
-            rh = fileOpen(reportRefFile, mode="w")
-
-            refdIds = collections.Counter()
-            missingIds = set()
-
-            totalRefs = 0
-            totalRefsU = 0
-
-            totalResolvable = 0
-            totalResolvableU = 0
-            totalDangling = 0
-            totalDanglingU = 0
-
-            seenItems = set()
-
-            for file, items in refs.items():
-                rh.write(f"{file}\n")
-
-                resolvable = 0
-                resolvableU = 0
-                dangling = 0
-                danglingU = 0
-
-                for item, n in sorted(items.items()):
-                    totalRefs += n
-
-                    if item in seenItems:
-                        newItem = False
-                    else:
-                        seenItems.add(item)
-                        newItem = True
-                        totalRefsU += 1
-
-                    (target, idv) = item
-
-                    if target not in ids or idv not in ids[target]:
-                        status = "dangling"
-                        dangling += n
-
-                        if newItem:
-                            missingIds.add((target, idv))
-                            danglingU += 1
-                    else:
-                        status = "ok"
-                        resolvable += n
-                        refdIds[(target, idv)] += n
-
-                        if newItem:
-                            resolvableU += 1
-                    rh.write(f"\t{status:<10} {n:>5} x {target} # {idv}\n")
-
-                msgs = (
-                    f"\tDangling:   {dangling:>4} x {danglingU:>4}",
-                    f"\tResolvable: {resolvable:>4} x {resolvableU:>4}",
-                )
-                for msg in msgs:
-                    rh.write(f"{msg}\n")
-
-                totalResolvable += resolvable
-                totalResolvableU += resolvableU
-                totalDangling += dangling
-                totalDanglingU += danglingU
-
-            if verbose >= 0:
-                console(f"Refs written to {reportRefFile}")
-                msgs = (
-                    f"\tresolvable: {totalResolvableU:>4} in {totalResolvable:>4}",
-                    f"\tdangling:   {totalDanglingU:>4} in {totalDangling:>4}",
-                    f"\tALL:        {totalRefsU:>4} in {totalRefs:>4} ",
-                )
-                for msg in msgs:
-                    console(msg)
-
-            totalIds = 0
-            totalIdsU = 0
-            totalIdsM = 0
-            totalIdsRefd = 0
-            totalIdsRefdU = 0
-            totalIdsUnused = 0
-
-            for file, items in ids.items():
-                totalIds += len(items)
-
-                ih.write(f"{file}\n")
-
-                unique = 0
-                multiple = 0
-                refd = 0
-                refdU = 0
-                unused = 0
-
-                for item, n in sorted(items.items()):
-                    nRefs = refdIds.get((file, item), 0)
-
-                    if n == 1:
-                        unique += 1
-                    else:
-                        multiple += 1
-
-                    if nRefs == 0:
-                        unused += 1
-                    else:
-                        refd += nRefs
-                        refdU += 1
-
-                    status1 = f"{n}x"
-                    plural = "" if nRefs == 1 else "s"
-                    status2 = f"{nRefs}ref{plural}"
-
-                    ih.write(f"\t{status1:<8} {status2:<8} {item}\n")
-
-                msgs = (
-                    f"\tUnique:     {unique:>4}",
-                    f"\tNon-unique: {multiple:>4}",
-                    f"\tUnused:     {unused:>4}",
-                    f"\tReferenced: {refd:>4} x {refdU:>4}",
-                )
-                for msg in msgs:
-                    ih.write(f"{msg}\n")
-
-                totalIdsU += unique
-                totalIdsM += multiple
-                totalIdsRefdU += refdU
-                totalIdsRefd += refd
-                totalIdsUnused += unused
-
-            if verbose >= 0:
-                console(f"Ids written to {reportIdFile}")
-                msgs = (
-                    f"\treferenced: {totalIdsRefdU:>4} by {totalIdsRefd:>4}",
-                    f"\tnon-unique: {totalIdsM:>4}",
-                    f"\tunused:     {totalIdsUnused:>4}",
-                    f"\tALL:        {totalIdsU:>4} in {totalIds:>4}",
-                )
-                for msg in msgs:
-                    console(msg)
-
-        def filterError(msg):
-            return msg == (
-                "Element 'graphic', attribute 'url': [facet 'pattern'] "
-                "The value '' is not accepted by the pattern '\\S+'."
-            )
-
-        def doXMLFile(xmlPath):
-            xmlFullPath = f"{sourceDir}/{xmlPath}"
-            pageScans[xmlPath] = []
-            facsMapping[xmlPath] = {}
-            facsKind[xmlPath] = {}
-            facsNotDeclared[xmlPath] = set()
-            facsNoId[xmlPath] = collections.Counter()
-
-            root = self.parseXML(xmlPath, xmlFullPath, parser)
-
-            if root is None:
-                return
-
-            ids[xmlFile][""] = 1
-            analyse(root, analysis, xmlPath)
+        out = self.out
+        errors = out.errors
+        modelInfo = out.modelInfo
+        out.toBeInventoried = []
 
         xmlFilesByModel = collections.defaultdict(list)
 
@@ -1446,51 +765,768 @@ class TEI:
                     continue
 
             if (good or carryon) and verbose >= 0:
-                console("\tMaking inventory ...")
+                out.toBeInventoried.extend(xmlPaths)
 
-            for xmlPath in xmlPaths:
-                doXMLFile(xmlPath)
+    def analyse(self, root, xmlPath):
+        FORMAT_ATTS = set(
+            """
+            dim
+            level
+            place
+            rend
+        """.strip().split()
+        )
 
-        if not good:
-            self.good = False
+        KEYWORD_ATTS = set(
+            """
+            facs
+            form
+            function
+            lang
+            reason
+            type
+            unit
+            who
+        """.strip().split()
+        )
+
+        TRIM_ATTS = set(
+            """
+            id
+            key
+            target
+            value
+        """.strip().split()
+        )
+
+        NUM_RE = re.compile(r"""[0-9]""", re.S)
+
+        param = self.param
+        procins = param.procins
+        zoneBased = param.zoneBased
+
+        out = self.out
+        report = out.report
+        tagByNs = out.tagByNs
+        refs = out.refs
+        ids = out.ids
+        lbParents = out.lbParents
+        pageScans = out.pageScans
+        facsMapping = out.facsMapping
+        facsKind = out.facsKind
+        facsNotDeclared = out.facsNotDeclared
+        facsNoId = out.facsNoId
+        zoneRegionIncomplete = out.zoneRegionIncomplete
+
+        def nodeInfo(xnode):
+            if procins and isinstance(xnode, etree._ProcessingInstruction):
+                target = xnode.target
+                tag = f"?{target}"
+                ns = ""
+                out.nProcins += 1
+            else:
+                qName = etree.QName(xnode.tag)
+                tag = qName.localname
+                ns = qName.namespace
+
+            atts = {etree.QName(k).localname: v for (k, v) in xnode.attrib.items()}
+
+            tagByNs[tag][ns] += 1
+
+            if tag == "lb":
+                parentTag = etree.QName(xnode.getparent().tag).localname
+                lbParents[parentTag] += 1
+            elif tag == "pb":
+                facsv = atts.get("facs", "")
+
+                if zoneBased:
+                    facsv = facsv.removeprefix("#")
+
+                    if facsv:
+                        (scanName, scanRegion) = facsMapping[xmlPath].get(
+                            facsv, ["", "full"]
+                        )
+
+                        if not scanName:
+                            facsNotDeclared[xmlPath].add(facsv)
+
+                if facsv:
+                    pageScans[xmlPath].append(facsv)
+                else:
+                    out.nPagesNoFacs += 1
+            elif zoneBased:
+                if tag == "facsimile":
+                    out.inFacsimile = True
+                elif out.inFacsimile:
+                    if tag == "surface":
+                        out.surfaceId = atts.get("id", None)
+                        out.scanFile = None
+
+                        if not out.surfaceId:
+                            facsNoId[xmlPath]["surface"] += 1
+                    elif tag == "zone":
+                        out.zoneId = atts.get("id", None)
+
+                        if out.zoneId:
+                            out.zoneRegion = []
+
+                            for a, aDefault in ZONE_ATTS:
+                                aVal = atts.get(a, None)
+
+                                if aVal is None:
+                                    aVal = aDefault
+                                    zoneRegionIncomplete.setdefault(out.zoneId, {})[
+                                        a
+                                    ] = f"None => {aDefault}"
+                                elif aVal.isdecimal():
+                                    aVal = int(aVal)
+                                else:
+                                    zoneRegionIncomplete.setdefault(out.zoneId, {})[
+                                        a
+                                    ] = f"{aVal} => {aDefault}"
+
+                                out.zoneRegion.append(aVal)
+
+                            (ulx, uly, lrx, lry) = out.zoneRegion
+                            out.zoneRegion = f"pct:{ulx},{uly},{lrx - ulx},{lry - uly}"
+
+                            if out.scanFile:
+                                facsMapping[xmlPath][out.zoneId] = [
+                                    out.scanFile,
+                                    out.zoneRegion,
+                                ]
+                                facsKind[xmlPath][out.zoneId] = "zone"
+                        else:
+                            facsNoId[xmlPath]["zone"] += 1
+
+                    elif tag == "graphic":
+                        # can be inside zone or inside surface
+                        # if inside surface, it holds for all zones without
+                        # own scanFile
+                        thisScanFile = atts.get("url", None)
+
+                        if thisScanFile is not None:
+                            if out.zoneId:
+                                facsMapping[xmlPath][out.zoneId] = [
+                                    thisScanFile,
+                                    out.zoneRegion,
+                                ]
+                                facsKind[xmlPath][out.zoneId] = "zone"
+                            else:
+                                # this is a graphic outside the zones
+                                # we set the surface wide scan file
+                                # so that subsequent zones without graphic
+                                # can pick this up
+                                out.scanFile = thisScanFile
+                            if out.surfaceId:
+                                facsMapping[xmlPath][out.surfaceId] = [
+                                    out.scanFile,
+                                    "full",
+                                ]
+                                facsKind[xmlPath][out.surfaceId] = "surface"
+
+            if len(atts) == 0:
+                kind = "rest"
+                report[kind][tag][""][""] += 1
+            else:
+                idv = atts.get("id", None)
+
+                if idv is not None:
+                    ids[xmlPath][idv] += 1
+
+                for refAtt, targetFile, targetId in getRefs(tag, atts, xmlPath):
+                    refs[xmlPath][(targetFile, targetId)] += 1
+
+                for k, v in atts.items():
+                    kind = (
+                        "format"
+                        if k in FORMAT_ATTS
+                        else "keyword" if k in KEYWORD_ATTS else "rest"
+                    )
+                    dest = report[kind]
+
+                    if kind == "rest":
+                        vTrim = "X" if k in TRIM_ATTS else NUM_RE.sub("N", v)
+                        dest[tag][k][vTrim] += 1
+                    else:
+                        words = v.strip().split()
+                        for w in words:
+                            dest[tag][k][w.strip()] += 1
+
+            for child in xnode.iterchildren(
+                tag=(
+                    (etree.Element, etree.ProcessingInstruction)
+                    if procins
+                    else etree.Element
+                )
+            ):
+                nodeInfo(child)
+
+            if zoneBased:
+                if tag == "facsimile":
+                    out.inFacsimile = False
+                elif out.inFacsimile:
+                    if tag == "surface":
+                        out.surfaceId = None
+                        out.scanFile = None
+                    elif tag == "zone":
+                        out.zoneId = None
+
+        nodeInfo(root)
+
+    def fileInventory(self, xmlPath):
+        sourceDir = self.sourceDir
+        xmlFullPath = f"{sourceDir}/{xmlPath}"
+
+        out = self.out
+        ids = out.ids
+        pageScans = out.pageScans
+        facsMapping = out.facsMapping
+        facsKind = out.facsKind
+        facsNotDeclared = out.facsNotDeclared
+        facsNoId = out.facsNoId
+
+        pageScans[xmlPath] = []
+        facsMapping[xmlPath] = {}
+        facsKind[xmlPath] = {}
+        facsNotDeclared[xmlPath] = set()
+        facsNoId[xmlPath] = collections.Counter()
+
+        root = self.parseXML(xmlPath, xmlFullPath)
+
+        if root is None:
+            return
+
+        ids[xmlPath][""] = 1
+        self.analyse(root, xmlPath)
+
+    def writeErrors(self, verbose=0):
+        """Write the errors to a file."""
+
+        reportDir = self.reportDir
+        errorFile = f"{reportDir}/errors.txt"
+
+        out = self.out
+        errors = out.errors
+
+        nErrors = 0
+        nFiles = 0
+
+        with fileOpen(errorFile, mode="w") as fh:
+            prevFolder = None
+            prevFile = None
+
+            for folder, file, line, col, kind, text in errors:
+                newFolder = prevFolder != folder
+                newFile = newFolder or prevFile != file
+
+                if newFile:
+                    nFiles += 1
+
+                if kind in {"error", "fatal"}:
+                    nErrors += 1
+
+                indent1 = f"{folder}\n\t" if newFolder else "\t"
+                indent2 = f"{file}\n\t\t" if newFile else "\t"
+                loc = f"{line or ''}:{col or ''}"
+                text = "\n".join(wrap(text, width=80, subsequent_indent="\t\t\t"))
+                fh.write(f"{indent1}{indent2}{loc} {kind or ''} {text}\n")
+                prevFolder = folder
+                prevFile = file
+
+        if nErrors:
+            console(
+                (
+                    f"{nErrors} validation error(s) in {nFiles} file(s) "
+                    f"written to {errorFile}"
+                ),
+                error=True,
+            )
+        else:
+            if verbose >= 0:
+                console("Validation OK")
+
+    def writeFacs(self, verbose=0):
+        reportDir = self.reportDir
+        infoFile = f"{reportDir}/facsNoId.yml"
+
+        param = self.param
+        zoneBased = param.zoneBased
+
+        out = self.out
+        pageScans = out.pageScans
+        facsMapping = out.facsMapping
+        facsKind = out.facsKind
+        facsNotDeclared = out.facsNotDeclared
+        facsNoId = out.facsNoId
+        zoneRegionIncomplete = out.zoneRegionIncomplete
+        nPagesNoFacs = out.nPagesNoFacs
+
+        writeYaml(
+            {
+                f: {k: n for (k, n) in v.items() if n}
+                for (f, v) in facsNoId.items()
+                if len(v)
+            },
+            asFile=infoFile,
+        )
+
+        nSurfaces = sum(x["surface"] for x in facsNoId.values())
+        nZones = sum(x["zone"] for x in facsNoId.values())
 
         if verbose >= 0:
-            console("")
+            pluralS = "" if nSurfaces == 1 else "s"
+            pluralZ = "" if nZones == 1 else "s"
 
-        writeElemTypes()
+            if nSurfaces:
+                console(f"{nSurfaces} surface{pluralS} without id")
 
-        if not self.severeError:
-            writeErrors()
+            if nZones:
+                console(f"{nZones} zone{pluralZ} without id")
 
-        if good or carryon:
-            writeFacs()
-            writeNamespaces()
-            writeReport()
-            writeIdRefs()
-            writeLbParents()
+        infoFile = f"{reportDir}/facs.yml"
+        nItems = sum(len(x) for x in pageScans.values())
+        nUnique = sum(len(set(x)) for x in pageScans.values())
 
-    def readSchemas(self):
+        writeYaml(pageScans, asFile=infoFile)
+
+        if verbose >= 0:
+            plural = "" if nPagesNoFacs == 1 else "s"
+            console(f"{nPagesNoFacs} pagebreak{plural} without facs attribute.")
+
+            plural = "" if nItems == 1 else "s"
+            console(f"{nItems} pagebreak{plural} encountered.")
+            plural = "" if nUnique == 1 else "s"
+            console(f"{nUnique} distinct scan{plural} referred to by pagebreaks.")
+
+        if not zoneBased:
+            return
+
+        infoFile = f"{reportDir}/facsKind.yml"
+        writeYaml(facsKind, asFile=infoFile)
+        infoFile = f"{reportDir}/{FACS_MAPPING_YML}"
+        writeYaml(facsMapping, asFile=infoFile)
+
+        if verbose >= 0:
+            nSurfaces = sum(
+                sum(1 for y in x.values() if y == "surface") for x in facsKind.values()
+            )
+            nZones = sum(
+                sum(1 for y in x.values() if y == "zone") for x in facsKind.values()
+            )
+            plural = "" if nSurfaces == 1 else "s"
+            console(f"{nSurfaces} surface{plural} declared")
+            plural = "" if nZones == 1 else "s"
+            console(f"{nZones} zone{plural} declared")
+
+            nItems = sum(len(x) for x in facsMapping.values())
+            plural = "" if nItems == 1 else "s"
+            console(f"{nItems} scan{plural} declared and mapped.")
+
+        infoFile = f"{reportDir}/facsProblems.yml"
+        facsNotUsed = {}
+
+        for xmlPath, mapping in facsMapping.items():
+            facsEncountered = set(pageScans[xmlPath])
+            thisFacsNotUsed = {}
+
+            for facs in mapping:
+                if facs not in facsEncountered:
+                    kind = facsKind[xmlPath][facs]
+                    thisFacsNotUsed.setdefault(kind, []).append(facs)
+
+            if len(thisFacsNotUsed):
+                facsNotUsed[xmlPath] = thisFacsNotUsed
+
+        facsProblems = {}
+
+        nFacsNotDeclared = sum(len(x) for x in facsNotDeclared.values())
+        nSurfacesNotUsed = sum(len(x.get("surface", [])) for x in facsNotUsed.values())
+        nZonesNotUsed = sum(len(x.get("zone", [])) for x in facsNotUsed.values())
+
+        if nFacsNotDeclared:
+            plural = "" if nFacsNotDeclared == 1 else "s"
+            console(f"{nFacsNotDeclared} undeclared scan{plural}", error=True)
+            facsProblems["facsNotDeclared"] = {
+                xmlPath: sorted(x) for (xmlPath, x) in facsNotDeclared.items() if len(x)
+            }
+
+        if nSurfacesNotUsed:
+            plural = "" if nSurfacesNotUsed == 1 else "s"
+            console(f"{nSurfacesNotUsed} unused surface{plural}", error=True)
+        if nZonesNotUsed:
+            plural = "" if nZonesNotUsed == 1 else "s"
+            console(f"{nZonesNotUsed} unused zone{plural}", error=True)
+
+        facsProblems["facsNotUsed"] = facsNotUsed
+
+        writeYaml(facsProblems, asFile=infoFile)
+
+        infoFile = f"{reportDir}/zoneErrors.yml"
+        nIncomplete = len(zoneRegionIncomplete)
+        plural = "" if nIncomplete == 1 else "s"
+
+        if nIncomplete:
+            console(f"{nIncomplete} missing zone region specifier{plural}", error=True)
+
+            console(f"See {infoFile}", error=True)
+
+        writeYaml(zoneRegionIncomplete, asFile=infoFile)
+
+    def writeNamespaces(self, verbose=0):
+        reportDir = self.reportDir
+        errorFile = f"{reportDir}/namespaces.txt"
+
+        param = self.param
+        procins = param.procins
+
+        out = self.out
+        tagByNs = out.tagByNs
+        nProcins = out.nProcins
+
+        nErrors = 0
+
+        nTags = len(tagByNs)
+
+        with fileOpen(errorFile, mode="w") as fh:
+            for tag, nsInfo in sorted(
+                tagByNs.items(), key=lambda x: (-len(x[1]), x[0])
+            ):
+                label = "OK"
+                nNs = len(nsInfo)
+                if nNs > 1:
+                    nErrors += 1
+                    label = "XX"
+
+                for ns, amount in sorted(nsInfo.items(), key=lambda x: (-x[1], x[0])):
+                    fh.write(
+                        f"{label} {nNs:>2} namespace for "
+                        f"{tag:<16} : {amount:>5}x {ns}\n"
+                    )
+
+        if verbose >= 0:
+            if procins:
+                plural = "" if nProcins == 1 else "s"
+                console(f"{nProcins} processing instruction{plural} encountered.")
+
+            console(
+                (
+                    f"{nTags} tags of which {nErrors} with multiple namespaces "
+                    f"written to {errorFile}"
+                    if verbose >= 0 or nErrors
+                    else "Namespaces OK"
+                ),
+                error=nErrors > 0,
+            )
+
+    def writeReport(self, verbose=0):
+        reportDir = self.reportDir
+        reportFile = f"{reportDir}/elements.txt"
+
+        param = self.param
+        kindLabels = param.kindLabels
+
+        out = self.out
+        report = out.report
+
+        with fileOpen(reportFile, mode="w") as fh:
+            fh.write(
+                "Inventory of tags and attributes in the source XML file(s).\n"
+                "Contains the following sections:\n"
+            )
+            for label in kindLabels.values():
+                fh.write(f"\t{label}\n")
+            fh.write("\n\n")
+
+            infoLines = 0
+
+            def writeAttInfo(tag, att, attInfo):
+                nonlocal infoLines
+                nl = "" if tag == "" else "\n"
+                tagRep = "" if tag == "" else f"<{tag}>"
+                attRep = "" if att == "" else f"{att}="
+                atts = sorted(attInfo.items())
+                (val, amount) = atts[0]
+                fh.write(f"{nl}\t{tagRep:<18} " f"{attRep:<11} {amount:>7}x {val}\n")
+                infoLines += 1
+
+                for val, amount in atts[1:]:
+                    fh.write(f"""\t{'':<18} {'':<11} {amount:>7}x {val}\n""")
+                    infoLines += 1
+
+            def writeTagInfo(tag, tagInfo):
+                nonlocal infoLines
+                tags = sorted(tagInfo.items())
+                (att, attInfo) = tags[0]
+                writeAttInfo(tag, att, attInfo)
+                infoLines += 1
+                for att, attInfo in tags[1:]:
+                    writeAttInfo("", att, attInfo)
+
+            for kind, label in kindLabels.items():
+                fh.write(f"\n{label}\n")
+                for tag, tagInfo in sorted(report[kind].items()):
+                    writeTagInfo(tag, tagInfo)
+
+        if verbose >= 0:
+            console(f"{infoLines} info line(s) written to {reportFile}")
+
+    def writeElemTypes(self, verbose=0):
+        reportDir = self.reportDir
+
+        out = self.out
+        elementDefs = out.elementDefs
+        modelInv = out.modelInv
+
+        elemsCombined = {}
+        modelSet = set()
+
+        for schemaOverride, eDefs in elementDefs.items():
+            model = modelInv[schemaOverride]
+            modelSet.add(model)
+            for tag, (typ, mixed) in eDefs.items():
+                elemsCombined.setdefault(tag, {}).setdefault(model, {})
+                elemsCombined[tag][model]["typ"] = typ
+                elemsCombined[tag][model]["mixed"] = mixed
+
+        tagReport = {}
+
+        for tag, tagInfo in elemsCombined.items():
+            tagLines = []
+            tagReport[tag] = tagLines
+
+            if None in tagInfo:
+                teiInfo = tagInfo[None]
+                teiTyp = teiInfo["typ"]
+                teiMixed = teiInfo["mixed"]
+                teiTypRep = "??" if teiTyp is None else typ
+                teiMixedRep = (
+                    "??" if teiMixed is None else "mixed" if teiMixed else "pure"
+                )
+                mds = ["TEI"]
+
+                for model in sorted(x for x in tagInfo if x is not None):
+                    info = tagInfo[model]
+                    typ = info["typ"]
+                    mixed = info["mixed"]
+                    if typ == teiTyp and mixed == teiMixed:
+                        mds.append(model)
+                    else:
+                        typRep = "" if typ == teiTyp else "??" if typ is None else typ
+                        mixedRep = (
+                            ""
+                            if mixed == teiMixed
+                            else (
+                                "??" if mixed is None else "mixed" if mixed else "pure"
+                            )
+                        )
+                        tagLines.append((tag, [model], typRep, mixedRep))
+                tagLines.insert(0, (tag, mds, teiTypRep, teiMixedRep))
+            else:
+                for model in sorted(tagInfo):
+                    info = tagInfo[model]
+                    typ = info["typ"]
+                    mixed = info["mixed"]
+                    typRep = "??" if typ is None else typ
+                    mixedRep = "??" if mixed is None else "mixed" if mixed else "pure"
+                    tagLines.append((tag, [model], typRep, mixedRep))
+
+        reportFile = f"{reportDir}/types.txt"
+
+        with fileOpen(reportFile, mode="w") as fh:
+            for tag in sorted(tagReport):
+                tagLines = tagReport[tag]
+
+                for tag, mds, typ, mixed in tagLines:
+                    model = ",".join(mds)
+                    fh.write(f"{tag:<18} {model:<18} {typ or '':<7} {mixed or '':<5}\n")
+
+        if verbose >= 0:
+            console(f"{len(elemsCombined)} tag(s) type info written to {reportFile}")
+
+    def writeLbParents(self, verbose=0):
+        reportDir = self.reportDir
+        reportFile = f"{reportDir}/lb-parents.txt"
+
+        out = self.out
+        lbParents = out.lbParents
+
+        with fileOpen(reportFile, "w") as fh:
+            for parent, n in sorted(lbParents.items()):
+                fh.write(f"{n:>5} x {parent}\n")
+
+        if verbose >= 0:
+            console(f"lb-parent info written to {reportFile}")
+
+    def writeIdRefs(self, verbose=0):
+        reportDir = self.reportDir
+        reportIdFile = f"{reportDir}/ids.txt"
+        reportRefFile = f"{reportDir}/refs.txt"
+
+        out = self.out
+        refs = out.refs
+        ids = out.ids
+
+        ih = fileOpen(reportIdFile, mode="w")
+        rh = fileOpen(reportRefFile, mode="w")
+
+        refdIds = collections.Counter()
+        missingIds = set()
+
+        totalRefs = 0
+        totalRefsU = 0
+
+        totalResolvable = 0
+        totalResolvableU = 0
+        totalDangling = 0
+        totalDanglingU = 0
+
+        seenItems = set()
+
+        for file, items in refs.items():
+            rh.write(f"{file}\n")
+
+            resolvable = 0
+            resolvableU = 0
+            dangling = 0
+            danglingU = 0
+
+            for item, n in sorted(items.items()):
+                totalRefs += n
+
+                if item in seenItems:
+                    newItem = False
+                else:
+                    seenItems.add(item)
+                    newItem = True
+                    totalRefsU += 1
+
+                (target, idv) = item
+
+                if target not in ids or idv not in ids[target]:
+                    status = "dangling"
+                    dangling += n
+
+                    if newItem:
+                        missingIds.add((target, idv))
+                        danglingU += 1
+                else:
+                    status = "ok"
+                    resolvable += n
+                    refdIds[(target, idv)] += n
+
+                    if newItem:
+                        resolvableU += 1
+                rh.write(f"\t{status:<10} {n:>5} x {target} # {idv}\n")
+
+            msgs = (
+                f"\tDangling:   {dangling:>4} x {danglingU:>4}",
+                f"\tResolvable: {resolvable:>4} x {resolvableU:>4}",
+            )
+            for msg in msgs:
+                rh.write(f"{msg}\n")
+
+            totalResolvable += resolvable
+            totalResolvableU += resolvableU
+            totalDangling += dangling
+            totalDanglingU += danglingU
+
+        if verbose >= 0:
+            console(f"Refs written to {reportRefFile}")
+            msgs = (
+                f"\tresolvable: {totalResolvableU:>4} in {totalResolvable:>4}",
+                f"\tdangling:   {totalDanglingU:>4} in {totalDangling:>4}",
+                f"\tALL:        {totalRefsU:>4} in {totalRefs:>4} ",
+            )
+            for msg in msgs:
+                console(msg)
+
+        totalIds = 0
+        totalIdsU = 0
+        totalIdsM = 0
+        totalIdsRefd = 0
+        totalIdsRefdU = 0
+        totalIdsUnused = 0
+
+        for file, items in ids.items():
+            totalIds += len(items)
+
+            ih.write(f"{file}\n")
+
+            unique = 0
+            multiple = 0
+            refd = 0
+            refdU = 0
+            unused = 0
+
+            for item, n in sorted(items.items()):
+                nRefs = refdIds.get((file, item), 0)
+
+                if n == 1:
+                    unique += 1
+                else:
+                    multiple += 1
+
+                if nRefs == 0:
+                    unused += 1
+                else:
+                    refd += nRefs
+                    refdU += 1
+
+                status1 = f"{n}x"
+                plural = "" if nRefs == 1 else "s"
+                status2 = f"{nRefs}ref{plural}"
+
+                ih.write(f"\t{status1:<8} {status2:<8} {item}\n")
+
+            msgs = (
+                f"\tUnique:     {unique:>4}",
+                f"\tNon-unique: {multiple:>4}",
+                f"\tUnused:     {unused:>4}",
+                f"\tReferenced: {refd:>4} x {refdU:>4}",
+            )
+            for msg in msgs:
+                ih.write(f"{msg}\n")
+
+            totalIdsU += unique
+            totalIdsM += multiple
+            totalIdsRefdU += refdU
+            totalIdsRefd += refd
+            totalIdsUnused += unused
+
+        if verbose >= 0:
+            console(f"Ids written to {reportIdFile}")
+            msgs = (
+                f"\treferenced: {totalIdsRefdU:>4} by {totalIdsRefd:>4}",
+                f"\tnon-unique: {totalIdsM:>4}",
+                f"\tunused:     {totalIdsUnused:>4}",
+                f"\tALL:        {totalIdsU:>4} in {totalIds:>4}",
+            )
+            for msg in msgs:
+                console(msg)
+
+    def readSchemas(self, verbose=0):
         schemaDir = self.schemaDir
-        models = self.models
-        modelMap = {}
+
+        param = self.param
+        models = param.models
+
+        out = self.out
+        out.modelXsd = {}
+        out.modelMap = {}
+        out.modelInfo = {}
+        out.modelInv = {}
+
+        A = Analysis(verbose=verbose)
+        self.A = A
+
         newModels = []
-        self.modelMap = modelMap
-
-        A = self.A
-
         schemaFiles = dict(rng={}, xsd={})
-        self.schemaFiles = schemaFiles
-        modelInfo = {}
-        self.modelInfo = modelInfo
-        modelXsd = {}
-        self.modelXsd = modelXsd
-        modelInv = {}
-        self.modelInv = modelInv
 
         for model in [None] + models:
             if type(model) is dict:
                 (model, href) = list(model.items())[0]
-                modelMap[href] = model
+                out.modelMap[href] = model
 
             if model is not None:
                 newModels.append(model)
@@ -1508,7 +1544,7 @@ class TEI:
                         or kind == "xsd"
                         and model not in schemaFiles["rng"]
                     ):
-                        modelInfo[model] = schemaFile
+                        out.modelInfo[model] = schemaFile
 
             if model in schemaFiles["rng"] and model not in schemaFiles["xsd"]:
                 schemaFileXsd = f"{schemaDir}/{model}.xsd"
@@ -1526,29 +1562,29 @@ class TEI:
 
                 schemaFiles["xsd"][model] = schemaFileXsd
 
-        models = newModels
-        self.models = models
-
         baseSchema = schemaFiles["xsd"][None]
-        modelXsd[None] = baseSchema
-        modelInv[(baseSchema, None)] = None
+        out.modelXsd[None] = baseSchema
+        out.modelInv[(baseSchema, None)] = None
 
-        for model in models:
+        for model in newModels:
             override = schemaFiles["xsd"][model]
-            modelXsd[model] = override
-            modelInv[(baseSchema, override)] = model
+            out.modelXsd[model] = override
+            out.modelInv[(baseSchema, override)] = model
 
     def getSwitches(self, xmlPath):
         verbose = self.verbose
-        models = self.models
-        modelMap = self.modelMap
-        adaptations = self.adaptations
-        templates = self.templates
-        triggers = self.triggers
         A = self.A
 
-        text = None
+        param = self.param
+        models = param.models
+        templates = param.templates
+        adaptations = param.adaptations
+        triggers = param.triggers
 
+        out = self.out
+        modelMap = out.modelMap
+
+        text = None
         found = {}
 
         for kind, allOfKind in (
@@ -1591,7 +1627,8 @@ class TEI:
         object
             A configured LXML parse object.
         """
-        procins = self.procins
+        param = self.param
+        procins = param.procins
 
         return etree.XMLParser(
             remove_blank_text=False,
@@ -1601,7 +1638,7 @@ class TEI:
             huge_tree=True,
         )
 
-    def parseXML(self, fileName, fileOrText, parser):
+    def parseXML(self, fileName, fileOrText):
         """Parse an XML source.
 
         This is not meant to validate the XML, only to parse the XML into elements,
@@ -1623,6 +1660,8 @@ class TEI:
             The root of the resulting parse tree if the parsing succeeded, else None.
             If the parsing failed, a message is written to stderr.
         """
+        parser = self.parser
+
         try:
             tree = etree.parse(fileOrText, parser)
             result = tree.getroot()
@@ -1655,13 +1694,15 @@ class TEI:
         """
         verbose = self.verbose
         sourceDir = self.sourceDir
-        sectionModel = self.sectionModel
+
+        param = self.param
+        sectionModel = param.sectionModel
 
         if verbose == 1:
             console(f"Section model {sectionModel}")
 
         if sectionModel == "I":
-            backMatter = self.backMatter
+            backMatter = param.backMatter
 
             IGNORE = "__ignore__"
 

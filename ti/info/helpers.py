@@ -1,8 +1,7 @@
 import re
 
-from ..kit.generic import AttrDict
 from ..kit.helpers import console
-from ..kit.files import fileExists, readJson, readYaml, stripExt, fileOpen, dirExists
+from ..kit.files import fileExists, readJson, readYaml, stripExt, fileOpen
 
 
 FOLDER = "folder"
@@ -267,31 +266,3 @@ def getImageSizes(scanRefDir, doCovers, silent):
             console(f"Average deviation:  W = {devW:>4} H = {devH:>4}")
 
     return sizeInfo
-
-
-def getImageLocations(app, prod, silent):
-    repoLocation = app.repoLocation
-    scanDir = f"{repoLocation}/scans"
-    thumbDir = f"{repoLocation}/{app.context.provenanceSpec['graphicsRelative']}"
-    scanRefDir = thumbDir if prod == "dev" else scanDir
-    coversDir = f"{scanRefDir}/covers"
-
-    if dirExists(coversDir):
-        if not silent:
-            console(f"Found covers in directory: {coversDir}")
-
-        doCovers = True
-    else:
-        if not silent:
-            console(f"No cover directory: {coversDir}")
-
-        doCovers = False
-
-    return AttrDict(
-        repoLocation=repoLocation,
-        scanDir=scanDir,
-        thumbDir=thumbDir,
-        scanRefDir=scanRefDir,
-        coversDir=coversDir,
-        doCovers=doCovers,
-    )

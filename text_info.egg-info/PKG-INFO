@@ -27,6 +27,7 @@ Requires-Python: >=3.13.0
 License-File: LICENSE
 Requires-Dist: wheel
 Requires-Dist: lxml
+Requires-Dist: python-gitlab
 Dynamic: license-file
 
 file README.md

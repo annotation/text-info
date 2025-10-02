@@ -49,55 +49,66 @@ def fillinIIIF(data, **kwargs):
     return data
 
 
-def parseIIIF(settings, prod, selector, **kwargs):
+def parseIIIF(settings, selectors, **kwargs):
     """Parse the iiif yml file and deliver a filled in section.
 
-    The iiif.yml file contains switches and constants and macros which then are used
-    to define IIIF things via templates.
-
-    The top-level section `scans` contains instructions to define extra annotations
-    on node types that need to refer to scans.
-    This is only used for WATM generation.
+    The iiif.yml file contains constants which are used to define IIIF things
+    via templates.
 
     The top-level section `templates` contains fragments from which manifests can be
-    constructed. This is only used in this module.
+    constructed.
 
-    This function fills in the switches, based on the parameter `prod`, then
-    prepares the constants, then prepares the macros, and then uses it all
-    to assemble either the `scans` section or the `templates` section; this
-    choice is based on the parameter `selector`.
+    This function prepares the constants and then uses them to assemble  the section
+    in the yaml file based on the parameter `selector`.
+
+    The constants are given as a list of dictionaries, where each value in such a
+    dictionary may use constants defined in previous dictionaries.
 
     Parameters
     ----------
-    prod: string
-        Either `prod` or `dev` or `preview` or `pub`.
-        This determines whether we fill in a production value or a develop value
-        or a preview value or a pub value for each of the settings mentioned in
-        the `switches` section of the iiif.yml file.
-    selector: string
-        Either `scans` or `templates` or `excludedFolders`.
-        Which top-level of sections we are going to grab out of the iiif.yml file.
+    selector: iterbale
+        Which top-level sections we are going to grab out of the iiif.yml file.
+        This can be any number of section in the yaml file, except `constants`.
     kwargs: dict
         Additional optional parameters to pass as key value pairs to
         the iiif config file. These values will be filled in for place holders
         of the form `[`*arg*`]`.
+
+    Returns
+    -------
+    void or AttrDict
+        If the constants do not resolve, or non-existing constants or arguments
+        are being refererred to, None is returned.
+
+        Otherwise, an AttrDict is returned, keyd by the sections in the selector,
+        with key value pairs from that section with the values resolved.
     """
 
-    def applySwitches(prod, constants, switches):
-        if len(switches):
-            for k, v in switches[prod].items():
+    errors = []
+
+    def resolveConstants():
+        source = settings.get("constants", [])
+
+        constants = {}
+
+        for i, batch in enumerate(source):
+            for k, v in batch.items():
+                if type(v) is str:
+                    for c, w in constants.items():
+                        v = v.replace(f"«{c}»", str(w))
+                    if "«" in v or "»" in v:
+                        errors.append(
+                            f"constant batch {i + 1}: value for {k} not resolved: {v}"
+                        )
+
                 constants[k] = v
 
         return constants
 
-    def substituteConstants(data, macros, constants, kwargs):
+    def substituteConstants(data, constants, kwargs):
         tpd = type(data)
 
         if tpd is str:
-            for k, v in macros.items():
-                pattern = f"<{k}>"
-                data = data.replace(pattern, str(v))
-
             for k, v in constants.items():
                 pattern = f"«{k}»"
 
@@ -109,7 +120,7 @@ def parseIIIF(settings, prod, selector, **kwargs):
 
             if type(data) is str:
                 for k, v in kwargs.items():
-                    pattern = f"[{k}]"
+                    pattern = f"[[{k}]]"
 
                     if type(v) is int and data == pattern:
                         data = v
@@ -117,32 +128,37 @@ def parseIIIF(settings, prod, selector, **kwargs):
                     else:
                         data = data.replace(pattern, str(v))
 
+                if "«" in data or "»" in data or "[[" in data or "]]" in data:
+                    errors.append(f"value not completely resolved: {data}")
+
             return data
 
         if tpd is list:
-            return [
-                substituteConstants(item, macros, constants, kwargs) for item in data
-            ]
+            return [substituteConstants(item, constants, kwargs) for item in data]
 
         if tpd is dict:
             return {
-                k: substituteConstants(v, macros, constants, kwargs)
-                for (k, v) in data.items()
+                k: substituteConstants(v, constants, kwargs) for (k, v) in data.items()
             }
 
         return data
 
-    constants = applySwitches(
-        prod, settings.get("constants", {}), settings.get("switches", {})
-    )
-    macros = applySwitches(
-        prod, settings.get("macros", {}), settings.get("switches", {})
-    )
+    constants = resolveConstants()
+
+    if len(errors):
+        for e in errors:
+            console(e)
+        return None
 
     return AttrDict(
         {
-            x: substituteConstants(xText, macros, constants, kwargs)
-            for (x, xText) in settings.get(selector, {}).items()
+            selector: AttrDict(
+                {
+                    x: substituteConstants(xText, constants, kwargs)
+                    for (x, xText) in settings.get(selector, {}).items()
+                }
+            )
+            for selector in selectors
         }
     )
 
@@ -150,72 +166,35 @@ def parseIIIF(settings, prod, selector, **kwargs):
 class IIIF:
     def __init__(
         self,
-        teiVersion,
-        app,
-        pageInfoDir,
-        outputDir=None,
-        prod="dev",
-        silent=False,
-        **kwargs,
+        infoDir,
+        configPath,
+        verbose=0,
     ):
         """Class for generating IIIF manifests.
 
         Parameters
         ----------
-        teiVersion: string
-            Subdirectory within the static directory.
-            The manifests are generated in this subdirectory, which corresponds to
-            the version of the TEI source.
-        app: object
-            A loaded TF data source
-        pageInfoDir: string
-            Directory where the files with page information are, especially the
-            page sequence file.
-        outputDir: string, optional None
-            If present, manifests nad logo will be generated in this directory.
-            Otherwise a standard location is chosen: `static` at
-            the top-level of the repo and within that `prod` or `dev` or
-            `preview` or `pub`.
-        prod: string, optional dev
-            Whether the manifests are for production (`prod`) or development (`dev`)
-            or preview (`preview`) or publication (`pub`).
-            If the value is `preview` or `pub` we assume that the actual scans
-            are in a IIIF repo, and not within reach of the code here. But we do assume
-            that a sizes file is present in the expected location (in the scanRefDir),
-            and possibly a rotations file.
-        silent: boolean, optional False
-            Whether to suppress output messages
-        kwargs: dict
-            Additional optional parameters to pass as key value pairs to
-            the iiif config file. These values will be filled in for place holders
-            of the form `[`*arg*`]`.
+        infoDir: string
+            Directory where the files with page information are, typically containing
+            the result of an inventory by `ti.info.tei`
+        configPath: string
+            The configuration file that directs the shape of the manifests.
+        verbose: integer, optional -1
+            Produce no (-1), some (0) or many (1) progress and reporting messages
+
         """
-        self.teiVersion = teiVersion
-        self.app = app
-        self.pageInfoDir = pageInfoDir
-        self.prod = prod if prod in {"prod", "dev", "preview", "pub"} else "dev"
-        self.silent = silent
+        self.infoDir = infoDir
+        self.configPath = configPath
+        self.verbose = verbose
         self.error = False
-        self.kwargs = kwargs
 
-        teiVersionRep = f"/{teiVersion}" if teiVersion else teiVersion
-
-        F = app.api.F
-        L = app.api.L
+        (ok, settings) = readCfg(configPath, "iiif", verbose=verbose, plain=True)
 
         myDir = dirNm(abspath(__file__))
         self.myDir = myDir
 
-        locations = getImageLocations(app, prod, silent)
-        repoLocation = locations.repoLocation
-        self.thumbDir = locations.thumbDir
-        scanRefDir = locations.scanRefDir
-        self.scanRefDir = scanRefDir
-        self.coversDir = locations.coversDir
-        doCovers = locations.doCovers
-        self.doCovers = doCovers
-
-        self.console(f"Scan images taken from {scanRefDir}")
+        if verbose != -1:
+            console(f"Source information taken from {infoDir}")
 
         outputDir = (
             f"{repoLocation}/static{teiVersionRep}/{prod}"
@@ -236,9 +215,6 @@ class IIIF:
             self.coversHtmlIn = f"{repoLocation}/programs/covers.html"
             self.coversHtmlOut = f"{outputDir}/covers.html"
 
-        (ok, settings) = readCfg(
-            repoLocation, "iiif", "IIIF", verbose=-1 if silent else 1, plain=True
-        )
         if not ok:
             self.error = True
             return
@@ -251,9 +227,7 @@ class IIIF:
         excludedFolders = parseIIIF(settings, prod, "excludedFolders")
         self.excludedFolders = excludedFolders
         self.mirador = parseIIIF(settings, prod, "mirador", **kwargs)
-        self.templates = parseIIIF(
-            settings, prod, "templates", **kwargs
-        )
+        self.templates = parseIIIF(settings, prod, "templates", **kwargs)
         switches = parseIIIF(settings, prod, "switches", **kwargs)
         server = switches[prod]["server"]
         console(f"All generated urls are for a {prod} deployment on {server}")
@@ -313,17 +287,130 @@ class IIIF:
 
             self.console(f"{folder:>10} with {fileRep}{pageRep}")
 
-    def console(self, msg, **kwargs):
-        """Print something to the output.
+    def manifests(self, manifestDir, miradorDir, **kwargs):
+        """Generate manifests.
 
-        This works exactly as `ti.kit.helpers.console`
-
-        When the silent member of the object is True, the message will be suppressed.
+        Parameters
+        ----------
+        manifestDir: string
+            Manifests and logo will be generated in this directory.
+        miradorDir: string
+            A mirador viewer with a manifest loaded will be generated here.
+        kwargs: dict
+            Additional optional parameters to pass as key value pairs to
+            the iiif config file. These values will be filled in for place holders
+            of the form `[`*arg*`]`.
         """
-        silent = self.silent
 
-        if not silent:
-            console(msg, **kwargs)
+        if self.error:
+            return
+
+        # silent = self.silent
+        mirador = self.mirador
+        folders = self.folders
+        manifestDir = self.manifestDir
+        logoInDir = self.logoInDir
+        logoDir = self.logoDir
+        doCovers = self.doCovers
+        manifestLevel = self.manifestLevel
+        pageInfoDir = self.pageInfoDir
+
+        prod = self.prod
+        settings = self.settings
+        server = settings["switches"][prod]["server"]
+
+        initTree(manifestDir, fresh=True)
+
+        miradorHtmlIn = self.miradorHtmlIn
+        miradorHtmlOut = self.miradorHtmlOut
+
+        with fileOpen(miradorHtmlIn) as fh:
+            miradorHtml = fh.read()
+
+        miradorHtml = miradorHtml.replace("«manifests»", mirador.manifests)
+        miradorHtml = miradorHtml.replace("«example»", mirador.example)
+
+        with fileOpen(miradorHtmlOut, "w") as fh:
+            fh.write(miradorHtml)
+
+        missingFiles = {}
+        self.missingFiles = missingFiles
+
+        if doCovers:
+            coversHtmlIn = self.coversHtmlIn
+            coversHtmlOut = self.coversHtmlOut
+
+            with fileOpen(coversHtmlIn) as fh:
+                coversHtml = fh.read()
+
+            coversHtml = coversHtml.replace("«server»", server)
+
+            with fileOpen(coversHtmlOut, "w") as fh:
+                fh.write(coversHtml)
+
+            self.genPages("covers")
+
+        p = 0
+        i = 0
+        m = 0
+
+        if manifestLevel == "folder":
+            for folder in folders:
+                (thisP, thisI) = self.genPages("pages", folder=folder)
+                p += thisP
+                i += thisI
+
+                if thisI:
+                    m += 1
+        else:
+            for folder, files in folders:
+                folderDir = f"{manifestDir}/{folder}"
+                initTree(folderDir, fresh=True, gentle=False)
+
+                folderI = 0
+
+                for file in files:
+                    (thisP, thisI) = self.genPages("pages", folder=folder, file=file)
+                    p += thisP
+                    i += thisI
+
+                    if thisI:
+                        m += 1
+
+                    folderI += thisI
+
+                if folderI == 0:
+                    dirRemove(folderDir)
+
+        if dirExists(logoInDir):
+            dirCopy(logoInDir, logoDir)
+        else:
+            console(f"Directory with logos not found: {logoInDir}", error=True)
+
+        if len(missingFiles):
+            console("Missing image files:", error=True)
+
+        with fileOpen(f"{pageInfoDir}/facsMissing.tsv", "w") as fh:
+            fh.write("kind\tfile\tpage\tn\n")
+            nMissing = 0
+
+            for kind, files in missingFiles.items():
+                console(f"\t{kind}:", error=True)
+
+                for file, pages in files.items():
+                    console(f"\t\t{file}:", error=True)
+
+                    for page, n in pages.items():
+                        console(f"\t\t\t{n:>3} x {page}", error=True)
+                        nMissing += n
+
+                        fh.write(f"{kind}\t{file}\t{page}\t{n}\n")
+
+            console(f"\ttotal occurrences of a missing file: {nMissing}")
+
+        self.console(
+            f"{m} IIIF manifests with {i} items for {p} pages generated in {manifestDir}"
+        )
 
     def getRotations(self):
         if self.error:
@@ -511,114 +598,3 @@ class IIIF:
                 ),
             )
         return (nPages, nItems)
-
-    def manifests(self):
-        if self.error:
-            return
-
-        # silent = self.silent
-        mirador = self.mirador
-        folders = self.folders
-        manifestDir = self.manifestDir
-        logoInDir = self.logoInDir
-        logoDir = self.logoDir
-        doCovers = self.doCovers
-        manifestLevel = self.manifestLevel
-        pageInfoDir = self.pageInfoDir
-
-        prod = self.prod
-        settings = self.settings
-        server = settings["switches"][prod]["server"]
-
-        initTree(manifestDir, fresh=True)
-
-        miradorHtmlIn = self.miradorHtmlIn
-        miradorHtmlOut = self.miradorHtmlOut
-
-        with fileOpen(miradorHtmlIn) as fh:
-            miradorHtml = fh.read()
-
-        miradorHtml = miradorHtml.replace("«manifests»", mirador.manifests)
-        miradorHtml = miradorHtml.replace("«example»", mirador.example)
-
-        with fileOpen(miradorHtmlOut, "w") as fh:
-            fh.write(miradorHtml)
-
-        missingFiles = {}
-        self.missingFiles = missingFiles
-
-        if doCovers:
-            coversHtmlIn = self.coversHtmlIn
-            coversHtmlOut = self.coversHtmlOut
-
-            with fileOpen(coversHtmlIn) as fh:
-                coversHtml = fh.read()
-
-            coversHtml = coversHtml.replace("«server»", server)
-
-            with fileOpen(coversHtmlOut, "w") as fh:
-                fh.write(coversHtml)
-
-            self.genPages("covers")
-
-        p = 0
-        i = 0
-        m = 0
-
-        if manifestLevel == "folder":
-            for folder in folders:
-                (thisP, thisI) = self.genPages("pages", folder=folder)
-                p += thisP
-                i += thisI
-
-                if thisI:
-                    m += 1
-        else:
-            for folder, files in folders:
-                folderDir = f"{manifestDir}/{folder}"
-                initTree(folderDir, fresh=True, gentle=False)
-
-                folderI = 0
-
-                for file in files:
-                    (thisP, thisI) = self.genPages("pages", folder=folder, file=file)
-                    p += thisP
-                    i += thisI
-
-                    if thisI:
-                        m += 1
-
-                    folderI += thisI
-
-                if folderI == 0:
-                    dirRemove(folderDir)
-
-        if dirExists(logoInDir):
-            dirCopy(logoInDir, logoDir)
-        else:
-            console(f"Directory with logos not found: {logoInDir}", error=True)
-
-        if len(missingFiles):
-            console("Missing image files:", error=True)
-
-        with fileOpen(f"{pageInfoDir}/facsMissing.tsv", "w") as fh:
-            fh.write("kind\tfile\tpage\tn\n")
-            nMissing = 0
-
-            for kind, files in missingFiles.items():
-                console(f"\t{kind}:", error=True)
-
-                for file, pages in files.items():
-                    console(f"\t\t{file}:", error=True)
-
-                    for page, n in pages.items():
-                        console(f"\t\t\t{n:>3} x {page}", error=True)
-                        nMissing += n
-
-                        fh.write(f"{kind}\t{file}\t{page}\t{n}\n")
-
-            console(f"\ttotal occurrences of a missing file: {nMissing}")
-
-        self.console(
-            f"{m} IIIF manifests with {i} items for {p} pages generated in {manifestDir}"
-        )
