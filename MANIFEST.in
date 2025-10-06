@@ -1,4 +1,3 @@
-include ti/info/mirador.html *
 recursive-include ti/info/fof *
 recursive-include ti/tools/tei *
 recursive-include ti/tools/trang *

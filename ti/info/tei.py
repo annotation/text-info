@@ -554,6 +554,7 @@ class TEI:
         out.refs = collections.defaultdict(lambda: collections.Counter())
         out.ids = collections.defaultdict(lambda: collections.Counter())
         out.lbParents = collections.Counter()
+        out.folders = []
         out.pageScans = {}
         out.facsMapping = {} if zoneBased else {}
         out.facsKind = {}
@@ -608,8 +609,11 @@ class TEI:
 
         xmlFilesByModel = collections.defaultdict(list)
 
+        out.files = self.getXML()
+        self.writeFileInfo()
+
         if sectionModel == "I":
-            for xmlFolder, xmlFiles in self.getXML():
+            for xmlFolder, xmlFiles in out.files:
                 msg = "Start " if verbose >= 0 else "\t"
 
                 if verbose >= 0:
@@ -622,7 +626,7 @@ class TEI:
                     xmlFilesByModel[model].append(xmlPath)
 
         elif sectionModel == "II":
-            xmlFile = self.getXML()
+            xmlFile = out.files
 
             if xmlFile is None:
                 console("No XML files found!", error=True)
@@ -633,7 +637,7 @@ class TEI:
             xmlFilesByModel[model].append(xmlFile)
 
         elif sectionModel == "III":
-            for xmlFile in self.getXML():
+            for xmlFile in out.files:
                 xmlFullPath = f"{sourceDir}/{xmlFile}"
                 (model, adapt, tpl) = self.getSwitches(xmlFullPath)
                 xmlFilesByModel[model].append(xmlFile)
@@ -999,6 +1003,17 @@ class TEI:
 
         ids[xmlPath][""] = 1
         self.analyse(root, xmlPath)
+
+    def writeFileInfo(self, verbose=0):
+        """Write the folder/file info to a file."""
+
+        reportDir = self.reportDir
+        infoFile = f"{reportDir}/files.yml"
+
+        out = self.out
+        info = out.files
+
+        writeYaml(info, asFile=infoFile)
 
     def writeErrors(self, verbose=0):
         """Write the errors to a file."""
@@ -1676,12 +1691,12 @@ class TEI:
 
         Returns
         -------
-        tuple of tuple | tuple of string | string
+        list of list | list of string | string
             If section model I is in force:
 
-            The outer tuple has sorted entries corresponding to folders under the
+            The outer list has sorted entries corresponding to folders under the
             TEI input directory.
-            Each such entry consists of the folder name and an inner tuple
+            Each such entry consists of the folder name and an inner list
             that contains the file names in that folder, sorted.
 
             If section model II is in force:
@@ -1690,7 +1705,7 @@ class TEI:
 
             If section model III is in force:
 
-            It is a tuple of multiple XML files
+            It is a list of multiple XML files
         """
         verbose = self.verbose
         sourceDir = self.sourceDir
@@ -1734,13 +1749,11 @@ class TEI:
                     hasBackMatter = True
                 else:
                     fileNames = xmlFilesRaw[folderName]
-                    xmlFiles.append((folderName, tuple(sorted(fileNames))))
+                    xmlFiles.append([folderName, sorted(fileNames)])
 
             if hasBackMatter:
                 fileNames = xmlFilesRaw[backMatter]
-                xmlFiles.append((backMatter, tuple(sorted(fileNames))))
-
-            xmlFiles = tuple(xmlFiles)
+                xmlFiles.append([backMatter, sorted(fileNames)])
 
             return xmlFiles
 
@@ -1770,4 +1783,4 @@ class TEI:
 
                     xmlFiles.append(fileName)
 
-            return tuple(sorted(xmlFiles))
+            return sorted(xmlFiles)

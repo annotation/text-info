@@ -1,7 +1,4 @@
-import re
-
 from ..kit.helpers import console
-from ..kit.files import fileExists, readJson, readYaml, stripExt, fileOpen
 
 
 FOLDER = "folder"
@@ -9,6 +6,7 @@ FILE = "file"
 LINE = "line"
 LN = "ln"
 PAGE = "page"
+PAGES = "pages"
 REGION = "region"
 DOC = "doc"
 CHAPTER = "chapter"
@@ -44,31 +42,6 @@ A model
 SECTION_MODEL_DEFAULT = "I"
 """Default model for sections.
 """
-
-
-TOKEN_RE = re.compile(r"""\w+|\W""")
-NUMBER_RE = re.compile(
-    r"""
-    ^
-    [0-9]+
-    (?:
-        [.,]
-        [0-9]+
-    )*
-    $
-""",
-    re.X,
-)
-
-W_BEFORE = re.compile(r"""^\s+""")
-W_AFTER = re.compile(r"""\s+$""")
-
-
-def repTokens(tokens):
-    text = []
-    for t, space in tokens:
-        text.append(f"‹{t}›{space}")
-    return "".join(text)
 
 
 def checkSectionModel(thisModel, verbose):
@@ -143,126 +116,3 @@ def checkSectionModel(thisModel, verbose):
         return False
 
     return dict(model=model, properties=properties)
-
-
-def getPageInfo(pageInfoDir, zoneBased, manifestLevel):
-    if pageInfoDir is None:
-        return {}
-
-    pageInfoFile = f"{pageInfoDir}/pageseq.json"
-    facsFile = f"{pageInfoDir}/facs.yml"
-
-    pages = None
-
-    if fileExists(pageInfoFile):
-        console(f"Using page info file {pageInfoFile}")
-        pages = readJson(asFile=pageInfoFile, plain=True)
-    elif fileExists(facsFile):
-        console(f"Using facs file info file {facsFile}")
-        pagesProto = readYaml(asFile=facsFile, plain=True, preferTuples=False)
-        pages = {}
-
-        if zoneBased:
-            facsMappingFile = f"{pageInfoDir}/facsMapping.yml"
-
-            if fileExists(facsMappingFile):
-                console(f"Using facs mapping file {facsMappingFile}")
-                facsMapping = readYaml(
-                    asFile=facsMappingFile, plain=True, preferTuples=False
-                )
-
-                for path, ps in pagesProto.items():
-                    pathComps = path.split("/")
-                    folder = pathComps[0]
-
-                    if manifestLevel == "file":
-                        file = stripExt(pathComps[1])
-
-                    mapping = facsMapping.get(path, {})
-                    mappedPs = [mapping.get(p, p) for p in ps]
-                    pagesDest = pages.setdefault(
-                        folder, [] if manifestLevel == "folder" else {}
-                    )
-
-                    if manifestLevel == "folder":
-                        pagesDest.extend(mappedPs)
-                    else:
-                        pagesDest.setdefault(file, []).extend(mappedPs)
-            else:
-                console(f"No facs mapping file {facsMappingFile}", error=True)
-        else:
-            for path, ps in pagesProto.items():
-                (folder, file) = path.split("/")
-                file = stripExt(file)
-                pagesDest = pages.setdefault(
-                    folder, [] if manifestLevel == "folder" else {}
-                )
-                pages.setdefault(folder, []).extend(ps)
-
-                if manifestLevel == "folder":
-                    pagesDest.extend(ps)
-                else:
-                    pagesDest.setdefault(file, []).extend(ps)
-    else:
-        console("No page-facsimile relating information found", error=True)
-
-    if pages is None:
-        console("Could not assemble page sequence info", error=True)
-        result = {}
-    else:
-        result = dict(pages=pages)
-
-    return result
-
-
-def getImageSizes(scanRefDir, doCovers, silent):
-    sizeInfo = {}
-
-    for kind in ("covers", "pages") if doCovers else ("pages",):
-        sizeFile = f"{scanRefDir}/sizes_{kind}.tsv"
-
-        thisSizeInfo = {}
-        sizeInfo[kind] = thisSizeInfo
-
-        maxW, maxH = 0, 0
-
-        n = 0
-
-        totW, totH = 0, 0
-
-        ws, hs = [], []
-
-        if not fileExists(sizeFile):
-            console(f"Size file not found: {sizeFile}", error=True)
-            continue
-
-        with fileOpen(sizeFile) as rh:
-            next(rh)
-            for line in rh:
-                fields = line.rstrip("\n").split("\t")
-                p = fields[0]
-                (w, h) = (int(x) for x in fields[1:3])
-                thisSizeInfo[p] = (w, h)
-                ws.append(w)
-                hs.append(h)
-                n += 1
-                totW += w
-                totH += h
-
-                if w > maxW:
-                    maxW = w
-                if h > maxH:
-                    maxH = h
-
-        avW = int(round(totW / n))
-        avH = int(round(totH / n))
-
-        devW = int(round(sum(abs(w - avW) for w in ws) / n))
-        devH = int(round(sum(abs(h - avH) for h in hs) / n))
-
-        if not silent:
-            console(f"Maximum dimensions: W = {maxW:>4} H = {maxH:>4}")
-            console(f"Average dimensions: W = {avW:>4} H = {avH:>4}")
-            console(f"Average deviation:  W = {devW:>4} H = {devH:>4}")
-
-    return sizeInfo

@@ -6,18 +6,17 @@ from ..kit.files import (
     fileExists,
     fileCopy,
     initTree,
-    dirNm,
-    dirExists,
-    dirRemove,
-    dirCopy,
     dirContents,
+    dirRemove,
     dirMake,
+    dirNm,
+    readYaml,
     stripExt,
     abspath,
 )
 from ..kit.generic import AttrDict
 from ..kit.helpers import console, readCfg
-from .helpers import getPageInfo, getImageLocations, getImageSizes
+from .helpers import PAGES
 
 DS_STORE = ".DS_Store"
 
@@ -49,7 +48,7 @@ def fillinIIIF(data, **kwargs):
     return data
 
 
-def parseIIIF(settings, selectors, **kwargs):
+def parseIIIF(settings, selector, **kwargs):
     """Parse the iiif yml file and deliver a filled in section.
 
     The iiif.yml file contains constants which are used to define IIIF things
@@ -66,9 +65,9 @@ def parseIIIF(settings, selectors, **kwargs):
 
     Parameters
     ----------
-    selector: iterbale
-        Which top-level sections we are going to grab out of the iiif.yml file.
-        This can be any number of section in the yaml file, except `constants`.
+    selector: string
+        Which top-level section we are going to grab out of the iiif.yml file.
+        This can be any section in the yaml file, except `constants`.
     kwargs: dict
         Additional optional parameters to pass as key value pairs to
         the iiif config file. These values will be filled in for place holders
@@ -76,12 +75,14 @@ def parseIIIF(settings, selectors, **kwargs):
 
     Returns
     -------
-    void or AttrDict
+    void or tuple
         If the constants do not resolve, or non-existing constants or arguments
         are being refererred to, None is returned.
 
-        Otherwise, an AttrDict is returned, keyd by the sections in the selector,
-        with key value pairs from that section with the values resolved.
+        Otherwise, a tuple is returned with two members:
+
+        *   an dict consisting of the resolved constants
+        *   an AttrDict with resolved key value pairs from that section.
     """
 
     errors = []
@@ -150,16 +151,14 @@ def parseIIIF(settings, selectors, **kwargs):
             console(e)
         return None
 
-    return AttrDict(
-        {
-            selector: AttrDict(
-                {
-                    x: substituteConstants(xText, constants, kwargs)
-                    for (x, xText) in settings.get(selector, {}).items()
-                }
-            )
-            for selector in selectors
-        }
+    return (
+        constants,
+        AttrDict(
+            {
+                x: substituteConstants(xText, constants, kwargs)
+                for (x, xText) in settings.get(selector, {}).items()
+            }
+        ),
     )
 
 
@@ -167,6 +166,7 @@ class IIIF:
     def __init__(
         self,
         infoDir,
+        scanInfoDir,
         configPath,
         verbose=0,
     ):
@@ -177,6 +177,9 @@ class IIIF:
         infoDir: string
             Directory where the files with page information are, typically containing
             the result of an inventory by `ti.info.tei`
+        scanInfoDir: string
+            Directory where the files with scan information are, typically containing
+            the sizes, colorspaces en rotations of the scans.
         configPath: string
             The configuration file that directs the shape of the manifests.
         verbose: integer, optional -1
@@ -184,74 +187,135 @@ class IIIF:
 
         """
         self.infoDir = infoDir
+        self.scanInfoDir = scanInfoDir
         self.configPath = configPath
         self.verbose = verbose
         self.error = False
 
         (ok, settings) = readCfg(configPath, "iiif", verbose=verbose, plain=True)
 
-        myDir = dirNm(abspath(__file__))
-        self.myDir = myDir
-
         if verbose != -1:
             console(f"Source information taken from {infoDir}")
-
-        outputDir = (
-            f"{repoLocation}/static{teiVersionRep}/{prod}"
-            if outputDir is None
-            else outputDir
-        )
-        self.outputDir = outputDir
-        self.manifestDir = f"{outputDir}/manifests"
-
-        self.pagesDir = f"{scanRefDir}/pages"
-        self.logoInDir = f"{scanRefDir}/logo"
-        self.logoDir = f"{outputDir}/logo"
-
-        self.miradorHtmlIn = f"{myDir}/mirador.html"
-        self.miradorHtmlOut = f"{outputDir}/mirador.html"
-
-        if doCovers:
-            self.coversHtmlIn = f"{repoLocation}/programs/covers.html"
-            self.coversHtmlOut = f"{outputDir}/covers.html"
 
         if not ok:
             self.error = True
             return
 
         self.settings = settings
+        myDir = dirNm(abspath(__file__))
+        self.myDir = myDir
+
+    def manifests(self, manifestDir, verbose=None, **kwargs):
+        """Generate manifests.
+
+        Parameters
+        ----------
+        manifestDir: string
+            Manifests and logo will be generated in this directory.
+        verbose: integer, optional None
+            Produce no (-1), some (0) or many (1) progress and reporting messages
+            If `None`, the value will be taken from the corresponding object member.
+        kwargs: dict
+            Additional optional parameters to pass as key value pairs to
+            the iiif config file. These values will be filled in for place holders
+            of the form `[`*arg*`]`.
+        """
+
+        if self.error:
+            return
+
+        if verbose is None:
+            verbose = self.verbose
+
+        self.manifestDir = manifestDir
+
+        infoDir = self.infoDir
+        settings = self.settings
+
+        fileInfoFile = f"{infoDir}/files.yml"
+
+        if not fileExists(fileInfoFile):
+            console(f"File with folder/file info not found: {fileInfoFile}", error=True)
+            self.error = True
+            return
+
+        files = readYaml(asFile=fileInfoFile, plain=True)
+        excludedFolders = {
+            k for k, v in settings.get("excludedFolders", {}).items() if v
+        }
+        if type(files) is not list:
+            console(f"The file info in {fileInfoFile} should be a list", error=True)
+            self.error = True
+            return
+
+        errors = []
+
+        for item in files:
+            if type(item) is not list or len(item) != 2:
+                errors.append(f"Folder {repr(item)} : not a pair")
+                continue
+
+            (folder, fls) = item
+
+            if type(fls) is not list:
+                errors.append(f"Folder {folder} : {repr(fls)} is not a list")
+                continue
+
+            for file in fls:
+                if type(file) is not str:
+                    errors.append(f"Folder {folder}: {repr(file)} is not a string")
+
+        if len(errors):
+            for error in errors:
+                console(error, error=True)
+
+            self.errors = True
+            return
+
+        iFiles = [
+            (fold, [f.removesuffix(".xml") for f in fl])
+            for (fold, fl) in files
+            if fold not in excludedFolders
+        ]
+        nFolders = len(iFiles)
+        nFiles = sum(len(x[1]) for x in iFiles)
+
+        self.files = iFiles
+        files = self.files
+
         manifestLevel = settings.get("manifestLevel", "folder")
-        console(f"Manifestlevel = {manifestLevel}")
         self.manifestLevel = manifestLevel
+        (self.constants, self.templates) = parseIIIF(settings, "templates", **kwargs)
 
-        excludedFolders = parseIIIF(settings, prod, "excludedFolders")
-        self.excludedFolders = excludedFolders
-        self.mirador = parseIIIF(settings, prod, "mirador", **kwargs)
-        self.templates = parseIIIF(settings, prod, "templates", **kwargs)
-        switches = parseIIIF(settings, prod, "switches", **kwargs)
-        server = switches[prod]["server"]
-        console(f"All generated urls are for a {prod} deployment on {server}")
+        if verbose > -1:
+            console("Parameters passed to manifest generation:")
 
-        folders = (
-            [F.folder.v(f) for f in F.otype.s("folder")]
-            if manifestLevel == "folder"
-            else [
-                (F.folder.v(fo), [F.file.v(fi) for fi in L.d(fo, otype="file")])
-                for fo in F.otype.s("folder")
-            ]
-        )
+            for k, v in sorted(kwargs.items()):
+                console(f"\t{k:<10} = {v}")
+
+            if verbose == 1:
+                console("Values for the constants of the manifest generation:")
+
+                for k, v in sorted(self.constants.items()):
+                    console(f"\t{k:<10} = {v}")
+
+            excludedFoldersStr = ", ".join(sorted(excludedFolders))
+            console(f"Manifestlevel = {manifestLevel}")
+            console(f"Excluded {manifestLevel} items: = {excludedFoldersStr}")
+
+            console(f"{nFolders} folders and {nFiles} files, not counting exclusions")
 
         self.getSizes()
         self.getRotations()
         self.getPageSeq()
         pages = self.pages
         properPages = pages.get("pages", {})
-        self.folders = folders
         mLevelFolders = manifestLevel == "folder"
 
-        self.console("Collections:")
+        if verbose > -1:
+            console("Folders:")
 
-        for item in folders:
+        for item in files:
             folder = item if mLevelFolders else item[0]
 
             n = len(properPages[folder]) if folder in properPages else 0
@@ -271,91 +335,34 @@ class IIIF:
             pageRep = f"{nP:>4} pages"
             fileRep = "" if nF is None else f"{nF:>4} files and "
 
-            if excludedFolders.get(folder, False):
-                self.console(
-                    f"{folder:>10} with {fileRep}{pageRep} (excluded in config)"
-                )
-                continue
-
             if folder not in properPages:
                 console(
-                    f"{folder:>10} with {fileRep}{pageRep} (not excluded in config)",
+                    f"\t{folder:<10} with {fileRep}{pageRep} (not excluded in config)",
                     error=True,
                 )
                 self.error = True
                 continue
 
-            self.console(f"{folder:>10} with {fileRep}{pageRep}")
+            if verbose > -1:
+                console(f"\t{folder:<10} with {fileRep}{pageRep}")
 
-    def manifests(self, manifestDir, miradorDir, **kwargs):
-        """Generate manifests.
-
-        Parameters
-        ----------
-        manifestDir: string
-            Manifests and logo will be generated in this directory.
-        miradorDir: string
-            A mirador viewer with a manifest loaded will be generated here.
-        kwargs: dict
-            Additional optional parameters to pass as key value pairs to
-            the iiif config file. These values will be filled in for place holders
-            of the form `[`*arg*`]`.
-        """
-
-        if self.error:
-            return
-
-        # silent = self.silent
-        mirador = self.mirador
-        folders = self.folders
         manifestDir = self.manifestDir
-        logoInDir = self.logoInDir
-        logoDir = self.logoDir
-        doCovers = self.doCovers
         manifestLevel = self.manifestLevel
-        pageInfoDir = self.pageInfoDir
+        infoDir = self.infoDir
 
-        prod = self.prod
         settings = self.settings
-        server = settings["switches"][prod]["server"]
 
         initTree(manifestDir, fresh=True)
 
-        miradorHtmlIn = self.miradorHtmlIn
-        miradorHtmlOut = self.miradorHtmlOut
-
-        with fileOpen(miradorHtmlIn) as fh:
-            miradorHtml = fh.read()
-
-        miradorHtml = miradorHtml.replace("«manifests»", mirador.manifests)
-        miradorHtml = miradorHtml.replace("«example»", mirador.example)
-
-        with fileOpen(miradorHtmlOut, "w") as fh:
-            fh.write(miradorHtml)
-
         missingFiles = {}
         self.missingFiles = missingFiles
-
-        if doCovers:
-            coversHtmlIn = self.coversHtmlIn
-            coversHtmlOut = self.coversHtmlOut
-
-            with fileOpen(coversHtmlIn) as fh:
-                coversHtml = fh.read()
-
-            coversHtml = coversHtml.replace("«server»", server)
-
-            with fileOpen(coversHtmlOut, "w") as fh:
-                fh.write(coversHtml)
-
-            self.genPages("covers")
 
         p = 0
         i = 0
         m = 0
 
         if manifestLevel == "folder":
-            for folder in folders:
+            for folder in files:
                 (thisP, thisI) = self.genPages("pages", folder=folder)
                 p += thisP
                 i += thisI
@@ -363,13 +370,13 @@ class IIIF:
                 if thisI:
                     m += 1
         else:
-            for folder, files in folders:
+            for folder, fls in files:
                 folderDir = f"{manifestDir}/{folder}"
                 initTree(folderDir, fresh=True, gentle=False)
 
                 folderI = 0
 
-                for file in files:
+                for file in fls:
                     (thisP, thisI) = self.genPages("pages", folder=folder, file=file)
                     p += thisP
                     i += thisI
@@ -382,22 +389,17 @@ class IIIF:
                 if folderI == 0:
                     dirRemove(folderDir)
 
-        if dirExists(logoInDir):
-            dirCopy(logoInDir, logoDir)
-        else:
-            console(f"Directory with logos not found: {logoInDir}", error=True)
-
         if len(missingFiles):
             console("Missing image files:", error=True)
 
-        with fileOpen(f"{pageInfoDir}/facsMissing.tsv", "w") as fh:
+        with fileOpen(f"{infoDir}/facsMissing.tsv", "w") as fh:
             fh.write("kind\tfile\tpage\tn\n")
             nMissing = 0
 
-            for kind, files in missingFiles.items():
+            for kind, fls in missingFiles.items():
                 console(f"\t{kind}:", error=True)
 
-                for file, pages in files.items():
+                for file, pages in fls.items():
                     console(f"\t\t{file}:", error=True)
 
                     for page, n in pages.items():
@@ -408,83 +410,201 @@ class IIIF:
 
             console(f"\ttotal occurrences of a missing file: {nMissing}")
 
-        self.console(
-            f"{m} IIIF manifests with {i} items for {p} pages generated in {manifestDir}"
-        )
+        if verbose > -1:
+            console(
+                f"{m} IIIF manifests with {i} items "
+                f"for {p} pages generated in {manifestDir}"
+            )
 
     def getRotations(self):
         if self.error:
             return
 
-        scanRefDir = self.scanRefDir
-
-        rotateFile = f"{scanRefDir}/rotation_pages.tsv"
+        verbose = self.verbose
+        scanInfoDir = self.scanInfoDir
+        prefix = "rotation_"
+        suffix = ".tsv"
 
         rotateInfo = {}
         self.rotateInfo = rotateInfo
 
-        if not fileExists(rotateFile):
-            console(f"Rotation file not found: {rotateFile}")
-            return
+        n = 0
+        nPages = 0
 
-        with fileOpen(rotateFile) as rh:
-            next(rh)
-            for line in rh:
-                fields = line.rstrip("\n").split("\t")
-                p = fields[0]
-                rot = int(fields[1])
-                rotateInfo[p] = rot
+        for f in dirContents(scanInfoDir)[0]:
+            if not f.startswith(prefix) or not f.endswith(suffix):
+                continue
+
+            kind = f.removeprefix(prefix).removesuffix(suffix).split("_", 1)[-1]
+
+            if kind != PAGES:
+                continue
+
+            with fileOpen(f"{scanInfoDir}/{f}") as rh:
+                next(rh)
+                for line in rh:
+                    fields = line.rstrip("\n").split("\t")
+                    p = fields[0]
+                    rot = int(fields[1])
+                    rotateInfo.setdefault(kind, {})[p] = rot
+                    n += 1
+
+                    if rot != 0:
+                        nPages += 1
+
+        if n == 0:
+            if verbose > -1:
+                console(f"No rotation files found in {scanInfoDir}")
+                return
+
+        if verbose > -1:
+            console(f"{nPages} pages have nonzero rotations")
 
     def getSizes(self):
         if self.error:
             return
 
-        scanRefDir = self.scanRefDir
-        doCovers = self.doCovers
-        silent = self.silent
+        verbose = self.verbose
+        scanInfoDir = self.scanInfoDir
+        prefix = "sizes_"
+        suffix = ".tsv"
 
-        self.sizeInfo = getImageSizes(scanRefDir, doCovers, silent) or {}
+        sizeInfo = {}
+        self.sizeInfo = sizeInfo
+
+        maxW, maxH = 0, 0
+        totW, totH = 0, 0
+        n = 0
+        ws, hs = [], []
+
+        for f in dirContents(scanInfoDir)[0]:
+            if not f.startswith(prefix) or not f.endswith(suffix):
+                continue
+
+            kind = f.removeprefix(prefix).removesuffix(suffix).split("_", 1)[-1]
+
+            if kind != PAGES:
+                continue
+
+            with fileOpen(f"{scanInfoDir}/{f}") as rh:
+                next(rh)
+                for line in rh:
+                    fields = line.rstrip("\n").split("\t")
+                    p = fields[0]
+                    (w, h) = (int(x) for x in fields[1:3])
+                    sizeInfo.setdefault(kind, {})[p] = (w, h)
+                    ws.append(w)
+                    hs.append(h)
+                    n += 1
+                    totW += w
+                    totH += h
+
+                    if w > maxW:
+                        maxW = w
+                    if h > maxH:
+                        maxH = h
+
+        if n == 0:
+            console(f"No sizes files found in {scanInfoDir}", error=True)
+            return
+
+        avW = int(round(totW / n))
+        avH = int(round(totH / n))
+
+        devW = int(round(sum(abs(w - avW) for w in ws) / n))
+        devH = int(round(sum(abs(h - avH) for h in hs) / n))
+
+        if verbose > -1:
+            console(f"Maximum dimensions: W = {maxW:>4} H = {maxH:>4}")
+            console(f"Average dimensions: W = {avW:>4} H = {avH:>4}")
+            console(f"Average deviation:  W = {devW:>4} H = {devH:>4}")
 
     def getPageSeq(self):
         if self.error:
             return
 
         manifestLevel = self.manifestLevel
-        doCovers = self.doCovers
         zoneBased = self.settings.get("zoneBased", False)
 
-        if doCovers:
-            coversDir = self.coversDir
-            covers = sorted(
-                stripExt(f) for f in dirContents(coversDir)[0] if f is not DS_STORE
-            )
-            self.covers = covers
+        verbose = self.verbose
+        infoDir = self.infoDir
+        facsFile = f"{infoDir}/facs.yml"
 
-        pageInfoDir = self.pageInfoDir
+        if not fileExists(facsFile):
+            console("No page-facsimile relating information found", error=True)
+            return
 
-        pages = getPageInfo(pageInfoDir, zoneBased, manifestLevel)
+        pagesProto = readYaml(asFile=facsFile, plain=True, preferTuples=False)
 
-        if doCovers:
-            pages["covers"] = covers
+        if verbose > -1:
+            console(f"Using facs file info file {facsFile}")
 
-        self.pages = pages
+        pages = {}
+
+        if zoneBased:
+            facsMappingFile = f"{infoDir}/facsMapping.yml"
+
+            if fileExists(facsMappingFile):
+                console(f"Using facs mapping file {facsMappingFile}")
+                facsMapping = readYaml(
+                    asFile=facsMappingFile, plain=True, preferTuples=False
+                )
+
+                for path, ps in pagesProto.items():
+                    pathComps = path.split("/")
+                    folder = pathComps[0]
+
+                    if manifestLevel == "file":
+                        file = stripExt(pathComps[1])
+
+                    mapping = facsMapping.get(path, {})
+                    mappedPs = [mapping.get(p, p) for p in ps]
+                    pagesDest = pages.setdefault(
+                        folder, [] if manifestLevel == "folder" else {}
+                    )
+
+                    if manifestLevel == "folder":
+                        pagesDest.extend(mappedPs)
+                    else:
+                        pagesDest.setdefault(file, []).extend(mappedPs)
+            else:
+                console(f"No facs mapping file {facsMappingFile}", error=True)
+        else:
+            for path, ps in pagesProto.items():
+                (folder, file) = path.split("/")
+                file = stripExt(file)
+                pagesDest = pages.setdefault(
+                    folder, [] if manifestLevel == "folder" else {}
+                )
+                pages.setdefault(folder, []).extend(ps)
+
+                if manifestLevel == "folder":
+                    pagesDest.extend(ps)
+                else:
+                    pagesDest.setdefault(file, []).extend(ps)
+
+        if pages is None:
+            console("Could not assemble page sequence info", error=True)
+        else:
+            result = dict(pages=pages)
+
+        self.pages = result
 
     def genPages(self, kind, folder=None, file=None):
         if self.error:
             return (0, 0)
 
-        prod = self.prod
+        constants = self.constants
         settings = self.settings
-        scanRefDir = self.scanRefDir
-        ext = settings.get("constants", {}).get("ext", "jpg")
+        scanInfoDir = self.scanInfoDir
         missingFiles = self.missingFiles
-
         manifestLevel = self.manifestLevel
         zoneBased = settings.get("zoneBased", False)
-
         templates = self.templates
         sizeInfo = self.sizeInfo.get(kind, {})
-        rotateInfo = None if kind == "covers" else self.rotateInfo
+        rotateInfo = self.rotateInfo.get(kind, {})
+        ext = constants.get("ext", "jpg")
+
         things = self.pages[kind]
         theseThings = things if folder is None else things.get(folder, None)
 
@@ -495,15 +615,10 @@ class IIIF:
                 theseThings if file is None else (theseThings or {}).get(file, [])
             )
 
-        if kind == "covers":
-            folder = "covers"
-
-        pageItem = templates.coverItem if kind == "covers" else templates.pageItem
+        pageItem = templates.pageItem
 
         itemsSeen = set()
-
         items = []
-
         nPages = 0
 
         for p in thesePages:
@@ -521,11 +636,7 @@ class IIIF:
             else:
                 region = "full"
 
-            if prod in {"preview", "pub"}:
-                scanPresent = p in sizeInfo
-            else:
-                pFile = f"{scanRefDir}/{kind}/{p}.{ext}"
-                scanPresent = fileExists(pFile)
+            scanPresent = p in sizeInfo
 
             if scanPresent:
                 w, h = sizeInfo.get(p, (0, 0))
@@ -549,7 +660,7 @@ class IIIF:
                 myDir = self.myDir
                 fof = f"{FILE_NOT_FOUND}.{ext}"
                 fofInPath = f"{myDir}/fof/{fof}"
-                fofOutDir = f"{scanRefDir}/{kind}"
+                fofOutDir = f"{scanInfoDir}/{kind}"
                 fofOutPath = f"{fofOutDir}/{fof}"
 
                 if not fileExists(fofOutPath):
@@ -573,9 +684,7 @@ class IIIF:
 
             items.append(item)
 
-        pageSequence = (
-            templates.coverSequence if kind == "covers" else templates.pageSequence
-        )
+        pageSequence = templates.pageSequence
         manifestDir = self.manifestDir
 
         data = {}
