@@ -31,18 +31,21 @@ crossorigin>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/aa439e40f08027e60c76a5bd756adad2f6c3df74/ti/kit/helpers.py#L1-L110" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/helpers.py#L1-L315" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">import os
 import sys
+import time
 import re
 from subprocess import run as run_cmd, CalledProcessError
-from datetime import datetime as dt, timezone
+from datetime import datetime as dt, timezone, UTC
+import unicodedata
 
 
 from .files import readYaml, unexpanduser as ux
 
 
+TZ_RE = re.compile(r&#34;&#34;&#34;(?:Z|(?:[+-][0-9:]+))$&#34;&#34;&#34;)
 LETTER = set(&#34;abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ&#34;)
 
 SEP_RE = re.compile(r&#34;[\n\t ,]+&#34;)
@@ -50,10 +53,175 @@ STRIP_RE = re.compile(r&#34;(?:^[\n\t ,]+)|(?:[\n\t ,]+$)&#34;, re.S)
 VAR_RE = re.compile(r&#34;\{([^}]+?)(:[^}]*)?\}&#34;)
 MSG_LINE_RE = re.compile(r&#34;^( *[0-9]+) (.*)$&#34;)
 NUM_ALFA_RE = re.compile(r&#34;^([0-9]*)([^0-9]*)(.*)$&#34;)
+WHITE_RE = re.compile(r&#34;&#34;&#34;\s+&#34;&#34;&#34;)
+TO_ASCII_DEF = dict(
+    ñ=&#34;n&#34;,
+    ø=&#34;o&#34;,
+    ç=&#34;c&#34;,
+)
+&#34;&#34;&#34;Undecomposable UNICODE characters mapped to their related ASCII characters.&#34;&#34;&#34;
+
+
+TO_ASCII = {}
+
+for u, a in TO_ASCII_DEF.items():
+    TO_ASCII[u] = a
+    TO_ASCII[u.upper()] = a.upper()
+
+
+LETTER = set(&#34;abcdefghijklmnopqrstuvwxyz()-&#34;)
+VALID = set(&#34;_0123456789&#34;) | LETTER
+SEQ_RE = re.compile(r&#34;&#34;&#34;^(.*)\(([0-9]+)\)$&#34;&#34;&#34;, re.S)
+
+
+def normalize(text):
+    &#34;&#34;&#34;Produce a normalized version of a string.
+
+    Parameters
+    ----------
+    text: string
+        The input text
+
+    Returns
+    -------
+    string
+        The lower-cased, whitespace normalized version of the input.
+    &#34;&#34;&#34;
+    return WHITE_RE.sub(&#34; &#34;, text.strip()).lower()
+
+
+def toAscii(text):
+    &#34;&#34;&#34;Transforms a text with diacritical marks into a plain ASCII text.
+
+    Characters with diacritics are replaced by their base character.
+    Some characters with diacritics are considered by UNICODE to be undecomposable
+    characters, such as `ø` and `ñ`.
+    We use a table (`TO_ASCII_DEF`) to map these on their related ASCII characters.
+
+    We replace all consecutive whitespace by `_`, en we replace all non-alphanumeric
+    characters except `()` by `x`.
+
+    Parameters
+    ----------
+    text: string
+        The text to be translated
+
+    Returns
+    -------
+    string
+        The translated text.
+    &#34;&#34;&#34;
+    text = WHITE_RE.sub(&#34;_&#34;, text.strip()).lower()
+    text = &#34;&#34;.join(
+        TO_ASCII.get(c, c)
+        for c in unicodedata.normalize(&#34;NFD&#34;, text)
+        if unicodedata.category(c) != &#34;Mn&#34;
+    )
+    text = &#34;&#34;.join(c if c in VALID else &#34;x&#34; for c in text)
+    return text
+
+
+def makeAsciiUnique(text, among):
+    &#34;&#34;&#34;Transforms a text into plain ASCII and makes it unique among alternatives.
+
+    Paramaters
+    ----------
+    text: string
+        The text to be translated
+
+    among: set of string
+        The strings among which the result should be unique.
+        It is assumed that these strings are themselves the results of `toAscii`.
+    &#34;&#34;&#34;
+
+    candidate = toAscii(text)
+
+    if candidate not in among:
+        return candidate
+
+    match = SEQ_RE.match(candidate)
+    (base, seq) = match.group(1, 2) if match else (candidate, None)
+
+    if seq is not None:
+        seq = int(seq)
+
+    oSeqs = set()
+
+    for other in sorted(among):
+        match = SEQ_RE.match(other)
+        (oBase, oSeq) = match.group(1, 2) if match else (other, None)
+
+        if oBase == base:
+            oSeqs.add(None if oSeq is None else int(oSeq))
+
+    if len(oSeqs):
+        if seq in oSeqs:
+            newSeqRep = f&#34;({max((oSeq for oSeq in oSeqs if oSeq is not None), default=0) + 1})&#34;
+        else:
+            newSeqRep = &#34;&#34; if seq is None else f&#34;({seq})&#34;
+    else:
+        newSeqRep = &#34;(1)&#34;
+    return f&#34;{base}{newSeqRep}&#34;
 
 
 def utcnow():
+    &#34;&#34;&#34;The current moment in time in the UTC time zone.
+
+    Returns
+    -------
+    datetime
+        An aware datetime object (in the sense of: having the timezone included
+        in its value.
+    &#34;&#34;&#34;
     return dt.now(timezone.utc)
+
+
+def isonow():
+    &#34;&#34;&#34;The current moment in time as an ISO 8601 string value.
+
+    Details:
+
+    *   the precision is up to the second;
+    *   the separator between the date part and the timpe part is `T`;
+    *   the timezone is UTC, marked as `Z` directly after the time part.
+
+    Returns
+    -------
+    string
+        E.g. `2024-11-13T10:53:15Z`
+    &#34;&#34;&#34;
+    return TZ_RE.sub(&#34;Z&#34;, utcnow().isoformat(timespec=&#34;seconds&#34;, sep=&#34;T&#34;))
+
+
+def pseudoisonow():
+    &#34;&#34;&#34;The current moment in time as a isolike string value.
+
+    It is like `isonow()`, but the time separators (`:`) are
+    replaced by `-`, so that the string can be included in urls.
+
+    Returns
+    -------
+    string
+        E.g. `2024-11-13T10-53-15Z`
+    &#34;&#34;&#34;
+    return isonow().replace(&#34;:&#34;, &#34;-&#34;)
+
+
+def getDelta(days, refDate, iso=True):
+    if refDate is None:
+        # undefined dates count as not recent
+        return 0
+
+    delta = utcnow() - (
+        dt.fromisoformat(refDate) if iso else dt.fromtimestamp(refDate, tz=UTC)
+    )
+    deltaDays = delta.days + delta.seconds / 86400
+
+    return deltaDays
+
+
+def lessAgo(days, refDate, iso=True):
+    return 0 &lt;= getDelta(days, refDate, iso=iso) &lt; days
 
 
 def versionSort(x):
@@ -65,6 +233,36 @@ def versionSort(x):
         parts.append((int(num) if num else 0, alfa, rest))
 
     return tuple(parts)
+
+
+def plainify(value):
+    &#34;&#34;&#34;Make sure that the value is either a string or a list of strings.
+
+    If it is a dict, turn it into a list of stringified key-value pairs.
+    &#34;&#34;&#34;
+    if value is None:
+        return &#34;&#34;
+
+    tp = type(value)
+
+    if tp is list:
+        return [plainify(v) for v in value]
+
+    if tp is dict:
+        return [f&#34;{k}: {plainify(v)}&#34; for (k, v) in value.items()]
+
+    return str(value)
+
+
+def ucFirst(x):
+    if not x:
+        return &#34;&#34;
+
+    return x[0].upper() + x[1:]
+
+
+def prettify(x):
+    return &#34; &#34;.join(ucFirst(w) for w in x.split(&#34;_&#34;))
 
 
 def var(envVar):
@@ -83,7 +281,7 @@ def var(envVar):
     return os.environ.get(envVar, None)
 
 
-def console(*msg, error=False, newline=True):
+def console(*msg, error=False, newline=True, sleep=None):
     msg = &#34; &#34;.join(m if type(m) is str else repr(m) for m in msg)
     msg = &#34;&#34; if not msg else ux(msg)
     msg = msg[1:] if msg.startswith(&#34;\n&#34;) else msg
@@ -92,6 +290,13 @@ def console(*msg, error=False, newline=True):
     nl = &#34;\n&#34; if newline else &#34;&#34;
     target.write(f&#34;{msg}{nl}&#34;)
     target.flush()
+
+    if sleep:
+        time.sleep(sleep)
+
+
+def consoleT01(msg, error=False, newline=True):
+    console(msg, error=error, newline=newline, sleep=0.1)
 
 
 def run(cmdline, workDir=None):
@@ -148,21 +353,28 @@ def readCfg(settingsFile, label, verbose=0, **kwargs):
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-variables">Global variables</h2>
+<dl>
+<dt id="ti.kit.helpers.TO_ASCII_DEF"><code class="name">var <span class="ident">TO_ASCII_DEF</span></code></dt>
+<dd>
+<div class="desc"><p>Undecomposable UNICODE characters mapped to their related ASCII characters.</p></div>
+</dd>
+</dl>
 </section>
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="ti.kit.helpers.console"><code class="name flex">
-<span>def <span class="ident">console</span></span>(<span>*msg, error=False, newline=True)</span>
+<span>def <span class="ident">console</span></span>(<span>*msg, error=False, newline=True, sleep=None)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/aa439e40f08027e60c76a5bd756adad2f6c3df74/ti/kit/helpers.py#L51-L59" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/helpers.py#L249-L260" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">def console(*msg, error=False, newline=True):
+<pre><code class="python">def console(*msg, error=False, newline=True, sleep=None):
     msg = &#34; &#34;.join(m if type(m) is str else repr(m) for m in msg)
     msg = &#34;&#34; if not msg else ux(msg)
     msg = msg[1:] if msg.startswith(&#34;\n&#34;) else msg
@@ -170,7 +382,269 @@ def readCfg(settingsFile, label, verbose=0, **kwargs):
     target = sys.stderr if error else sys.stdout
     nl = &#34;\n&#34; if newline else &#34;&#34;
     target.write(f&#34;{msg}{nl}&#34;)
-    target.flush()</code></pre>
+    target.flush()
+
+    if sleep:
+        time.sleep(sleep)</code></pre>
+</details>
+</dd>
+<dt id="ti.kit.helpers.consoleT01"><code class="name flex">
+<span>def <span class="ident">consoleT01</span></span>(<span>msg, error=False, newline=True)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/helpers.py#L263-L264" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def consoleT01(msg, error=False, newline=True):
+    console(msg, error=error, newline=newline, sleep=0.1)</code></pre>
+</details>
+</dd>
+<dt id="ti.kit.helpers.getDelta"><code class="name flex">
+<span>def <span class="ident">getDelta</span></span>(<span>days, refDate, iso=True)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/helpers.py#L175-L185" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def getDelta(days, refDate, iso=True):
+    if refDate is None:
+        # undefined dates count as not recent
+        return 0
+
+    delta = utcnow() - (
+        dt.fromisoformat(refDate) if iso else dt.fromtimestamp(refDate, tz=UTC)
+    )
+    deltaDays = delta.days + delta.seconds / 86400
+
+    return deltaDays</code></pre>
+</details>
+</dd>
+<dt id="ti.kit.helpers.isonow"><code class="name flex">
+<span>def <span class="ident">isonow</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>The current moment in time as an ISO 8601 string value.</p>
+<p>Details:</p>
+<ul>
+<li>the precision is up to the second;</li>
+<li>the separator between the date part and the timpe part is <code>T</code>;</li>
+<li>the timezone is UTC, marked as <code>Z</code> directly after the time part.</li>
+</ul>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>string</code></dt>
+<dd>E.g. <code>2024-11-13T10:53:15Z</code></dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/helpers.py#L144-L158" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def isonow():
+    &#34;&#34;&#34;The current moment in time as an ISO 8601 string value.
+
+    Details:
+
+    *   the precision is up to the second;
+    *   the separator between the date part and the timpe part is `T`;
+    *   the timezone is UTC, marked as `Z` directly after the time part.
+
+    Returns
+    -------
+    string
+        E.g. `2024-11-13T10:53:15Z`
+    &#34;&#34;&#34;
+    return TZ_RE.sub(&#34;Z&#34;, utcnow().isoformat(timespec=&#34;seconds&#34;, sep=&#34;T&#34;))</code></pre>
+</details>
+</dd>
+<dt id="ti.kit.helpers.lessAgo"><code class="name flex">
+<span>def <span class="ident">lessAgo</span></span>(<span>days, refDate, iso=True)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/helpers.py#L188-L189" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def lessAgo(days, refDate, iso=True):
+    return 0 &lt;= getDelta(days, refDate, iso=iso) &lt; days</code></pre>
+</details>
+</dd>
+<dt id="ti.kit.helpers.makeAsciiUnique"><code class="name flex">
+<span>def <span class="ident">makeAsciiUnique</span></span>(<span>text, among)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Transforms a text into plain ASCII and makes it unique among alternatives.</p>
+<h2 id="paramaters">Paramaters</h2>
+<p>text: string
+The text to be translated</p>
+<p>among: set of string
+The strings among which the result should be unique.
+It is assumed that these strings are themselves the results of <code><a title="ti.kit.helpers.toAscii" href="#ti.kit.helpers.toAscii">toAscii()</a></code>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/helpers.py#L89-L129" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def makeAsciiUnique(text, among):
+    &#34;&#34;&#34;Transforms a text into plain ASCII and makes it unique among alternatives.
+
+    Paramaters
+    ----------
+    text: string
+        The text to be translated
+
+    among: set of string
+        The strings among which the result should be unique.
+        It is assumed that these strings are themselves the results of `toAscii`.
+    &#34;&#34;&#34;
+
+    candidate = toAscii(text)
+
+    if candidate not in among:
+        return candidate
+
+    match = SEQ_RE.match(candidate)
+    (base, seq) = match.group(1, 2) if match else (candidate, None)
+
+    if seq is not None:
+        seq = int(seq)
+
+    oSeqs = set()
+
+    for other in sorted(among):
+        match = SEQ_RE.match(other)
+        (oBase, oSeq) = match.group(1, 2) if match else (other, None)
+
+        if oBase == base:
+            oSeqs.add(None if oSeq is None else int(oSeq))
+
+    if len(oSeqs):
+        if seq in oSeqs:
+            newSeqRep = f&#34;({max((oSeq for oSeq in oSeqs if oSeq is not None), default=0) + 1})&#34;
+        else:
+            newSeqRep = &#34;&#34; if seq is None else f&#34;({seq})&#34;
+    else:
+        newSeqRep = &#34;(1)&#34;
+    return f&#34;{base}{newSeqRep}&#34;</code></pre>
+</details>
+</dd>
+<dt id="ti.kit.helpers.normalize"><code class="name flex">
+<span>def <span class="ident">normalize</span></span>(<span>text)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Produce a normalized version of a string.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>text</code></strong> :&ensp;<code>string</code></dt>
+<dd>The input text</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>string</code></dt>
+<dd>The lower-cased, whitespace normalized version of the input.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/helpers.py#L42-L55" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def normalize(text):
+    &#34;&#34;&#34;Produce a normalized version of a string.
+
+    Parameters
+    ----------
+    text: string
+        The input text
+
+    Returns
+    -------
+    string
+        The lower-cased, whitespace normalized version of the input.
+    &#34;&#34;&#34;
+    return WHITE_RE.sub(&#34; &#34;, text.strip()).lower()</code></pre>
+</details>
+</dd>
+<dt id="ti.kit.helpers.plainify"><code class="name flex">
+<span>def <span class="ident">plainify</span></span>(<span>value)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Make sure that the value is either a string or a list of strings.</p>
+<p>If it is a dict, turn it into a list of stringified key-value pairs.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/helpers.py#L203-L219" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def plainify(value):
+    &#34;&#34;&#34;Make sure that the value is either a string or a list of strings.
+
+    If it is a dict, turn it into a list of stringified key-value pairs.
+    &#34;&#34;&#34;
+    if value is None:
+        return &#34;&#34;
+
+    tp = type(value)
+
+    if tp is list:
+        return [plainify(v) for v in value]
+
+    if tp is dict:
+        return [f&#34;{k}: {plainify(v)}&#34; for (k, v) in value.items()]
+
+    return str(value)</code></pre>
+</details>
+</dd>
+<dt id="ti.kit.helpers.prettify"><code class="name flex">
+<span>def <span class="ident">prettify</span></span>(<span>x)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/helpers.py#L229-L230" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def prettify(x):
+    return &#34; &#34;.join(ucFirst(w) for w in x.split(&#34;_&#34;))</code></pre>
+</details>
+</dd>
+<dt id="ti.kit.helpers.pseudoisonow"><code class="name flex">
+<span>def <span class="ident">pseudoisonow</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>The current moment in time as a isolike string value.</p>
+<p>It is like <code><a title="ti.kit.helpers.isonow" href="#ti.kit.helpers.isonow">isonow()</a></code>, but the time separators (<code>:</code>) are
+replaced by <code>-</code>, so that the string can be included in urls.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>string</code></dt>
+<dd>E.g. <code>2024-11-13T10-53-15Z</code></dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/helpers.py#L161-L172" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def pseudoisonow():
+    &#34;&#34;&#34;The current moment in time as a isolike string value.
+
+    It is like `isonow()`, but the time separators (`:`) are
+    replaced by `-`, so that the string can be included in urls.
+
+    Returns
+    -------
+    string
+        E.g. `2024-11-13T10-53-15Z`
+    &#34;&#34;&#34;
+    return isonow().replace(&#34;:&#34;, &#34;-&#34;)</code></pre>
 </details>
 </dd>
 <dt id="ti.kit.helpers.readCfg"><code class="name flex">
@@ -181,7 +655,7 @@ def readCfg(settingsFile, label, verbose=0, **kwargs):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/aa439e40f08027e60c76a5bd756adad2f6c3df74/ti/kit/helpers.py#L99-L110" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/helpers.py#L304-L315" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def readCfg(settingsFile, label, verbose=0, **kwargs):
     settings = readYaml(asFile=settingsFile, **kwargs)
@@ -216,7 +690,7 @@ If <code>None</code> the current directory is used.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/aa439e40f08027e60c76a5bd756adad2f6c3df74/ti/kit/helpers.py#L62-L96" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/helpers.py#L267-L301" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def run(cmdline, workDir=None):
     &#34;&#34;&#34;Runs a shell command and returns all relevant info.
@@ -255,17 +729,105 @@ If <code>None</code> the current directory is used.</dd>
     return (good, returnCode, stdOut, stdErr)</code></pre>
 </details>
 </dd>
-<dt id="ti.kit.helpers.utcnow"><code class="name flex">
-<span>def <span class="ident">utcnow</span></span>(<span>)</span>
+<dt id="ti.kit.helpers.toAscii"><code class="name flex">
+<span>def <span class="ident">toAscii</span></span>(<span>text)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Transforms a text with diacritical marks into a plain ASCII text.</p>
+<p>Characters with diacritics are replaced by their base character.
+Some characters with diacritics are considered by UNICODE to be undecomposable
+characters, such as <code>ø</code> and <code>ñ</code>.
+We use a table (<code><a title="ti.kit.helpers.TO_ASCII_DEF" href="#ti.kit.helpers.TO_ASCII_DEF">TO_ASCII_DEF</a></code>) to map these on their related ASCII characters.</p>
+<p>We replace all consecutive whitespace by <code>_</code>, en we replace all non-alphanumeric
+characters except <code>()</code> by <code>x</code>.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>text</code></strong> :&ensp;<code>string</code></dt>
+<dd>The text to be translated</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>string</code></dt>
+<dd>The translated text.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/helpers.py#L58-L86" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def toAscii(text):
+    &#34;&#34;&#34;Transforms a text with diacritical marks into a plain ASCII text.
+
+    Characters with diacritics are replaced by their base character.
+    Some characters with diacritics are considered by UNICODE to be undecomposable
+    characters, such as `ø` and `ñ`.
+    We use a table (`TO_ASCII_DEF`) to map these on their related ASCII characters.
+
+    We replace all consecutive whitespace by `_`, en we replace all non-alphanumeric
+    characters except `()` by `x`.
+
+    Parameters
+    ----------
+    text: string
+        The text to be translated
+
+    Returns
+    -------
+    string
+        The translated text.
+    &#34;&#34;&#34;
+    text = WHITE_RE.sub(&#34;_&#34;, text.strip()).lower()
+    text = &#34;&#34;.join(
+        TO_ASCII.get(c, c)
+        for c in unicodedata.normalize(&#34;NFD&#34;, text)
+        if unicodedata.category(c) != &#34;Mn&#34;
+    )
+    text = &#34;&#34;.join(c if c in VALID else &#34;x&#34; for c in text)
+    return text</code></pre>
+</details>
+</dd>
+<dt id="ti.kit.helpers.ucFirst"><code class="name flex">
+<span>def <span class="ident">ucFirst</span></span>(<span>x)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/aa439e40f08027e60c76a5bd756adad2f6c3df74/ti/kit/helpers.py#L20-L21" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/helpers.py#L222-L226" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def ucFirst(x):
+    if not x:
+        return &#34;&#34;
+
+    return x[0].upper() + x[1:]</code></pre>
+</details>
+</dd>
+<dt id="ti.kit.helpers.utcnow"><code class="name flex">
+<span>def <span class="ident">utcnow</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>The current moment in time in the UTC time zone.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>datetime</code></dt>
+<dd>An aware datetime object (in the sense of: having the timezone included
+in its value.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/helpers.py#L132-L141" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def utcnow():
+    &#34;&#34;&#34;The current moment in time in the UTC time zone.
+
+    Returns
+    -------
+    datetime
+        An aware datetime object (in the sense of: having the timezone included
+        in its value.
+    &#34;&#34;&#34;
     return dt.now(timezone.utc)</code></pre>
 </details>
 </dd>
@@ -287,7 +849,7 @@ If <code>None</code> the current directory is used.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/aa439e40f08027e60c76a5bd756adad2f6c3df74/ti/kit/helpers.py#L35-L48" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/helpers.py#L233-L246" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def var(envVar):
     &#34;&#34;&#34;Retrieves the value of an environment variable.
@@ -313,7 +875,7 @@ If <code>None</code> the current directory is used.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/aa439e40f08027e60c76a5bd756adad2f6c3df74/ti/kit/helpers.py#L24-L32" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/helpers.py#L192-L200" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def versionSort(x):
     parts = []
@@ -393,11 +955,27 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="ti.kit" href="index.html">ti.kit</a></code></li>
 </ul>
 </li>
+<li><h3><a href="#header-variables">Global variables</a></h3>
+<ul class="">
+<li><code><a title="ti.kit.helpers.TO_ASCII_DEF" href="#ti.kit.helpers.TO_ASCII_DEF">TO_ASCII_DEF</a></code></li>
+</ul>
+</li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="two-column">
 <li><code><a title="ti.kit.helpers.console" href="#ti.kit.helpers.console">console</a></code></li>
+<li><code><a title="ti.kit.helpers.consoleT01" href="#ti.kit.helpers.consoleT01">consoleT01</a></code></li>
+<li><code><a title="ti.kit.helpers.getDelta" href="#ti.kit.helpers.getDelta">getDelta</a></code></li>
+<li><code><a title="ti.kit.helpers.isonow" href="#ti.kit.helpers.isonow">isonow</a></code></li>
+<li><code><a title="ti.kit.helpers.lessAgo" href="#ti.kit.helpers.lessAgo">lessAgo</a></code></li>
+<li><code><a title="ti.kit.helpers.makeAsciiUnique" href="#ti.kit.helpers.makeAsciiUnique">makeAsciiUnique</a></code></li>
+<li><code><a title="ti.kit.helpers.normalize" href="#ti.kit.helpers.normalize">normalize</a></code></li>
+<li><code><a title="ti.kit.helpers.plainify" href="#ti.kit.helpers.plainify">plainify</a></code></li>
+<li><code><a title="ti.kit.helpers.prettify" href="#ti.kit.helpers.prettify">prettify</a></code></li>
+<li><code><a title="ti.kit.helpers.pseudoisonow" href="#ti.kit.helpers.pseudoisonow">pseudoisonow</a></code></li>
 <li><code><a title="ti.kit.helpers.readCfg" href="#ti.kit.helpers.readCfg">readCfg</a></code></li>
 <li><code><a title="ti.kit.helpers.run" href="#ti.kit.helpers.run">run</a></code></li>
+<li><code><a title="ti.kit.helpers.toAscii" href="#ti.kit.helpers.toAscii">toAscii</a></code></li>
+<li><code><a title="ti.kit.helpers.ucFirst" href="#ti.kit.helpers.ucFirst">ucFirst</a></code></li>
 <li><code><a title="ti.kit.helpers.utcnow" href="#ti.kit.helpers.utcnow">utcnow</a></code></li>
 <li><code><a title="ti.kit.helpers.var" href="#ti.kit.helpers.var">var</a></code></li>
 <li><code><a title="ti.kit.helpers.versionSort" href="#ti.kit.helpers.versionSort">versionSort</a></code></li>

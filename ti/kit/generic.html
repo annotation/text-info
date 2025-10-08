@@ -31,7 +31,7 @@ crossorigin>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/aa439e40f08027e60c76a5bd756adad2f6c3df74/ti/kit/generic.py#L1-L123" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/generic.py#L1-L137" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class AttrDict(dict):
     &#34;&#34;&#34;Turn a dict into an object with attributes.
@@ -96,15 +96,19 @@ def deepdict(info):
     return (
         dict({k: deepdict(v) for (k, v) in info.items()})
         if tp in {dict, AttrDict}
-        else tuple(deepdict(item) for item in info)
-        if tp is tuple
-        else frozenset(deepdict(item) for item in info)
-        if tp is frozenset
-        else [deepdict(item) for item in info]
-        if tp is list
-        else {deepdict(item) for item in info}
-        if tp is set
-        else info
+        else (
+            tuple(deepdict(item) for item in info)
+            if tp is tuple
+            else (
+                frozenset(deepdict(item) for item in info)
+                if tp is frozenset
+                else (
+                    [deepdict(item) for item in info]
+                    if tp is list
+                    else {deepdict(item) for item in info} if tp is set else info
+                )
+            )
+        )
     )
 
 
@@ -135,15 +139,25 @@ def deepAttrDict(info, preferTuples=False):
             {k: deepAttrDict(v, preferTuples=preferTuples) for (k, v) in info.items()}
         )
         if tp in {dict, AttrDict}
-        else tuple(deepAttrDict(item, preferTuples=preferTuples) for item in info)
-        if tp is tuple or (tp is list and preferTuples)
-        else frozenset(deepAttrDict(item, preferTuples=preferTuples) for item in info)
-        if tp is frozenset
-        else [deepAttrDict(item, preferTuples=preferTuples) for item in info]
-        if tp is list
-        else {deepAttrDict(item, preferTuples=preferTuples) for item in info}
-        if tp is set
-        else info
+        else (
+            tuple(deepAttrDict(item, preferTuples=preferTuples) for item in info)
+            if tp is tuple or (tp is list and preferTuples)
+            else (
+                frozenset(
+                    deepAttrDict(item, preferTuples=preferTuples) for item in info
+                )
+                if tp is frozenset
+                else (
+                    [deepAttrDict(item, preferTuples=preferTuples) for item in info]
+                    if tp is list
+                    else (
+                        {deepAttrDict(item, preferTuples=preferTuples) for item in info}
+                        if tp is set
+                        else info
+                    )
+                )
+            )
+        )
     )
 
 
@@ -190,7 +204,7 @@ each value of type <code>dict</code> is turned into an <code><a title="ti.kit.ge
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/aa439e40f08027e60c76a5bd756adad2f6c3df74/ti/kit/generic.py#L76-L112" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/generic.py#L80-L126" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def deepAttrDict(info, preferTuples=False):
     &#34;&#34;&#34;Turn a `dict` into an `AttrDict`, recursively.
@@ -219,15 +233,25 @@ each value of type <code>dict</code> is turned into an <code><a title="ti.kit.ge
             {k: deepAttrDict(v, preferTuples=preferTuples) for (k, v) in info.items()}
         )
         if tp in {dict, AttrDict}
-        else tuple(deepAttrDict(item, preferTuples=preferTuples) for item in info)
-        if tp is tuple or (tp is list and preferTuples)
-        else frozenset(deepAttrDict(item, preferTuples=preferTuples) for item in info)
-        if tp is frozenset
-        else [deepAttrDict(item, preferTuples=preferTuples) for item in info]
-        if tp is list
-        else {deepAttrDict(item, preferTuples=preferTuples) for item in info}
-        if tp is set
-        else info
+        else (
+            tuple(deepAttrDict(item, preferTuples=preferTuples) for item in info)
+            if tp is tuple or (tp is list and preferTuples)
+            else (
+                frozenset(
+                    deepAttrDict(item, preferTuples=preferTuples) for item in info
+                )
+                if tp is frozenset
+                else (
+                    [deepAttrDict(item, preferTuples=preferTuples) for item in info]
+                    if tp is list
+                    else (
+                        {deepAttrDict(item, preferTuples=preferTuples) for item in info}
+                        if tp is set
+                        else info
+                    )
+                )
+            )
+        )
     )</code></pre>
 </details>
 </dd>
@@ -254,7 +278,7 @@ each value of type <code><a title="ti.kit.generic.AttrDict" href="#ti.kit.generi
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/aa439e40f08027e60c76a5bd756adad2f6c3df74/ti/kit/generic.py#L41-L73" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/generic.py#L41-L77" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def deepdict(info):
     &#34;&#34;&#34;Turns an `AttrDict` into a `dict`, recursively.
@@ -279,15 +303,19 @@ each value of type <code><a title="ti.kit.generic.AttrDict" href="#ti.kit.generi
     return (
         dict({k: deepdict(v) for (k, v) in info.items()})
         if tp in {dict, AttrDict}
-        else tuple(deepdict(item) for item in info)
-        if tp is tuple
-        else frozenset(deepdict(item) for item in info)
-        if tp is frozenset
-        else [deepdict(item) for item in info]
-        if tp is list
-        else {deepdict(item) for item in info}
-        if tp is set
-        else info
+        else (
+            tuple(deepdict(item) for item in info)
+            if tp is tuple
+            else (
+                frozenset(deepdict(item) for item in info)
+                if tp is frozenset
+                else (
+                    [deepdict(item) for item in info]
+                    if tp is list
+                    else {deepdict(item) for item in info} if tp is set else info
+                )
+            )
+        )
     )</code></pre>
 </details>
 </dd>
@@ -304,7 +332,7 @@ But for this purpose we regard strings as non-iterable scalars.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/aa439e40f08027e60c76a5bd756adad2f6c3df74/ti/kit/generic.py#L115-L123" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/generic.py#L129-L137" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def isIterable(value):
     &#34;&#34;&#34;Whether a value is a non-string iterable.
@@ -346,7 +374,7 @@ dict by means of keys, like <code>xxx["yyy"]</code> rather then by attribute lik
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/aa439e40f08027e60c76a5bd756adad2f6c3df74/ti/kit/generic.py#L1-L38" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/generic.py#L1-L38" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class AttrDict(dict):
     &#34;&#34;&#34;Turn a dict into an object with attributes.
@@ -401,7 +429,7 @@ dict by means of keys, like <code>xxx["yyy"]</code> rather then by attribute lik
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/aa439e40f08027e60c76a5bd756adad2f6c3df74/ti/kit/generic.py#L37-L38" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/generic.py#L37-L38" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def deepdict(self):
     return deepdict(self)</code></pre>

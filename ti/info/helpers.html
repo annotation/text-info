@@ -31,13 +31,9 @@ crossorigin>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/aa439e40f08027e60c76a5bd756adad2f6c3df74/ti/info/helpers.py#L1-L297" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/info/helpers.py#L1-L118" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">import re
-
-from ..kit.generic import AttrDict
-from ..kit.helpers import console
-from ..kit.files import fileExists, readJson, readYaml, stripExt, fileOpen, dirExists
+<pre><code class="python">from ..kit.helpers import console
 
 
 FOLDER = &#34;folder&#34;
@@ -45,6 +41,7 @@ FILE = &#34;file&#34;
 LINE = &#34;line&#34;
 LN = &#34;ln&#34;
 PAGE = &#34;page&#34;
+PAGES = &#34;pages&#34;
 REGION = &#34;region&#34;
 DOC = &#34;doc&#34;
 CHAPTER = &#34;chapter&#34;
@@ -80,31 +77,6 @@ A model
 SECTION_MODEL_DEFAULT = &#34;I&#34;
 &#34;&#34;&#34;Default model for sections.
 &#34;&#34;&#34;
-
-
-TOKEN_RE = re.compile(r&#34;&#34;&#34;\w+|\W&#34;&#34;&#34;)
-NUMBER_RE = re.compile(
-    r&#34;&#34;&#34;
-    ^
-    [0-9]+
-    (?:
-        [.,]
-        [0-9]+
-    )*
-    $
-&#34;&#34;&#34;,
-    re.X,
-)
-
-W_BEFORE = re.compile(r&#34;&#34;&#34;^\s+&#34;&#34;&#34;)
-W_AFTER = re.compile(r&#34;&#34;&#34;\s+$&#34;&#34;&#34;)
-
-
-def repTokens(tokens):
-    text = []
-    for t, space in tokens:
-        text.append(f&#34;‹{t}›{space}&#34;)
-    return &#34;&#34;.join(text)
 
 
 def checkSectionModel(thisModel, verbose):
@@ -178,158 +150,7 @@ def checkSectionModel(thisModel, verbose):
     if not good:
         return False
 
-    return dict(model=model, properties=properties)
-
-
-def getPageInfo(pageInfoDir, zoneBased, manifestLevel):
-    if pageInfoDir is None:
-        return {}
-
-    pageInfoFile = f&#34;{pageInfoDir}/pageseq.json&#34;
-    facsFile = f&#34;{pageInfoDir}/facs.yml&#34;
-
-    pages = None
-
-    if fileExists(pageInfoFile):
-        console(f&#34;Using page info file {pageInfoFile}&#34;)
-        pages = readJson(asFile=pageInfoFile, plain=True)
-    elif fileExists(facsFile):
-        console(f&#34;Using facs file info file {facsFile}&#34;)
-        pagesProto = readYaml(asFile=facsFile, plain=True, preferTuples=False)
-        pages = {}
-
-        if zoneBased:
-            facsMappingFile = f&#34;{pageInfoDir}/facsMapping.yml&#34;
-
-            if fileExists(facsMappingFile):
-                console(f&#34;Using facs mapping file {facsMappingFile}&#34;)
-                facsMapping = readYaml(
-                    asFile=facsMappingFile, plain=True, preferTuples=False
-                )
-
-                for path, ps in pagesProto.items():
-                    pathComps = path.split(&#34;/&#34;)
-                    folder = pathComps[0]
-
-                    if manifestLevel == &#34;file&#34;:
-                        file = stripExt(pathComps[1])
-
-                    mapping = facsMapping.get(path, {})
-                    mappedPs = [mapping.get(p, p) for p in ps]
-                    pagesDest = pages.setdefault(
-                        folder, [] if manifestLevel == &#34;folder&#34; else {}
-                    )
-
-                    if manifestLevel == &#34;folder&#34;:
-                        pagesDest.extend(mappedPs)
-                    else:
-                        pagesDest.setdefault(file, []).extend(mappedPs)
-            else:
-                console(f&#34;No facs mapping file {facsMappingFile}&#34;, error=True)
-        else:
-            for path, ps in pagesProto.items():
-                (folder, file) = path.split(&#34;/&#34;)
-                file = stripExt(file)
-                pagesDest = pages.setdefault(
-                    folder, [] if manifestLevel == &#34;folder&#34; else {}
-                )
-                pages.setdefault(folder, []).extend(ps)
-
-                if manifestLevel == &#34;folder&#34;:
-                    pagesDest.extend(ps)
-                else:
-                    pagesDest.setdefault(file, []).extend(ps)
-    else:
-        console(&#34;No page-facsimile relating information found&#34;, error=True)
-
-    if pages is None:
-        console(&#34;Could not assemble page sequence info&#34;, error=True)
-        result = {}
-    else:
-        result = dict(pages=pages)
-
-    return result
-
-
-def getImageSizes(scanRefDir, doCovers, silent):
-    sizeInfo = {}
-
-    for kind in (&#34;covers&#34;, &#34;pages&#34;) if doCovers else (&#34;pages&#34;,):
-        sizeFile = f&#34;{scanRefDir}/sizes_{kind}.tsv&#34;
-
-        thisSizeInfo = {}
-        sizeInfo[kind] = thisSizeInfo
-
-        maxW, maxH = 0, 0
-
-        n = 0
-
-        totW, totH = 0, 0
-
-        ws, hs = [], []
-
-        if not fileExists(sizeFile):
-            console(f&#34;Size file not found: {sizeFile}&#34;, error=True)
-            continue
-
-        with fileOpen(sizeFile) as rh:
-            next(rh)
-            for line in rh:
-                fields = line.rstrip(&#34;\n&#34;).split(&#34;\t&#34;)
-                p = fields[0]
-                (w, h) = (int(x) for x in fields[1:3])
-                thisSizeInfo[p] = (w, h)
-                ws.append(w)
-                hs.append(h)
-                n += 1
-                totW += w
-                totH += h
-
-                if w &gt; maxW:
-                    maxW = w
-                if h &gt; maxH:
-                    maxH = h
-
-        avW = int(round(totW / n))
-        avH = int(round(totH / n))
-
-        devW = int(round(sum(abs(w - avW) for w in ws) / n))
-        devH = int(round(sum(abs(h - avH) for h in hs) / n))
-
-        if not silent:
-            console(f&#34;Maximum dimensions: W = {maxW:&gt;4} H = {maxH:&gt;4}&#34;)
-            console(f&#34;Average dimensions: W = {avW:&gt;4} H = {avH:&gt;4}&#34;)
-            console(f&#34;Average deviation:  W = {devW:&gt;4} H = {devH:&gt;4}&#34;)
-
-    return sizeInfo
-
-
-def getImageLocations(app, prod, silent):
-    repoLocation = app.repoLocation
-    scanDir = f&#34;{repoLocation}/scans&#34;
-    thumbDir = f&#34;{repoLocation}/{app.context.provenanceSpec[&#39;graphicsRelative&#39;]}&#34;
-    scanRefDir = thumbDir if prod == &#34;dev&#34; else scanDir
-    coversDir = f&#34;{scanRefDir}/covers&#34;
-
-    if dirExists(coversDir):
-        if not silent:
-            console(f&#34;Found covers in directory: {coversDir}&#34;)
-
-        doCovers = True
-    else:
-        if not silent:
-            console(f&#34;No cover directory: {coversDir}&#34;)
-
-        doCovers = False
-
-    return AttrDict(
-        repoLocation=repoLocation,
-        scanDir=scanDir,
-        thumbDir=thumbDir,
-        scanRefDir=scanRefDir,
-        coversDir=coversDir,
-        doCovers=doCovers,
-    )</code></pre>
+    return dict(model=model, properties=properties)</code></pre>
 </details>
 </section>
 <section>
@@ -361,7 +182,7 @@ or by elements within a single TEI source file.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/aa439e40f08027e60c76a5bd756adad2f6c3df74/ti/info/helpers.py#L75-L146" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/info/helpers.py#L47-L118" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def checkSectionModel(thisModel, verbose):
     modelDefault = SECTION_MODEL_DEFAULT
@@ -435,204 +256,6 @@ or by elements within a single TEI source file.</p>
         return False
 
     return dict(model=model, properties=properties)</code></pre>
-</details>
-</dd>
-<dt id="ti.info.helpers.getImageLocations"><code class="name flex">
-<span>def <span class="ident">getImageLocations</span></span>(<span>app, prod, silent)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/aa439e40f08027e60c76a5bd756adad2f6c3df74/ti/info/helpers.py#L272-L297" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">def getImageLocations(app, prod, silent):
-    repoLocation = app.repoLocation
-    scanDir = f&#34;{repoLocation}/scans&#34;
-    thumbDir = f&#34;{repoLocation}/{app.context.provenanceSpec[&#39;graphicsRelative&#39;]}&#34;
-    scanRefDir = thumbDir if prod == &#34;dev&#34; else scanDir
-    coversDir = f&#34;{scanRefDir}/covers&#34;
-
-    if dirExists(coversDir):
-        if not silent:
-            console(f&#34;Found covers in directory: {coversDir}&#34;)
-
-        doCovers = True
-    else:
-        if not silent:
-            console(f&#34;No cover directory: {coversDir}&#34;)
-
-        doCovers = False
-
-    return AttrDict(
-        repoLocation=repoLocation,
-        scanDir=scanDir,
-        thumbDir=thumbDir,
-        scanRefDir=scanRefDir,
-        coversDir=coversDir,
-        doCovers=doCovers,
-    )</code></pre>
-</details>
-</dd>
-<dt id="ti.info.helpers.getImageSizes"><code class="name flex">
-<span>def <span class="ident">getImageSizes</span></span>(<span>scanRefDir, doCovers, silent)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/aa439e40f08027e60c76a5bd756adad2f6c3df74/ti/info/helpers.py#L219-L269" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">def getImageSizes(scanRefDir, doCovers, silent):
-    sizeInfo = {}
-
-    for kind in (&#34;covers&#34;, &#34;pages&#34;) if doCovers else (&#34;pages&#34;,):
-        sizeFile = f&#34;{scanRefDir}/sizes_{kind}.tsv&#34;
-
-        thisSizeInfo = {}
-        sizeInfo[kind] = thisSizeInfo
-
-        maxW, maxH = 0, 0
-
-        n = 0
-
-        totW, totH = 0, 0
-
-        ws, hs = [], []
-
-        if not fileExists(sizeFile):
-            console(f&#34;Size file not found: {sizeFile}&#34;, error=True)
-            continue
-
-        with fileOpen(sizeFile) as rh:
-            next(rh)
-            for line in rh:
-                fields = line.rstrip(&#34;\n&#34;).split(&#34;\t&#34;)
-                p = fields[0]
-                (w, h) = (int(x) for x in fields[1:3])
-                thisSizeInfo[p] = (w, h)
-                ws.append(w)
-                hs.append(h)
-                n += 1
-                totW += w
-                totH += h
-
-                if w &gt; maxW:
-                    maxW = w
-                if h &gt; maxH:
-                    maxH = h
-
-        avW = int(round(totW / n))
-        avH = int(round(totH / n))
-
-        devW = int(round(sum(abs(w - avW) for w in ws) / n))
-        devH = int(round(sum(abs(h - avH) for h in hs) / n))
-
-        if not silent:
-            console(f&#34;Maximum dimensions: W = {maxW:&gt;4} H = {maxH:&gt;4}&#34;)
-            console(f&#34;Average dimensions: W = {avW:&gt;4} H = {avH:&gt;4}&#34;)
-            console(f&#34;Average deviation:  W = {devW:&gt;4} H = {devH:&gt;4}&#34;)
-
-    return sizeInfo</code></pre>
-</details>
-</dd>
-<dt id="ti.info.helpers.getPageInfo"><code class="name flex">
-<span>def <span class="ident">getPageInfo</span></span>(<span>pageInfoDir, zoneBased, manifestLevel)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/aa439e40f08027e60c76a5bd756adad2f6c3df74/ti/info/helpers.py#L149-L216" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">def getPageInfo(pageInfoDir, zoneBased, manifestLevel):
-    if pageInfoDir is None:
-        return {}
-
-    pageInfoFile = f&#34;{pageInfoDir}/pageseq.json&#34;
-    facsFile = f&#34;{pageInfoDir}/facs.yml&#34;
-
-    pages = None
-
-    if fileExists(pageInfoFile):
-        console(f&#34;Using page info file {pageInfoFile}&#34;)
-        pages = readJson(asFile=pageInfoFile, plain=True)
-    elif fileExists(facsFile):
-        console(f&#34;Using facs file info file {facsFile}&#34;)
-        pagesProto = readYaml(asFile=facsFile, plain=True, preferTuples=False)
-        pages = {}
-
-        if zoneBased:
-            facsMappingFile = f&#34;{pageInfoDir}/facsMapping.yml&#34;
-
-            if fileExists(facsMappingFile):
-                console(f&#34;Using facs mapping file {facsMappingFile}&#34;)
-                facsMapping = readYaml(
-                    asFile=facsMappingFile, plain=True, preferTuples=False
-                )
-
-                for path, ps in pagesProto.items():
-                    pathComps = path.split(&#34;/&#34;)
-                    folder = pathComps[0]
-
-                    if manifestLevel == &#34;file&#34;:
-                        file = stripExt(pathComps[1])
-
-                    mapping = facsMapping.get(path, {})
-                    mappedPs = [mapping.get(p, p) for p in ps]
-                    pagesDest = pages.setdefault(
-                        folder, [] if manifestLevel == &#34;folder&#34; else {}
-                    )
-
-                    if manifestLevel == &#34;folder&#34;:
-                        pagesDest.extend(mappedPs)
-                    else:
-                        pagesDest.setdefault(file, []).extend(mappedPs)
-            else:
-                console(f&#34;No facs mapping file {facsMappingFile}&#34;, error=True)
-        else:
-            for path, ps in pagesProto.items():
-                (folder, file) = path.split(&#34;/&#34;)
-                file = stripExt(file)
-                pagesDest = pages.setdefault(
-                    folder, [] if manifestLevel == &#34;folder&#34; else {}
-                )
-                pages.setdefault(folder, []).extend(ps)
-
-                if manifestLevel == &#34;folder&#34;:
-                    pagesDest.extend(ps)
-                else:
-                    pagesDest.setdefault(file, []).extend(ps)
-    else:
-        console(&#34;No page-facsimile relating information found&#34;, error=True)
-
-    if pages is None:
-        console(&#34;Could not assemble page sequence info&#34;, error=True)
-        result = {}
-    else:
-        result = dict(pages=pages)
-
-    return result</code></pre>
-</details>
-</dd>
-<dt id="ti.info.helpers.repTokens"><code class="name flex">
-<span>def <span class="ident">repTokens</span></span>(<span>tokens)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/aa439e40f08027e60c76a5bd756adad2f6c3df74/ti/info/helpers.py#L68-L72" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">def repTokens(tokens):
-    text = []
-    for t, space in tokens:
-        text.append(f&#34;‹{t}›{space}&#34;)
-    return &#34;&#34;.join(text)</code></pre>
 </details>
 </dd>
 </dl>
@@ -711,10 +334,6 @@ setTimeout(() => input.focus(), 100);
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="ti.info.helpers.checkSectionModel" href="#ti.info.helpers.checkSectionModel">checkSectionModel</a></code></li>
-<li><code><a title="ti.info.helpers.getImageLocations" href="#ti.info.helpers.getImageLocations">getImageLocations</a></code></li>
-<li><code><a title="ti.info.helpers.getImageSizes" href="#ti.info.helpers.getImageSizes">getImageSizes</a></code></li>
-<li><code><a title="ti.info.helpers.getPageInfo" href="#ti.info.helpers.getPageInfo">getPageInfo</a></code></li>
-<li><code><a title="ti.info.helpers.repTokens" href="#ti.info.helpers.repTokens">repTokens</a></code></li>
 </ul>
 </li>
 </ul>
