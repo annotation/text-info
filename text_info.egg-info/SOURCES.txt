@@ -20,7 +20,6 @@ ti/cheatsheet.py
 ti/parameters.py
 ti/info/helpers.py
 ti/info/iiif.py
-ti/info/mirador.html
 ti/info/scans.py
 ti/info/tei.py
 ti/info/fof/filenotfound.gif
@@ -29,6 +28,14 @@ ti/info/fof/filenotfound.jpg
 ti/info/fof/filenotfound.pdf
 ti/info/fof/filenotfound.png
 ti/info/fof/filenotfound.tiff
+ti/kit/__init__.py
+ti/kit/command.py
+ti/kit/files.py
+ti/kit/generic.py
+ti/kit/helpers.py
+ti/kit/pdocs.py
+ti/kit/repo.py
+ti/kit/timestamp.py
 ti/tools/helpers.py
 ti/tools/xmlschema.py
 ti/tools/jing/copying.html

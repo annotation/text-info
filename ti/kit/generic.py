@@ -61,15 +61,19 @@ def deepdict(info):
     return (
         dict({k: deepdict(v) for (k, v) in info.items()})
         if tp in {dict, AttrDict}
-        else tuple(deepdict(item) for item in info)
-        if tp is tuple
-        else frozenset(deepdict(item) for item in info)
-        if tp is frozenset
-        else [deepdict(item) for item in info]
-        if tp is list
-        else {deepdict(item) for item in info}
-        if tp is set
-        else info
+        else (
+            tuple(deepdict(item) for item in info)
+            if tp is tuple
+            else (
+                frozenset(deepdict(item) for item in info)
+                if tp is frozenset
+                else (
+                    [deepdict(item) for item in info]
+                    if tp is list
+                    else {deepdict(item) for item in info} if tp is set else info
+                )
+            )
+        )
     )
 
 
@@ -100,15 +104,25 @@ def deepAttrDict(info, preferTuples=False):
             {k: deepAttrDict(v, preferTuples=preferTuples) for (k, v) in info.items()}
         )
         if tp in {dict, AttrDict}
-        else tuple(deepAttrDict(item, preferTuples=preferTuples) for item in info)
-        if tp is tuple or (tp is list and preferTuples)
-        else frozenset(deepAttrDict(item, preferTuples=preferTuples) for item in info)
-        if tp is frozenset
-        else [deepAttrDict(item, preferTuples=preferTuples) for item in info]
-        if tp is list
-        else {deepAttrDict(item, preferTuples=preferTuples) for item in info}
-        if tp is set
-        else info
+        else (
+            tuple(deepAttrDict(item, preferTuples=preferTuples) for item in info)
+            if tp is tuple or (tp is list and preferTuples)
+            else (
+                frozenset(
+                    deepAttrDict(item, preferTuples=preferTuples) for item in info
+                )
+                if tp is frozenset
+                else (
+                    [deepAttrDict(item, preferTuples=preferTuples) for item in info]
+                    if tp is list
+                    else (
+                        {deepAttrDict(item, preferTuples=preferTuples) for item in info}
+                        if tp is set
+                        else info
+                    )
+                )
+            )
+        )
     )
 
 
