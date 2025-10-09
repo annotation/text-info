@@ -9,6 +9,14 @@ from .generic import deepAttrDict
 
 DS_STORE = ".DS_Store"
 
+EXPRESS_SYNC = "__checkout__.txt"
+"""Name of cache indicator file.
+
+When a dataset is stored in the cache,
+information about the release / commit is stored in a file
+with this name.
+"""
+
 
 def str_presenter(dumper, data):
     """configures yaml for dumping multiline strings
@@ -263,6 +271,22 @@ def fileCopy(pathSrc, pathDst):
         copy(pathSrc, pathDst)
 
 
+def fileCopyExpr(dirSrc, dirDst):
+    """Copies the `__checkout__.txt` file from one directory to an other.
+
+    Wipes the destination file, if it exists.
+    """
+    pathSrc = f"{dirSrc}/{EXPRESS_SYNC}"
+    pathDst = f"{dirDst}/{EXPRESS_SYNC}"
+
+    if pathSrc == pathDst:
+        return
+
+    if fileExists(pathSrc):
+        fileRemove(pathDst)
+        copy(pathSrc, pathDst)
+
+
 def fileMove(pathSrc, pathDst):
     """Moves a file if it exists as file.
 
@@ -508,7 +532,7 @@ def dirContents(path, asSet=False):
     return (set(files), set(dirs)) if asSet else (tuple(files), tuple(dirs))
 
 
-def dirAllFiles(path, ignore=None):
+def dirAllFiles(path, ignore=None, relative=False):
     """Gets all the files found by `path`.
 
     The result is just `[path]` if `path` is a file, otherwise the list of files under
@@ -520,8 +544,10 @@ def dirAllFiles(path, ignore=None):
     ----------
     path: string
         The path to the file or directory on the file system.
-    ignore: set
+    ignore: set, optional None
         Names of directories that must be skipped
+    tailOnly: boolean, optional False
+        Only return the tail of each file name, i.e. the part relative to *path*
 
     Returns
     -------
@@ -529,28 +555,35 @@ def dirAllFiles(path, ignore=None):
         The names of the files under `path`, starting with `path`, followed
         by the bit relative to `path`.
     """
+
+    def _getFiles(parent):
+        files = []
+
+        for entry in os.listdir(parent):
+            name = f"{parent}/{entry}"
+
+            if os.path.isfile(name):
+                files.append(name)
+            elif os.path.isdir(name):
+                if entry in ignore:
+                    continue
+                files.extend(_getFiles(name))
+
+        return tuple(sorted(files))
+
     if fileExists(path):
-        return [path]
+        return [""] if relative else [path]
 
     if not dirExists(path):
         return []
 
-    files = []
-
     if not ignore:
         ignore = set()
 
-    for entry in os.listdir(path):
-        name = f"{path}/{entry}"
+    files = _getFiles(path)
+    prefix = f"{path}/"
 
-        if os.path.isfile(name):
-            files.append(name)
-        elif os.path.isdir(name):
-            if entry in ignore:
-                continue
-            files.extend(dirAllFiles(name, ignore=ignore))
-
-    return tuple(sorted(files))
+    return tuple(f.removeprefix(prefix) for f in files) if relative else files
 
 
 def getCwd():

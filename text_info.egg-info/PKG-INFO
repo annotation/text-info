@@ -9,7 +9,6 @@ License: MIT
 Keywords: text,xml,corpus
 Classifier: Development Status :: 4 - Beta
 Classifier: Environment :: Other Environment
-Classifier: Framework :: Jupyter
 Classifier: Intended Audience :: Developers
 Classifier: Intended Audience :: Education
 Classifier: Intended Audience :: Science/Research
@@ -26,6 +25,7 @@ Classifier: Topic :: Text Processing :: Markup
 Requires-Python: >=3.13.0
 License-File: LICENSE
 Requires-Dist: wheel
+Requires-Dist: pyyaml
 Requires-Dist: lxml
 Requires-Dist: python-gitlab
 Dynamic: license-file

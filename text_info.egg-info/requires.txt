@@ -1,3 +1,4 @@
 wheel
+pyyaml
 lxml
 python-gitlab
