@@ -31,7 +31,7 @@ crossorigin>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/files.py#L1-L789" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/files.py#L1-L822" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">import os
 import yaml
@@ -43,6 +43,14 @@ from .generic import deepAttrDict
 
 
 DS_STORE = &#34;.DS_Store&#34;
+
+EXPRESS_SYNC = &#34;__checkout__.txt&#34;
+&#34;&#34;&#34;Name of cache indicator file.
+
+When a dataset is stored in the cache,
+information about the release / commit is stored in a file
+with this name.
+&#34;&#34;&#34;
 
 
 def str_presenter(dumper, data):
@@ -298,6 +306,22 @@ def fileCopy(pathSrc, pathDst):
         copy(pathSrc, pathDst)
 
 
+def fileCopyExpr(dirSrc, dirDst):
+    &#34;&#34;&#34;Copies the `__checkout__.txt` file from one directory to an other.
+
+    Wipes the destination file, if it exists.
+    &#34;&#34;&#34;
+    pathSrc = f&#34;{dirSrc}/{EXPRESS_SYNC}&#34;
+    pathDst = f&#34;{dirDst}/{EXPRESS_SYNC}&#34;
+
+    if pathSrc == pathDst:
+        return
+
+    if fileExists(pathSrc):
+        fileRemove(pathDst)
+        copy(pathSrc, pathDst)
+
+
 def fileMove(pathSrc, pathDst):
     &#34;&#34;&#34;Moves a file if it exists as file.
 
@@ -543,7 +567,7 @@ def dirContents(path, asSet=False):
     return (set(files), set(dirs)) if asSet else (tuple(files), tuple(dirs))
 
 
-def dirAllFiles(path, ignore=None):
+def dirAllFiles(path, ignore=None, relative=False):
     &#34;&#34;&#34;Gets all the files found by `path`.
 
     The result is just `[path]` if `path` is a file, otherwise the list of files under
@@ -555,8 +579,10 @@ def dirAllFiles(path, ignore=None):
     ----------
     path: string
         The path to the file or directory on the file system.
-    ignore: set
+    ignore: set, optional None
         Names of directories that must be skipped
+    tailOnly: boolean, optional False
+        Only return the tail of each file name, i.e. the part relative to *path*
 
     Returns
     -------
@@ -564,28 +590,35 @@ def dirAllFiles(path, ignore=None):
         The names of the files under `path`, starting with `path`, followed
         by the bit relative to `path`.
     &#34;&#34;&#34;
+
+    def _getFiles(parent):
+        files = []
+
+        for entry in os.listdir(parent):
+            name = f&#34;{parent}/{entry}&#34;
+
+            if os.path.isfile(name):
+                files.append(name)
+            elif os.path.isdir(name):
+                if entry in ignore:
+                    continue
+                files.extend(_getFiles(name))
+
+        return tuple(sorted(files))
+
     if fileExists(path):
-        return [path]
+        return [&#34;&#34;] if relative else [path]
 
     if not dirExists(path):
         return []
 
-    files = []
-
     if not ignore:
         ignore = set()
 
-    for entry in os.listdir(path):
-        name = f&#34;{path}/{entry}&#34;
+    files = _getFiles(path)
+    prefix = f&#34;{path}/&#34;
 
-        if os.path.isfile(name):
-            files.append(name)
-        elif os.path.isdir(name):
-            if entry in ignore:
-                continue
-            files.extend(dirAllFiles(name, ignore=ignore))
-
-    return tuple(sorted(files))
+    return tuple(f.removeprefix(prefix) for f in files) if relative else files
 
 
 def getCwd():
@@ -827,6 +860,16 @@ def writeYaml(data, asFile=None, sorted=False):
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-variables">Global variables</h2>
+<dl>
+<dt id="ti.kit.files.EXPRESS_SYNC"><code class="name">var <span class="ident">EXPRESS_SYNC</span></code></dt>
+<dd>
+<div class="desc"><p>Name of cache indicator file.</p>
+<p>When a dataset is stored in the cache,
+information about the release / commit is stored in a file
+with this name.</p></div>
+</dd>
+</dl>
 </section>
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
@@ -839,7 +882,7 @@ def writeYaml(data, asFile=None, sorted=False):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/files.py#L62-L63" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/files.py#L70-L71" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def abspath(path):
     return normpath(os.path.abspath(path))</code></pre>
@@ -858,7 +901,7 @@ def writeYaml(data, asFile=None, sorted=False):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/files.py#L567-L575" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/files.py#L600-L608" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def chDir(directory):
     &#34;&#34;&#34;Change to other directory.
@@ -886,7 +929,7 @@ home directory.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/files.py#L99-L127" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/files.py#L107-L135" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def clearTree(path):
     &#34;&#34;&#34;Remove all files from a directory, recursively, but leave subdirectories.
@@ -920,7 +963,7 @@ home directory.</p></div>
 </details>
 </dd>
 <dt id="ti.kit.files.dirAllFiles"><code class="name flex">
-<span>def <span class="ident">dirAllFiles</span></span>(<span>path, ignore=None)</span>
+<span>def <span class="ident">dirAllFiles</span></span>(<span>path, ignore=None, relative=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Gets all the files found by <code>path</code>.</p>
@@ -931,8 +974,10 @@ home directory.</p></div>
 <dl>
 <dt><strong><code>path</code></strong> :&ensp;<code>string</code></dt>
 <dd>The path to the file or directory on the file system.</dd>
-<dt><strong><code>ignore</code></strong> :&ensp;<code>set</code></dt>
+<dt><strong><code>ignore</code></strong> :&ensp;<code>set</code>, optional <code>None</code></dt>
 <dd>Names of directories that must be skipped</dd>
+<dt><strong><code>tailOnly</code></strong> :&ensp;<code>boolean</code>, optional <code>False</code></dt>
+<dd>Only return the tail of each file name, i.e. the part relative to <em>path</em></dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -943,9 +988,9 @@ by the bit relative to <code>path</code>.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/files.py#L511-L553" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/files.py#L535-L586" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">def dirAllFiles(path, ignore=None):
+<pre><code class="python">def dirAllFiles(path, ignore=None, relative=False):
     &#34;&#34;&#34;Gets all the files found by `path`.
 
     The result is just `[path]` if `path` is a file, otherwise the list of files under
@@ -957,8 +1002,10 @@ by the bit relative to <code>path</code>.</dd>
     ----------
     path: string
         The path to the file or directory on the file system.
-    ignore: set
+    ignore: set, optional None
         Names of directories that must be skipped
+    tailOnly: boolean, optional False
+        Only return the tail of each file name, i.e. the part relative to *path*
 
     Returns
     -------
@@ -966,28 +1013,35 @@ by the bit relative to <code>path</code>.</dd>
         The names of the files under `path`, starting with `path`, followed
         by the bit relative to `path`.
     &#34;&#34;&#34;
+
+    def _getFiles(parent):
+        files = []
+
+        for entry in os.listdir(parent):
+            name = f&#34;{parent}/{entry}&#34;
+
+            if os.path.isfile(name):
+                files.append(name)
+            elif os.path.isdir(name):
+                if entry in ignore:
+                    continue
+                files.extend(_getFiles(name))
+
+        return tuple(sorted(files))
+
     if fileExists(path):
-        return [path]
+        return [&#34;&#34;] if relative else [path]
 
     if not dirExists(path):
         return []
 
-    files = []
-
     if not ignore:
         ignore = set()
 
-    for entry in os.listdir(path):
-        name = f&#34;{path}/{entry}&#34;
+    files = _getFiles(path)
+    prefix = f&#34;{path}/&#34;
 
-        if os.path.isfile(name):
-            files.append(name)
-        elif os.path.isdir(name):
-            if entry in ignore:
-                continue
-            files.extend(dirAllFiles(name, ignore=ignore))
-
-    return tuple(sorted(files))</code></pre>
+    return tuple(f.removeprefix(prefix) for f in files) if relative else files</code></pre>
 </details>
 </dd>
 <dt id="ti.kit.files.dirContents"><code class="name flex">
@@ -1017,7 +1071,7 @@ so <code>path</code> is not prepended to these names.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/files.py#L472-L508" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/files.py#L496-L532" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dirContents(path, asSet=False):
     &#34;&#34;&#34;Gets the contents of a directory.
@@ -1067,7 +1121,7 @@ so <code>path</code> is not prepended to these names.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/files.py#L302-L315" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/files.py#L326-L339" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dirCopy(pathSrc, pathDst, noclobber=False):
     &#34;&#34;&#34;Copies a directory if it exists as directory.
@@ -1093,7 +1147,7 @@ so <code>path</code> is not prepended to these names.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/files.py#L94-L96" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/files.py#L102-L104" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dirEmpty(target):
     target = normpath(target)
@@ -1108,7 +1162,7 @@ so <code>path</code> is not prepended to these names.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/files.py#L276-L282" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/files.py#L300-L306" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dirExists(path):
     &#34;&#34;&#34;Whether a path exists as directory on the file system.&#34;&#34;&#34;
@@ -1127,7 +1181,7 @@ so <code>path</code> is not prepended to these names.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/files.py#L466-L469" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/files.py#L490-L493" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dirMake(path):
     &#34;&#34;&#34;Creates a directory if it does not already exist as directory.&#34;&#34;&#34;
@@ -1144,7 +1198,7 @@ so <code>path</code> is not prepended to these names.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/files.py#L291-L299" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/files.py#L315-L323" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dirMove(pathSrc, pathDst):
     &#34;&#34;&#34;Moves a directory if it exists as directory.
@@ -1172,7 +1226,7 @@ If it is 0 or lower, the <code>path</code> itself is returned.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/files.py#L162-L172" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/files.py#L170-L180" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dirNm(path, up=1):
     &#34;&#34;&#34;Get the directory part of a file name.
@@ -1195,7 +1249,7 @@ If it is 0 or lower, the <code>path</code> itself is returned.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/files.py#L285-L288" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/files.py#L309-L312" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dirRemove(path):
     &#34;&#34;&#34;Removes a directory if it exists as directory.&#34;&#34;&#34;
@@ -1256,7 +1310,7 @@ that directories with the same version names are the same</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/files.py#L318-L463" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/files.py#L342-L487" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dirUpdate(pathSrc, pathDst, force=False, delete=True, level=-1, conservative=False):
     &#34;&#34;&#34;Makes a destination dir equal to a source dir by copying newer files only.
@@ -1414,7 +1468,7 @@ that directories with the same version names are the same</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/files.py#L79-L86" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/files.py#L87-L94" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def expandDir(obj, dirName):
     if dirName.startswith(&#34;~&#34;):
@@ -1434,7 +1488,7 @@ that directories with the same version names are the same</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/files.py#L66-L71" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/files.py#L74-L79" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def expanduser(path):
     nPath = normpath(path)
@@ -1454,7 +1508,7 @@ If there is no extension, the empty string is returned.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/files.py#L180-L187" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/files.py#L188-L195" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def extNm(path):
     &#34;&#34;&#34;Get the extension part of a file name.
@@ -1477,7 +1531,7 @@ Otherwise, wipes the destination file, if it exists.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/files.py#L252-L263" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/files.py#L260-L271" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def fileCopy(pathSrc, pathDst):
     &#34;&#34;&#34;Copies a file if it exists as file.
@@ -1485,6 +1539,33 @@ Otherwise, wipes the destination file, if it exists.</p></div>
     source path.
     Otherwise, wipes the destination file, if it exists.
     &#34;&#34;&#34;
+    if pathSrc == pathDst:
+        return
+
+    if fileExists(pathSrc):
+        fileRemove(pathDst)
+        copy(pathSrc, pathDst)</code></pre>
+</details>
+</dd>
+<dt id="ti.kit.files.fileCopyExpr"><code class="name flex">
+<span>def <span class="ident">fileCopyExpr</span></span>(<span>dirSrc, dirDst)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Copies the <code>__checkout__.txt</code> file from one directory to an other.</p>
+<p>Wipes the destination file, if it exists.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/files.py#L274-L287" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def fileCopyExpr(dirSrc, dirDst):
+    &#34;&#34;&#34;Copies the `__checkout__.txt` file from one directory to an other.
+
+    Wipes the destination file, if it exists.
+    &#34;&#34;&#34;
+    pathSrc = f&#34;{dirSrc}/{EXPRESS_SYNC}&#34;
+    pathDst = f&#34;{dirDst}/{EXPRESS_SYNC}&#34;
+
     if pathSrc == pathDst:
         return
 
@@ -1501,7 +1582,7 @@ Otherwise, wipes the destination file, if it exists.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/files.py#L241-L243" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/files.py#L249-L251" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def fileExists(path):
     &#34;&#34;&#34;Whether a path exists as file on the file system.&#34;&#34;&#34;
@@ -1527,7 +1608,7 @@ Otherwise, an existing file is truncated.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/files.py#L213-L233" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/files.py#L221-L241" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def fileMake(path, force=False):
     &#34;&#34;&#34;Create a new empty file.
@@ -1561,7 +1642,7 @@ Otherwise, an existing file is truncated.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/files.py#L266-L273" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/files.py#L290-L297" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def fileMove(pathSrc, pathDst):
     &#34;&#34;&#34;Moves a file if it exists as file.
@@ -1581,7 +1662,7 @@ Otherwise, an existing file is truncated.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/files.py#L175-L177" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/files.py#L183-L185" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def fileNm(path):
     &#34;&#34;&#34;Get the file part of a file name.&#34;&#34;&#34;
@@ -1599,7 +1680,7 @@ argument <code>encoding</code> is missing and the mode argument does not contain
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/files.py#L44-L54" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/files.py#L52-L62" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def fileOpen(*args, **kwargs):
     &#34;&#34;&#34;Wrapper around `open()`, making sure `encoding=&#34;utf8&#34; is passed.
@@ -1622,7 +1703,7 @@ argument <code>encoding</code> is missing and the mode argument does not contain
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/files.py#L246-L249" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/files.py#L254-L257" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def fileRemove(path):
     &#34;&#34;&#34;Removes a file if it exists as file.&#34;&#34;&#34;
@@ -1643,7 +1724,7 @@ argument <code>encoding</code> is missing and the mode argument does not contain
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/files.py#L556-L564" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/files.py#L589-L597" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def getCwd():
     &#34;&#34;&#34;Get current directory.
@@ -1677,7 +1758,7 @@ subdirectories.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/files.py#L130-L159" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/files.py#L138-L167" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def initTree(path, fresh=False, gentle=False):
     &#34;&#34;&#34;Make sure a directory exists, optionally clean it.
@@ -1719,7 +1800,7 @@ subdirectories.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/files.py#L208-L210" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/files.py#L216-L218" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def isDir(path):
     &#34;&#34;&#34;Whether path exists and is a directory.&#34;&#34;&#34;
@@ -1734,7 +1815,7 @@ subdirectories.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/files.py#L236-L238" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/files.py#L244-L246" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def isFile(path):
     &#34;&#34;&#34;Whether path exists and is a file.&#34;&#34;&#34;
@@ -1749,7 +1830,7 @@ subdirectories.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/files.py#L27-L31" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/files.py#L35-L39" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def normpath(path):
     if path is None:
@@ -1766,7 +1847,7 @@ subdirectories.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/files.py#L89-L91" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/files.py#L97-L99" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def prefixSlash(path):
     &#34;&#34;&#34;Prefix a / before a path if it is non-empty and not already starts with it.&#34;&#34;&#34;
@@ -1803,7 +1884,7 @@ we will represent lists as tuples.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/files.py#L604-L643" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/files.py#L637-L676" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def readJson(text=None, plain=False, asFile=None, preferTuples=False):
     &#34;&#34;&#34;Read a JSON file or string.
@@ -1871,7 +1952,7 @@ If the file does not exist, the empty string is returned.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/files.py#L578-L601" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/files.py#L611-L634" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def readPath(filePath):
     &#34;&#34;&#34;Reads the (textual) contents of a file.
@@ -1937,7 +2018,7 @@ return the text itself.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/files.py#L684-L752" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/files.py#L717-L785" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def readYaml(
     text=None,
@@ -2018,7 +2099,7 @@ return the text itself.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/files.py#L197-L200" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/files.py#L205-L208" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def replaceExt(path, newExt):
     &#34;&#34;&#34;Replace the extension of a path by another one. Specify it without dot.&#34;&#34;&#34;
@@ -2034,7 +2115,7 @@ return the text itself.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/files.py#L203-L205" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/files.py#L211-L213" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def splitPath(path):
     &#34;&#34;&#34;Split a file name in a directory part and a file part.&#34;&#34;&#34;
@@ -2050,7 +2131,7 @@ Ref: <a href="https://stackoverflow.com/questions/8640959">https://stackoverflow
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/files.py#L13-L20" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/files.py#L21-L28" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def str_presenter(dumper, data):
     &#34;&#34;&#34;configures yaml for dumping multiline strings
@@ -2070,7 +2151,7 @@ Ref: <a href="https://stackoverflow.com/questions/8640959">https://stackoverflow
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/files.py#L190-L194" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/files.py#L198-L202" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def stripExt(path):
     &#34;&#34;&#34;Strip the extension of a file name, if there is one.&#34;&#34;&#34;
@@ -2087,7 +2168,7 @@ Ref: <a href="https://stackoverflow.com/questions/8640959">https://stackoverflow
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/files.py#L57-L59" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/files.py#L65-L67" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def touch(path):
     &#34;&#34;&#34;Set access and modification times to the current time.&#34;&#34;&#34;
@@ -2102,7 +2183,7 @@ Ref: <a href="https://stackoverflow.com/questions/8640959">https://stackoverflow
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/files.py#L74-L76" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/files.py#L82-L84" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def unexpanduser(path):
     nPath = normpath(path)
@@ -2137,7 +2218,7 @@ to a file. Otherwise, the result string is returned.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/files.py#L646-L681" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/files.py#L679-L714" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def writeJson(data, asFile=None, **kwargs):
     &#34;&#34;&#34;Write data as JSON.
@@ -2204,7 +2285,7 @@ to a file. Otherwise, the result string is returned.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/files.py#L755-L789" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/files.py#L788-L822" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def writeYaml(data, asFile=None, sorted=False):
     &#34;&#34;&#34;Write data as YAML.
@@ -2310,6 +2391,11 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="ti.kit" href="index.html">ti.kit</a></code></li>
 </ul>
 </li>
+<li><h3><a href="#header-variables">Global variables</a></h3>
+<ul class="">
+<li><code><a title="ti.kit.files.EXPRESS_SYNC" href="#ti.kit.files.EXPRESS_SYNC">EXPRESS_SYNC</a></code></li>
+</ul>
+</li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="two-column">
 <li><code><a title="ti.kit.files.abspath" href="#ti.kit.files.abspath">abspath</a></code></li>
@@ -2329,6 +2415,7 @@ setTimeout(() => input.focus(), 100);
 <li><code><a title="ti.kit.files.expanduser" href="#ti.kit.files.expanduser">expanduser</a></code></li>
 <li><code><a title="ti.kit.files.extNm" href="#ti.kit.files.extNm">extNm</a></code></li>
 <li><code><a title="ti.kit.files.fileCopy" href="#ti.kit.files.fileCopy">fileCopy</a></code></li>
+<li><code><a title="ti.kit.files.fileCopyExpr" href="#ti.kit.files.fileCopyExpr">fileCopyExpr</a></code></li>
 <li><code><a title="ti.kit.files.fileExists" href="#ti.kit.files.fileExists">fileExists</a></code></li>
 <li><code><a title="ti.kit.files.fileMake" href="#ti.kit.files.fileMake">fileMake</a></code></li>
 <li><code><a title="ti.kit.files.fileMove" href="#ti.kit.files.fileMove">fileMove</a></code></li>

@@ -31,7 +31,7 @@ crossorigin>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/helpers.py#L1-L315" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/helpers.py#L1-L315" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">import os
 import sys
@@ -372,7 +372,7 @@ def readCfg(settingsFile, label, verbose=0, **kwargs):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/helpers.py#L249-L260" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/helpers.py#L249-L260" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def console(*msg, error=False, newline=True, sleep=None):
     msg = &#34; &#34;.join(m if type(m) is str else repr(m) for m in msg)
@@ -396,7 +396,7 @@ def readCfg(settingsFile, label, verbose=0, **kwargs):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/helpers.py#L263-L264" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/helpers.py#L263-L264" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def consoleT01(msg, error=False, newline=True):
     console(msg, error=error, newline=newline, sleep=0.1)</code></pre>
@@ -410,7 +410,7 @@ def readCfg(settingsFile, label, verbose=0, **kwargs):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/helpers.py#L175-L185" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/helpers.py#L175-L185" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def getDelta(days, refDate, iso=True):
     if refDate is None:
@@ -444,7 +444,7 @@ def readCfg(settingsFile, label, verbose=0, **kwargs):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/helpers.py#L144-L158" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/helpers.py#L144-L158" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def isonow():
     &#34;&#34;&#34;The current moment in time as an ISO 8601 string value.
@@ -471,7 +471,7 @@ def readCfg(settingsFile, label, verbose=0, **kwargs):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/helpers.py#L188-L189" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/helpers.py#L188-L189" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def lessAgo(days, refDate, iso=True):
     return 0 &lt;= getDelta(days, refDate, iso=iso) &lt; days</code></pre>
@@ -491,7 +491,7 @@ It is assumed that these strings are themselves the results of <code><a title="t
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/helpers.py#L89-L129" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/helpers.py#L89-L129" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def makeAsciiUnique(text, among):
     &#34;&#34;&#34;Transforms a text into plain ASCII and makes it unique among alternatives.
@@ -554,7 +554,7 @@ It is assumed that these strings are themselves the results of <code><a title="t
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/helpers.py#L42-L55" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/helpers.py#L42-L55" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def normalize(text):
     &#34;&#34;&#34;Produce a normalized version of a string.
@@ -581,7 +581,7 @@ It is assumed that these strings are themselves the results of <code><a title="t
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/helpers.py#L203-L219" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/helpers.py#L203-L219" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def plainify(value):
     &#34;&#34;&#34;Make sure that the value is either a string or a list of strings.
@@ -610,7 +610,7 @@ It is assumed that these strings are themselves the results of <code><a title="t
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/helpers.py#L229-L230" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/helpers.py#L229-L230" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def prettify(x):
     return &#34; &#34;.join(ucFirst(w) for w in x.split(&#34;_&#34;))</code></pre>
@@ -631,7 +631,7 @@ replaced by <code>-</code>, so that the string can be included in urls.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/helpers.py#L161-L172" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/helpers.py#L161-L172" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def pseudoisonow():
     &#34;&#34;&#34;The current moment in time as a isolike string value.
@@ -655,7 +655,7 @@ replaced by <code>-</code>, so that the string can be included in urls.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/helpers.py#L304-L315" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/helpers.py#L304-L315" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def readCfg(settingsFile, label, verbose=0, **kwargs):
     settings = readYaml(asFile=settingsFile, **kwargs)
@@ -690,7 +690,7 @@ If <code>None</code> the current directory is used.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/helpers.py#L267-L301" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/helpers.py#L267-L301" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def run(cmdline, workDir=None):
     &#34;&#34;&#34;Runs a shell command and returns all relevant info.
@@ -753,7 +753,7 @@ characters except <code>()</code> by <code>x</code>.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/helpers.py#L58-L86" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/helpers.py#L58-L86" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def toAscii(text):
     &#34;&#34;&#34;Transforms a text with diacritical marks into a plain ASCII text.
@@ -794,7 +794,7 @@ characters except <code>()</code> by <code>x</code>.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/helpers.py#L222-L226" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/helpers.py#L222-L226" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def ucFirst(x):
     if not x:
@@ -817,7 +817,7 @@ in its value.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/helpers.py#L132-L141" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/helpers.py#L132-L141" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def utcnow():
     &#34;&#34;&#34;The current moment in time in the UTC time zone.
@@ -849,7 +849,7 @@ in its value.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/helpers.py#L233-L246" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/helpers.py#L233-L246" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def var(envVar):
     &#34;&#34;&#34;Retrieves the value of an environment variable.
@@ -875,7 +875,7 @@ in its value.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/4f8bcf3cb864035c1e0109327b2b3b7bc37e3ecd/ti/kit/helpers.py#L192-L200" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/helpers.py#L192-L200" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def versionSort(x):
     parts = []
