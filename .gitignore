@@ -52,6 +52,7 @@ _local
 dist
 .tf/
 .ipynb_checkpoints/
+*.egg-info/
 
 # Config files which get locally modified
 #########################################
