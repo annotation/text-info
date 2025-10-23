@@ -81,7 +81,7 @@ def expanduser(path):
 
 def unexpanduser(path):
     nPath = normpath(path)
-    return nPath.replace(_homeDir, "~")
+    return nPath.replace(_homeDir, "~") if _homeDir in nPath else path
 
 
 def expandDir(obj, dirName):

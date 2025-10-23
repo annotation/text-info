@@ -1,11 +1,15 @@
-import sys
 import os
 import io
 import re
 from zipfile import ZipFile
 from shutil import rmtree
+import requests
+import ssl
 
 from gitlab import Gitlab, GitlabGetError
+
+from .helpers import console as consoleKit
+from .files import chDir, getCwd, dirRemove
 
 VERSION_DIGIT_RE = re.compile(r"^([0-9]+).*")
 SHELL_VAR_RE = re.compile(r"[^A-Z0-9_]")
@@ -100,22 +104,14 @@ def fetchRepo(
 
     Returns
     -------
-    bool
-        Whether the operation was successful
+    bool | void
+        A boolean indicating Whether the operation was successful.
+        However, if the repo exists, but the subfolder does not exist in the repo,
+        and the requests succeeds, but yields empty data, `None` is returned.
     """
 
     def console(*msg, error=False, newline=True):
-        msg = " ".join(m if type(m) is str else repr(m) for m in msg)
-        msg = msg[1:] if msg.startswith("\n") else msg
-        msg = msg[0:-1] if msg.endswith("\n") else msg
-        target = sys.stderr if error else sys.stdout
-        nl = "\n" if newline else ""
-
-        if indent:
-            msg = indent + msg.replace("\n", f"\n{indent}")
-
-        target.write(f"{msg}{nl}")
-        target.flush()
+        consoleKit(*msg, error=error, newline=newline, indent=indent)
 
     conn = None
 
@@ -231,7 +227,7 @@ def fetchRepo(
 
     if len(zf) == 0:
         console("Download is empty")
-        return False
+        return None
 
     initTree(folderLocal, fresh=removeLocal)
 
@@ -269,3 +265,92 @@ def fetchRepo(
         console("done")
 
     return True
+
+
+def downloadZip(
+    org, repo, release, file, dest, force=False, fresh=False, verbose=False
+):
+    """Download a zip file from a release on github and unpack it.
+
+    Parameters
+    ----------
+    org: string
+        Organization on GitHub
+    repo: string
+        Repository within organization
+    release: string
+        The release version of the data to be downloaded.
+    file: string
+        The filename of the release attachment to fetch, without extension.
+        The extension must be `.zip`
+    dest: string
+        The destination directory under which the contents of the zip is extracted.
+    force: boolean, optional False
+        Whether to force downloading data if the local copy matches the online copy
+        by release version.
+
+        If `False`: no re-download will take place. Otherwise the folder
+        will be downloaded again.
+
+        If `True`, the folder will be downloaded again, but the local copy will
+        not be wiped on beforehand, so new files will overwrite existing files,
+        but if the local copy contains additional material, it will be left in place.
+    fresh: boolean, optional False
+        Whether to clean the destination directory before extracting
+    verbose: boolean, optional False
+        If True, informational messages will be issued, otherwise only error messages
+        will be issued.
+
+    Returns
+    -------
+    boolean
+        Whether the download and extraction was successful
+    """
+    url = f"https://github.com/{org}/{repo}/releases/download/{release}/{file}.zip"
+
+    ssl._create_default_https_context = ssl._create_unverified_context
+    console = consoleKit
+    existingRelease = readSha(dest)
+
+    if existingRelease == release and not force and not fresh:
+        if verbose:
+            console(f"Data already present: {release}/{file}.zip")
+        return True
+
+    cwd = getCwd()
+
+    status = dict(downloaded=False, extracted=False)
+    good = False
+
+    try:
+        r = requests.get(url, allow_redirects=True)
+        if not r.ok:
+            console(f"{r.reason}\n\tcould not download {url}", error=True)
+        else:
+            zf = r.content
+            if verbose:
+                console(f"{release}/{file}.zip downloaded having {len(zf)} bytes")
+
+            status["downloaded"] = True
+            zf = io.BytesIO(zf)
+            z = ZipFile(zf)
+            initTree(dest, fresh=fresh)
+            chDir(dest)
+            z.extractall()
+            status["extracted"] = True
+            dirRemove("__MACOSX")
+            chDir(cwd)
+            writeSha(dest, release)
+            good = True
+    except Exception as e:
+        if not status["downloaded"]:
+            console(f"{str(e)}\n\tcould not download {url}", error=True)
+        elif not status["extracted"]:
+            console(f"{str(e)}\n\tcould not extract to {dest}", error=True)
+        else:
+            console(f"{str(e)} could not complete the operation", error=True)
+
+        good = False
+        chDir(cwd)
+
+    return good

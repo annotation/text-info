@@ -34,9 +34,38 @@ for u, a in TO_ASCII_DEF.items():
     TO_ASCII[u.upper()] = a.upper()
 
 
-LETTER = set("abcdefghijklmnopqrstuvwxyz()-")
+ALPHABET = "abcdefghijklmnopqrstuvwxyz"
+LETTER = set(ALPHABET) | set(ALPHABET.upper()) | set("()-")
 VALID = set("_0123456789") | LETTER
 SEQ_RE = re.compile(r"""^(.*)\(([0-9]+)\)$""", re.S)
+
+VAR_RE = re.compile(
+    r"""
+        (\$?)
+        \{
+        ([a-z0-9_]+)
+        \}
+    """,
+    re.X | re.S | re.I,
+)
+
+
+def makeVarReplace(info, found, notFound):
+    def varReplace(match):
+        (fullName, kind, name) = match.group(0, 1, 2)
+        fullName = fullName.replace("{", "").replace("}", "")
+
+        result = var(name) if kind else info.get(name, None)
+
+        if result is None:
+            notFound.append(fullName)
+            result = fullName
+        else:
+            found[fullName] = result
+
+        return result
+
+    return varReplace
 
 
 def normalize(text):
@@ -55,7 +84,7 @@ def normalize(text):
     return WHITE_RE.sub(" ", text.strip()).lower()
 
 
-def toAscii(text):
+def toAscii(text, lowercase=True):
     """Transforms a text with diacritical marks into a plain ASCII text.
 
     Characters with diacritics are replaced by their base character.
@@ -70,13 +99,19 @@ def toAscii(text):
     ----------
     text: string
         The text to be translated
+    lowercase: boolean, optional True
+        Convert the text to lowercase
 
     Returns
     -------
     string
         The translated text.
     """
-    text = WHITE_RE.sub("_", text.strip()).lower()
+    text = WHITE_RE.sub("_", text.strip())
+
+    if lowercase:
+        text = text.lower()
+
     text = "".join(
         TO_ASCII.get(c, c)
         for c in unicodedata.normalize("NFD", text)
@@ -121,12 +156,46 @@ def makeAsciiUnique(text, among):
 
     if len(oSeqs):
         if seq in oSeqs:
-            newSeqRep = f"({max((oSeq for oSeq in oSeqs if oSeq is not None), default=0) + 1})"
+            newSeqRep = (
+                f"({max((oSeq for oSeq in oSeqs if oSeq is not None), default=0) + 1})"
+            )
         else:
             newSeqRep = "" if seq is None else f"({seq})"
     else:
         newSeqRep = "(1)"
     return f"{base}{newSeqRep}"
+
+
+def htmlEsc(val, math=False):
+    """Escape certain HTML characters by HTML entities.
+
+    To prevent them to be interpreted as HTML
+    in cases where you need them literally.
+
+    Parameters
+    ----------
+    val: string
+        The input value
+    math: boolean, optional False
+        Whether retain TeX notation.
+        If True, `$` is not escaped, if False, it is not escaped.
+    """
+
+    return (
+        ""
+        if val is None
+        else (
+            (str(val).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"))
+            if math
+            else (
+                str(val)
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("$", "<span>$</span>")
+            )
+        )
+    )
 
 
 def utcnow():
@@ -246,13 +315,84 @@ def var(envVar):
     return os.environ.get(envVar, None)
 
 
-def console(*msg, error=False, newline=True, sleep=None):
+def fillin(pairs, config):
+    """Fills in variable parts into values of a dict.
+
+    Values may contain strings of the form `{var}`.
+    These `var` names will be looked up in a source dict, and their values
+    will be substituted.
+
+    Values may also contain strings of the form `${var}`.
+    These `var` names refer to environment variables and will be looked up as well.
+
+    Parameters
+    ----------
+    pairs: dict
+        The dict whose values must be filled in
+    config: dict
+        Source of the values used for filling
+
+    Returns
+    -------
+    list, dict
+        `list` is a list of variables that could not be looked up.
+    """
+
+    notFound = []
+    found = {}
+    result = {}
+
+    varReplace = makeVarReplace(config, found, notFound)
+
+    for (k, v) in pairs.items():
+        if type(v) is str:
+            v = VAR_RE.sub(varReplace, v)
+
+        result[k] = v
+
+    return notFound, found, result
+
+
+def addToDict(source, additions):
+    """Add material from an dict to an other dict without destroying information.
+
+    Values in the additions will be added to the source only if the key in question
+    does not exist in the source, or its value is `None`.
+
+    If the key for a value exists in the source, and the source and addition values
+    are both dicts, the addition will proceed recursively.
+
+    In all other cases, no replacement takes place.
+
+    Parameters
+    ----------
+    source: dict
+        The source dictionary, which will be modified by the additions.
+    additions: dict
+        The additions, itself a dictionary.
+    """
+
+    for k, v in additions.items():
+        if k not in source or source[k] is None:
+            source[k] = v
+        else:
+            sv = source[k]
+
+            if type(sv) is dict and type(v) is dict:
+                addToDict(sv, v)
+
+
+def console(*msg, error=False, newline=True, sleep=None, indent=""):
     msg = " ".join(m if type(m) is str else repr(m) for m in msg)
     msg = "" if not msg else ux(msg)
     msg = msg[1:] if msg.startswith("\n") else msg
     msg = msg[0:-1] if msg.endswith("\n") else msg
     target = sys.stderr if error else sys.stdout
     nl = "\n" if newline else ""
+
+    if indent:
+        msg = indent + msg.replace("\n", f"\n{indent}")
+
     target.write(f"{msg}{nl}")
     target.flush()
 
