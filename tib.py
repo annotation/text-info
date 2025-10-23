@@ -23,11 +23,6 @@ VERSION_CONFIG = dict(
         re=re.compile(r"""version\s*=\s*(\S+)"""),
         mask="version = {}",
     ),
-    parameters=dict(
-        file="ti/parameters.py",
-        re=re.compile(r"""\bVERSION\s*=\s*['"]([^'"]*)['"]"""),
-        mask="VERSION = '{}'",
-    ),
 )
 
 AN_BASE = os.path.expanduser(f"~/github/{ORG}")
