@@ -31,7 +31,7 @@ crossorigin>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/helpers.py#L1-L315" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/835b7288f86c5b02336e7d8ccac7e1e63d85207f/ti/kit/helpers.py#L1-L455" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">import os
 import sys
@@ -69,9 +69,38 @@ for u, a in TO_ASCII_DEF.items():
     TO_ASCII[u.upper()] = a.upper()
 
 
-LETTER = set(&#34;abcdefghijklmnopqrstuvwxyz()-&#34;)
+ALPHABET = &#34;abcdefghijklmnopqrstuvwxyz&#34;
+LETTER = set(ALPHABET) | set(ALPHABET.upper()) | set(&#34;()-&#34;)
 VALID = set(&#34;_0123456789&#34;) | LETTER
 SEQ_RE = re.compile(r&#34;&#34;&#34;^(.*)\(([0-9]+)\)$&#34;&#34;&#34;, re.S)
+
+VAR_RE = re.compile(
+    r&#34;&#34;&#34;
+        (\$?)
+        \{
+        ([a-z0-9_]+)
+        \}
+    &#34;&#34;&#34;,
+    re.X | re.S | re.I,
+)
+
+
+def makeVarReplace(info, found, notFound):
+    def varReplace(match):
+        (fullName, kind, name) = match.group(0, 1, 2)
+        fullName = fullName.replace(&#34;{&#34;, &#34;&#34;).replace(&#34;}&#34;, &#34;&#34;)
+
+        result = var(name) if kind else info.get(name, None)
+
+        if result is None:
+            notFound.append(fullName)
+            result = fullName
+        else:
+            found[fullName] = result
+
+        return result
+
+    return varReplace
 
 
 def normalize(text):
@@ -90,7 +119,7 @@ def normalize(text):
     return WHITE_RE.sub(&#34; &#34;, text.strip()).lower()
 
 
-def toAscii(text):
+def toAscii(text, lowercase=True):
     &#34;&#34;&#34;Transforms a text with diacritical marks into a plain ASCII text.
 
     Characters with diacritics are replaced by their base character.
@@ -105,13 +134,19 @@ def toAscii(text):
     ----------
     text: string
         The text to be translated
+    lowercase: boolean, optional True
+        Convert the text to lowercase
 
     Returns
     -------
     string
         The translated text.
     &#34;&#34;&#34;
-    text = WHITE_RE.sub(&#34;_&#34;, text.strip()).lower()
+    text = WHITE_RE.sub(&#34;_&#34;, text.strip())
+
+    if lowercase:
+        text = text.lower()
+
     text = &#34;&#34;.join(
         TO_ASCII.get(c, c)
         for c in unicodedata.normalize(&#34;NFD&#34;, text)
@@ -156,12 +191,46 @@ def makeAsciiUnique(text, among):
 
     if len(oSeqs):
         if seq in oSeqs:
-            newSeqRep = f&#34;({max((oSeq for oSeq in oSeqs if oSeq is not None), default=0) + 1})&#34;
+            newSeqRep = (
+                f&#34;({max((oSeq for oSeq in oSeqs if oSeq is not None), default=0) + 1})&#34;
+            )
         else:
             newSeqRep = &#34;&#34; if seq is None else f&#34;({seq})&#34;
     else:
         newSeqRep = &#34;(1)&#34;
     return f&#34;{base}{newSeqRep}&#34;
+
+
+def htmlEsc(val, math=False):
+    &#34;&#34;&#34;Escape certain HTML characters by HTML entities.
+
+    To prevent them to be interpreted as HTML
+    in cases where you need them literally.
+
+    Parameters
+    ----------
+    val: string
+        The input value
+    math: boolean, optional False
+        Whether retain TeX notation.
+        If True, `$` is not escaped, if False, it is not escaped.
+    &#34;&#34;&#34;
+
+    return (
+        &#34;&#34;
+        if val is None
+        else (
+            (str(val).replace(&#34;&amp;&#34;, &#34;&amp;amp;&#34;).replace(&#34;&lt;&#34;, &#34;&amp;lt;&#34;).replace(&#34;&gt;&#34;, &#34;&amp;gt;&#34;))
+            if math
+            else (
+                str(val)
+                .replace(&#34;&amp;&#34;, &#34;&amp;amp;&#34;)
+                .replace(&#34;&lt;&#34;, &#34;&amp;lt;&#34;)
+                .replace(&#34;&gt;&#34;, &#34;&amp;gt;&#34;)
+                .replace(&#34;$&#34;, &#34;&lt;span&gt;$&lt;/span&gt;&#34;)
+            )
+        )
+    )
 
 
 def utcnow():
@@ -281,13 +350,84 @@ def var(envVar):
     return os.environ.get(envVar, None)
 
 
-def console(*msg, error=False, newline=True, sleep=None):
+def fillin(pairs, config):
+    &#34;&#34;&#34;Fills in variable parts into values of a dict.
+
+    Values may contain strings of the form `{var}`.
+    These `var` names will be looked up in a source dict, and their values
+    will be substituted.
+
+    Values may also contain strings of the form `${var}`.
+    These `var` names refer to environment variables and will be looked up as well.
+
+    Parameters
+    ----------
+    pairs: dict
+        The dict whose values must be filled in
+    config: dict
+        Source of the values used for filling
+
+    Returns
+    -------
+    list, dict
+        `list` is a list of variables that could not be looked up.
+    &#34;&#34;&#34;
+
+    notFound = []
+    found = {}
+    result = {}
+
+    varReplace = makeVarReplace(config, found, notFound)
+
+    for (k, v) in pairs.items():
+        if type(v) is str:
+            v = VAR_RE.sub(varReplace, v)
+
+        result[k] = v
+
+    return notFound, found, result
+
+
+def addToDict(source, additions):
+    &#34;&#34;&#34;Add material from an dict to an other dict without destroying information.
+
+    Values in the additions will be added to the source only if the key in question
+    does not exist in the source, or its value is `None`.
+
+    If the key for a value exists in the source, and the source and addition values
+    are both dicts, the addition will proceed recursively.
+
+    In all other cases, no replacement takes place.
+
+    Parameters
+    ----------
+    source: dict
+        The source dictionary, which will be modified by the additions.
+    additions: dict
+        The additions, itself a dictionary.
+    &#34;&#34;&#34;
+
+    for k, v in additions.items():
+        if k not in source or source[k] is None:
+            source[k] = v
+        else:
+            sv = source[k]
+
+            if type(sv) is dict and type(v) is dict:
+                addToDict(sv, v)
+
+
+def console(*msg, error=False, newline=True, sleep=None, indent=&#34;&#34;):
     msg = &#34; &#34;.join(m if type(m) is str else repr(m) for m in msg)
     msg = &#34;&#34; if not msg else ux(msg)
     msg = msg[1:] if msg.startswith(&#34;\n&#34;) else msg
     msg = msg[0:-1] if msg.endswith(&#34;\n&#34;) else msg
     target = sys.stderr if error else sys.stdout
     nl = &#34;\n&#34; if newline else &#34;&#34;
+
+    if indent:
+        msg = indent + msg.replace(&#34;\n&#34;, f&#34;\n{indent}&#34;)
+
     target.write(f&#34;{msg}{nl}&#34;)
     target.flush()
 
@@ -364,23 +504,78 @@ def readCfg(settingsFile, label, verbose=0, **kwargs):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="ti.kit.helpers.addToDict"><code class="name flex">
+<span>def <span class="ident">addToDict</span></span>(<span>source, additions)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Add material from an dict to an other dict without destroying information.</p>
+<p>Values in the additions will be added to the source only if the key in question
+does not exist in the source, or its value is <code>None</code>.</p>
+<p>If the key for a value exists in the source, and the source and addition values
+are both dicts, the addition will proceed recursively.</p>
+<p>In all other cases, no replacement takes place.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>source</code></strong> :&ensp;<code>dict</code></dt>
+<dd>The source dictionary, which will be modified by the additions.</dd>
+<dt><strong><code>additions</code></strong> :&ensp;<code>dict</code></dt>
+<dd>The additions, itself a dictionary.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/annotation/text-info/blob/835b7288f86c5b02336e7d8ccac7e1e63d85207f/ti/kit/helpers.py#L356-L382" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def addToDict(source, additions):
+    &#34;&#34;&#34;Add material from an dict to an other dict without destroying information.
+
+    Values in the additions will be added to the source only if the key in question
+    does not exist in the source, or its value is `None`.
+
+    If the key for a value exists in the source, and the source and addition values
+    are both dicts, the addition will proceed recursively.
+
+    In all other cases, no replacement takes place.
+
+    Parameters
+    ----------
+    source: dict
+        The source dictionary, which will be modified by the additions.
+    additions: dict
+        The additions, itself a dictionary.
+    &#34;&#34;&#34;
+
+    for k, v in additions.items():
+        if k not in source or source[k] is None:
+            source[k] = v
+        else:
+            sv = source[k]
+
+            if type(sv) is dict and type(v) is dict:
+                addToDict(sv, v)</code></pre>
+</details>
+</dd>
 <dt id="ti.kit.helpers.console"><code class="name flex">
-<span>def <span class="ident">console</span></span>(<span>*msg, error=False, newline=True, sleep=None)</span>
+<span>def <span class="ident">console</span></span>(<span>*msg, error=False, newline=True, sleep=None, indent='')</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/helpers.py#L249-L260" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/835b7288f86c5b02336e7d8ccac7e1e63d85207f/ti/kit/helpers.py#L385-L400" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">def console(*msg, error=False, newline=True, sleep=None):
+<pre><code class="python">def console(*msg, error=False, newline=True, sleep=None, indent=&#34;&#34;):
     msg = &#34; &#34;.join(m if type(m) is str else repr(m) for m in msg)
     msg = &#34;&#34; if not msg else ux(msg)
     msg = msg[1:] if msg.startswith(&#34;\n&#34;) else msg
     msg = msg[0:-1] if msg.endswith(&#34;\n&#34;) else msg
     target = sys.stderr if error else sys.stdout
     nl = &#34;\n&#34; if newline else &#34;&#34;
+
+    if indent:
+        msg = indent + msg.replace(&#34;\n&#34;, f&#34;\n{indent}&#34;)
+
     target.write(f&#34;{msg}{nl}&#34;)
     target.flush()
 
@@ -396,10 +591,75 @@ def readCfg(settingsFile, label, verbose=0, **kwargs):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/helpers.py#L263-L264" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/835b7288f86c5b02336e7d8ccac7e1e63d85207f/ti/kit/helpers.py#L403-L404" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def consoleT01(msg, error=False, newline=True):
     console(msg, error=error, newline=newline, sleep=0.1)</code></pre>
+</details>
+</dd>
+<dt id="ti.kit.helpers.fillin"><code class="name flex">
+<span>def <span class="ident">fillin</span></span>(<span>pairs, config)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Fills in variable parts into values of a dict.</p>
+<p>Values may contain strings of the form <code>{var}</code>.
+These <code><a title="ti.kit.helpers.var" href="#ti.kit.helpers.var">var()</a></code> names will be looked up in a source dict, and their values
+will be substituted.</p>
+<p>Values may also contain strings of the form <code>${var}</code>.
+These <code><a title="ti.kit.helpers.var" href="#ti.kit.helpers.var">var()</a></code> names refer to environment variables and will be looked up as well.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>pairs</code></strong> :&ensp;<code>dict</code></dt>
+<dd>The dict whose values must be filled in</dd>
+<dt><strong><code>config</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Source of the values used for filling</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>list, dict</code></dt>
+<dd><code>list</code> is a list of variables that could not be looked up.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/annotation/text-info/blob/835b7288f86c5b02336e7d8ccac7e1e63d85207f/ti/kit/helpers.py#L318-L353" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def fillin(pairs, config):
+    &#34;&#34;&#34;Fills in variable parts into values of a dict.
+
+    Values may contain strings of the form `{var}`.
+    These `var` names will be looked up in a source dict, and their values
+    will be substituted.
+
+    Values may also contain strings of the form `${var}`.
+    These `var` names refer to environment variables and will be looked up as well.
+
+    Parameters
+    ----------
+    pairs: dict
+        The dict whose values must be filled in
+    config: dict
+        Source of the values used for filling
+
+    Returns
+    -------
+    list, dict
+        `list` is a list of variables that could not be looked up.
+    &#34;&#34;&#34;
+
+    notFound = []
+    found = {}
+    result = {}
+
+    varReplace = makeVarReplace(config, found, notFound)
+
+    for (k, v) in pairs.items():
+        if type(v) is str:
+            v = VAR_RE.sub(varReplace, v)
+
+        result[k] = v
+
+    return notFound, found, result</code></pre>
 </details>
 </dd>
 <dt id="ti.kit.helpers.getDelta"><code class="name flex">
@@ -410,7 +670,7 @@ def readCfg(settingsFile, label, verbose=0, **kwargs):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/helpers.py#L175-L185" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/835b7288f86c5b02336e7d8ccac7e1e63d85207f/ti/kit/helpers.py#L244-L254" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def getDelta(days, refDate, iso=True):
     if refDate is None:
@@ -423,6 +683,58 @@ def readCfg(settingsFile, label, verbose=0, **kwargs):
     deltaDays = delta.days + delta.seconds / 86400
 
     return deltaDays</code></pre>
+</details>
+</dd>
+<dt id="ti.kit.helpers.htmlEsc"><code class="name flex">
+<span>def <span class="ident">htmlEsc</span></span>(<span>val, math=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Escape certain HTML characters by HTML entities.</p>
+<p>To prevent them to be interpreted as HTML
+in cases where you need them literally.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>val</code></strong> :&ensp;<code>string</code></dt>
+<dd>The input value</dd>
+<dt><strong><code>math</code></strong> :&ensp;<code>boolean</code>, optional <code>False</code></dt>
+<dd>Whether retain TeX notation.
+If True, <code>$</code> is not escaped, if False, it is not escaped.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/annotation/text-info/blob/835b7288f86c5b02336e7d8ccac7e1e63d85207f/ti/kit/helpers.py#L169-L198" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def htmlEsc(val, math=False):
+    &#34;&#34;&#34;Escape certain HTML characters by HTML entities.
+
+    To prevent them to be interpreted as HTML
+    in cases where you need them literally.
+
+    Parameters
+    ----------
+    val: string
+        The input value
+    math: boolean, optional False
+        Whether retain TeX notation.
+        If True, `$` is not escaped, if False, it is not escaped.
+    &#34;&#34;&#34;
+
+    return (
+        &#34;&#34;
+        if val is None
+        else (
+            (str(val).replace(&#34;&amp;&#34;, &#34;&amp;amp;&#34;).replace(&#34;&lt;&#34;, &#34;&amp;lt;&#34;).replace(&#34;&gt;&#34;, &#34;&amp;gt;&#34;))
+            if math
+            else (
+                str(val)
+                .replace(&#34;&amp;&#34;, &#34;&amp;amp;&#34;)
+                .replace(&#34;&lt;&#34;, &#34;&amp;lt;&#34;)
+                .replace(&#34;&gt;&#34;, &#34;&amp;gt;&#34;)
+                .replace(&#34;$&#34;, &#34;&lt;span&gt;$&lt;/span&gt;&#34;)
+            )
+        )
+    )</code></pre>
 </details>
 </dd>
 <dt id="ti.kit.helpers.isonow"><code class="name flex">
@@ -444,7 +756,7 @@ def readCfg(settingsFile, label, verbose=0, **kwargs):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/helpers.py#L144-L158" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/835b7288f86c5b02336e7d8ccac7e1e63d85207f/ti/kit/helpers.py#L213-L227" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def isonow():
     &#34;&#34;&#34;The current moment in time as an ISO 8601 string value.
@@ -471,7 +783,7 @@ def readCfg(settingsFile, label, verbose=0, **kwargs):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/helpers.py#L188-L189" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/835b7288f86c5b02336e7d8ccac7e1e63d85207f/ti/kit/helpers.py#L257-L258" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def lessAgo(days, refDate, iso=True):
     return 0 &lt;= getDelta(days, refDate, iso=iso) &lt; days</code></pre>
@@ -491,7 +803,7 @@ It is assumed that these strings are themselves the results of <code><a title="t
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/helpers.py#L89-L129" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/835b7288f86c5b02336e7d8ccac7e1e63d85207f/ti/kit/helpers.py#L124-L166" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def makeAsciiUnique(text, among):
     &#34;&#34;&#34;Transforms a text into plain ASCII and makes it unique among alternatives.
@@ -528,12 +840,42 @@ It is assumed that these strings are themselves the results of <code><a title="t
 
     if len(oSeqs):
         if seq in oSeqs:
-            newSeqRep = f&#34;({max((oSeq for oSeq in oSeqs if oSeq is not None), default=0) + 1})&#34;
+            newSeqRep = (
+                f&#34;({max((oSeq for oSeq in oSeqs if oSeq is not None), default=0) + 1})&#34;
+            )
         else:
             newSeqRep = &#34;&#34; if seq is None else f&#34;({seq})&#34;
     else:
         newSeqRep = &#34;(1)&#34;
     return f&#34;{base}{newSeqRep}&#34;</code></pre>
+</details>
+</dd>
+<dt id="ti.kit.helpers.makeVarReplace"><code class="name flex">
+<span>def <span class="ident">makeVarReplace</span></span>(<span>info, found, notFound)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/annotation/text-info/blob/835b7288f86c5b02336e7d8ccac7e1e63d85207f/ti/kit/helpers.py#L53-L68" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def makeVarReplace(info, found, notFound):
+    def varReplace(match):
+        (fullName, kind, name) = match.group(0, 1, 2)
+        fullName = fullName.replace(&#34;{&#34;, &#34;&#34;).replace(&#34;}&#34;, &#34;&#34;)
+
+        result = var(name) if kind else info.get(name, None)
+
+        if result is None:
+            notFound.append(fullName)
+            result = fullName
+        else:
+            found[fullName] = result
+
+        return result
+
+    return varReplace</code></pre>
 </details>
 </dd>
 <dt id="ti.kit.helpers.normalize"><code class="name flex">
@@ -554,7 +896,7 @@ It is assumed that these strings are themselves the results of <code><a title="t
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/helpers.py#L42-L55" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/835b7288f86c5b02336e7d8ccac7e1e63d85207f/ti/kit/helpers.py#L71-L84" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def normalize(text):
     &#34;&#34;&#34;Produce a normalized version of a string.
@@ -581,7 +923,7 @@ It is assumed that these strings are themselves the results of <code><a title="t
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/helpers.py#L203-L219" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/835b7288f86c5b02336e7d8ccac7e1e63d85207f/ti/kit/helpers.py#L272-L288" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def plainify(value):
     &#34;&#34;&#34;Make sure that the value is either a string or a list of strings.
@@ -610,7 +952,7 @@ It is assumed that these strings are themselves the results of <code><a title="t
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/helpers.py#L229-L230" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/835b7288f86c5b02336e7d8ccac7e1e63d85207f/ti/kit/helpers.py#L298-L299" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def prettify(x):
     return &#34; &#34;.join(ucFirst(w) for w in x.split(&#34;_&#34;))</code></pre>
@@ -631,7 +973,7 @@ replaced by <code>-</code>, so that the string can be included in urls.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/helpers.py#L161-L172" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/835b7288f86c5b02336e7d8ccac7e1e63d85207f/ti/kit/helpers.py#L230-L241" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def pseudoisonow():
     &#34;&#34;&#34;The current moment in time as a isolike string value.
@@ -655,7 +997,7 @@ replaced by <code>-</code>, so that the string can be included in urls.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/helpers.py#L304-L315" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/835b7288f86c5b02336e7d8ccac7e1e63d85207f/ti/kit/helpers.py#L444-L455" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def readCfg(settingsFile, label, verbose=0, **kwargs):
     settings = readYaml(asFile=settingsFile, **kwargs)
@@ -690,7 +1032,7 @@ If <code>None</code> the current directory is used.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/helpers.py#L267-L301" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/835b7288f86c5b02336e7d8ccac7e1e63d85207f/ti/kit/helpers.py#L407-L441" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def run(cmdline, workDir=None):
     &#34;&#34;&#34;Runs a shell command and returns all relevant info.
@@ -730,7 +1072,7 @@ If <code>None</code> the current directory is used.</dd>
 </details>
 </dd>
 <dt id="ti.kit.helpers.toAscii"><code class="name flex">
-<span>def <span class="ident">toAscii</span></span>(<span>text)</span>
+<span>def <span class="ident">toAscii</span></span>(<span>text, lowercase=True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Transforms a text with diacritical marks into a plain ASCII text.</p>
@@ -744,6 +1086,8 @@ characters except <code>()</code> by <code>x</code>.</p>
 <dl>
 <dt><strong><code>text</code></strong> :&ensp;<code>string</code></dt>
 <dd>The text to be translated</dd>
+<dt><strong><code>lowercase</code></strong> :&ensp;<code>boolean</code>, optional <code>True</code></dt>
+<dd>Convert the text to lowercase</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -753,9 +1097,9 @@ characters except <code>()</code> by <code>x</code>.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/helpers.py#L58-L86" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/835b7288f86c5b02336e7d8ccac7e1e63d85207f/ti/kit/helpers.py#L87-L121" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">def toAscii(text):
+<pre><code class="python">def toAscii(text, lowercase=True):
     &#34;&#34;&#34;Transforms a text with diacritical marks into a plain ASCII text.
 
     Characters with diacritics are replaced by their base character.
@@ -770,13 +1114,19 @@ characters except <code>()</code> by <code>x</code>.</p>
     ----------
     text: string
         The text to be translated
+    lowercase: boolean, optional True
+        Convert the text to lowercase
 
     Returns
     -------
     string
         The translated text.
     &#34;&#34;&#34;
-    text = WHITE_RE.sub(&#34;_&#34;, text.strip()).lower()
+    text = WHITE_RE.sub(&#34;_&#34;, text.strip())
+
+    if lowercase:
+        text = text.lower()
+
     text = &#34;&#34;.join(
         TO_ASCII.get(c, c)
         for c in unicodedata.normalize(&#34;NFD&#34;, text)
@@ -794,7 +1144,7 @@ characters except <code>()</code> by <code>x</code>.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/helpers.py#L222-L226" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/835b7288f86c5b02336e7d8ccac7e1e63d85207f/ti/kit/helpers.py#L291-L295" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def ucFirst(x):
     if not x:
@@ -817,7 +1167,7 @@ in its value.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/helpers.py#L132-L141" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/835b7288f86c5b02336e7d8ccac7e1e63d85207f/ti/kit/helpers.py#L201-L210" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def utcnow():
     &#34;&#34;&#34;The current moment in time in the UTC time zone.
@@ -849,7 +1199,7 @@ in its value.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/helpers.py#L233-L246" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/835b7288f86c5b02336e7d8ccac7e1e63d85207f/ti/kit/helpers.py#L302-L315" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def var(envVar):
     &#34;&#34;&#34;Retrieves the value of an environment variable.
@@ -875,7 +1225,7 @@ in its value.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/helpers.py#L192-L200" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/835b7288f86c5b02336e7d8ccac7e1e63d85207f/ti/kit/helpers.py#L261-L269" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def versionSort(x):
     parts = []
@@ -962,12 +1312,16 @@ setTimeout(() => input.focus(), 100);
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="two-column">
+<li><code><a title="ti.kit.helpers.addToDict" href="#ti.kit.helpers.addToDict">addToDict</a></code></li>
 <li><code><a title="ti.kit.helpers.console" href="#ti.kit.helpers.console">console</a></code></li>
 <li><code><a title="ti.kit.helpers.consoleT01" href="#ti.kit.helpers.consoleT01">consoleT01</a></code></li>
+<li><code><a title="ti.kit.helpers.fillin" href="#ti.kit.helpers.fillin">fillin</a></code></li>
 <li><code><a title="ti.kit.helpers.getDelta" href="#ti.kit.helpers.getDelta">getDelta</a></code></li>
+<li><code><a title="ti.kit.helpers.htmlEsc" href="#ti.kit.helpers.htmlEsc">htmlEsc</a></code></li>
 <li><code><a title="ti.kit.helpers.isonow" href="#ti.kit.helpers.isonow">isonow</a></code></li>
 <li><code><a title="ti.kit.helpers.lessAgo" href="#ti.kit.helpers.lessAgo">lessAgo</a></code></li>
 <li><code><a title="ti.kit.helpers.makeAsciiUnique" href="#ti.kit.helpers.makeAsciiUnique">makeAsciiUnique</a></code></li>
+<li><code><a title="ti.kit.helpers.makeVarReplace" href="#ti.kit.helpers.makeVarReplace">makeVarReplace</a></code></li>
 <li><code><a title="ti.kit.helpers.normalize" href="#ti.kit.helpers.normalize">normalize</a></code></li>
 <li><code><a title="ti.kit.helpers.plainify" href="#ti.kit.helpers.plainify">plainify</a></code></li>
 <li><code><a title="ti.kit.helpers.prettify" href="#ti.kit.helpers.prettify">prettify</a></code></li>

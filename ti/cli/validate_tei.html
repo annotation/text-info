@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.11.6" />
-<title>ti.cheatsheet API documentation</title>
-<meta name="description" content="TEI import …" />
+<title>ti.cli.validate_tei API documentation</title>
+<meta name="description" content="" />
 <!-- integrity SRI from https://cdnjs.com/libraries/10up-sanitize.css/11.0.1 -->
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css"
 integrity="sha512-kcbluZFacWN57NgWZ4aH6eUMBEaTyErFhIFD3y5qYZbKuuyImH0K/AKsBbfXlivh2z5C+3IDTIhI11YmKomzmA=="
@@ -25,30 +25,51 @@ crossorigin>
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>ti.cheatsheet</code></h1>
+<h1 class="title">Module <code>ti.cli.validate_tei</code></h1>
 </header>
 <section id="section-intro">
-<h2 id="tei-import">TEI import</h2>
-<pre><code class="language-python">from ti.info.tei import TEI
-</code></pre>
-<dl>
-<dt><pre><code class="language-python">T = TEI(...)
-</code></pre></dt>
-<dd>
-<p>information retrieval from a TEI corpus</p>
-</dd>
-<dd>
-<p><code><a title="ti.info.tei" href="info/tei.html">ti.info.tei</a></code></p>
-</dd>
-</dl>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/835b7288f86c5b02336e7d8ccac7e1e63d85207f/ti/cheatsheet.py#L1-L3" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/835b7288f86c5b02336e7d8ccac7e1e63d85207f/ti/cli/validate_tei.py#L1-L37" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">&#34;&#34;&#34;
-.. include:: docs/main/cheatsheet.md
-&#34;&#34;&#34;</code></pre>
+<pre><code class="python">#!/usr/bin/env python
+
+import argparse
+import sys
+from ti.info.tei import TEI
+
+def main():
+    parser = argparse.ArgumentParser(description=&#34;Validate TEI input&#34;)
+    parser.add_argument(&#34;--tei-dir&#34;, action=&#34;store&#34;, type=str, help=&#34;Directory where input TEI XML files are&#34;, required=True)
+    parser.add_argument(&#34;--schema-dir&#34;, action=&#34;store&#34;, type=str, help=&#34;Schema directory&#34;, required=True)
+    parser.add_argument(&#34;--output-dir&#34;, action=&#34;store&#34;, type=str, help=&#34;Output directory where the TEI information is stored&#34;,required=True)
+    parser.add_argument(&#34;--config&#34;, action=&#34;store&#34;, type=str, help=&#34;Configuration file for validation&#34;, required=True)
+    parser.add_argument(&#34;--quiet&#34;, action=&#34;store_true&#34;, help=&#34;Quiet&#34;)
+    parser.add_argument(&#34;--verbose&#34;, action=&#34;store_true&#34;, help=&#34;Verbose&#34;)
+    parser.add_argument(&#34;--strict&#34;, action=&#34;store_true&#34;, help=&#34;Consider warnings errors&#34;)
+    args = parser.parse_args()
+
+    if args.quiet:
+        verbosity = -1
+    elif args.verbose:
+        verbosity = 1
+    else:
+        verbosity = 0
+
+    tei = TEI(args.tei_dir, args.config, verbose=verbosity)
+    tei.inventory(args.schema_dir, args.output_dir, carryon=True)
+
+    if not tei.good:
+        if tei.severeError or tei.fatalError:
+            sys.exit(1)
+        elif args.strict:
+            #consider warnings errors
+            sys.exit(2)
+    sys.exit(0)
+
+if __name__ == &#34;__main__&#34;:
+    main()</code></pre>
 </details>
 </section>
 <section>
@@ -56,15 +77,58 @@ crossorigin>
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="ti.cli.validate_tei.main"><code class="name flex">
+<span>def <span class="ident">main</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/annotation/text-info/blob/835b7288f86c5b02336e7d8ccac7e1e63d85207f/ti/cli/validate_tei.py#L7-L34" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def main():
+    parser = argparse.ArgumentParser(description=&#34;Validate TEI input&#34;)
+    parser.add_argument(&#34;--tei-dir&#34;, action=&#34;store&#34;, type=str, help=&#34;Directory where input TEI XML files are&#34;, required=True)
+    parser.add_argument(&#34;--schema-dir&#34;, action=&#34;store&#34;, type=str, help=&#34;Schema directory&#34;, required=True)
+    parser.add_argument(&#34;--output-dir&#34;, action=&#34;store&#34;, type=str, help=&#34;Output directory where the TEI information is stored&#34;,required=True)
+    parser.add_argument(&#34;--config&#34;, action=&#34;store&#34;, type=str, help=&#34;Configuration file for validation&#34;, required=True)
+    parser.add_argument(&#34;--quiet&#34;, action=&#34;store_true&#34;, help=&#34;Quiet&#34;)
+    parser.add_argument(&#34;--verbose&#34;, action=&#34;store_true&#34;, help=&#34;Verbose&#34;)
+    parser.add_argument(&#34;--strict&#34;, action=&#34;store_true&#34;, help=&#34;Consider warnings errors&#34;)
+    args = parser.parse_args()
+
+    if args.quiet:
+        verbosity = -1
+    elif args.verbose:
+        verbosity = 1
+    else:
+        verbosity = 0
+
+    tei = TEI(args.tei_dir, args.config, verbose=verbosity)
+    tei.inventory(args.schema_dir, args.output_dir, carryon=True)
+
+    if not tei.good:
+        if tei.severeError or tei.fatalError:
+            sys.exit(1)
+        elif args.strict:
+            #consider warnings errors
+            sys.exit(2)
+    sys.exit(0)</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 </section>
 </article>
 <nav id="sidebar">
-<p><a href="https://github.com/annotation" title="annotation on GitHub"><img src="../ti/images/tf-small.png" alt="annotation"></a></p>
-<p><a href="../ti/index.html">ti home</a> -
-<a href="../ti/cheatsheet.html">cheat sheet</a> -
-<a href="https://github.com/annotation/text-info" title="GitHub repo"><img src="../ti/images/GitHub_Logo.png" alt="GitHub" width="50"></a></p>
+<p><a href="https://github.com/annotation" title="annotation on GitHub"><img src="../../ti/images/tf-small.png" alt="annotation"></a></p>
+<p><a href="../../ti/index.html">ti home</a> -
+<a href="../../ti/cheatsheet.html">cheat sheet</a> -
+<a href="https://github.com/annotation/text-info" title="GitHub repo"><img src="../../ti/images/GitHub_Logo.png" alt="GitHub" width="50"></a></p>
 </p>
 <form>
 <input id="lunr-search" name="q" placeholder="🔎 Search ..." aria-label="Search"
@@ -100,7 +164,7 @@ const query = new URL(window.location).searchParams.get('q');
 if (query)
 search(query);
 function search(query) {
-const url = '../doc-search.html#' + encodeURIComponent(query);
+const url = '../../doc-search.html#' + encodeURIComponent(query);
 new tingle.modal({
 cssClass: ['modal-dialog'],
 onClose: () => {
@@ -114,14 +178,17 @@ setTimeout(() => input.focus(), 100);
 </script>
 <h1>Index</h1>
 <div class="toc">
-<ul>
-<li><a href="#tei-import">TEI import</a></li>
-</ul>
+<ul></ul>
 </div>
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="ti" href="index.html">ti</a></code></li>
+<li><code><a title="ti.cli" href="index.html">ti.cli</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="ti.cli.validate_tei.main" href="#ti.cli.validate_tei.main">main</a></code></li>
 </ul>
 </li>
 </ul>
@@ -129,7 +196,7 @@ setTimeout(() => input.focus(), 100);
 </main>
 <footer id="footer">
 <a href="https://pure.knaw.nl/portal/en/persons/dirk-roorda">Dirk Roorda</a>
-<a href="https://huc.knaw.nl"><img alt="HuC" src="../ti/images/huc.png" width="200" alt="Humanities Cluster"></a>
+<a href="https://huc.knaw.nl"><img alt="HuC" src="../../ti/images/huc.png" width="200" alt="Humanities Cluster"></a>
 <p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.11.6</a>.</p>
 </footer>
 </body>

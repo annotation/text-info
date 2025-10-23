@@ -31,16 +31,20 @@ crossorigin>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/repo.py#L1-L271" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/835b7288f86c5b02336e7d8ccac7e1e63d85207f/ti/kit/repo.py#L1-L356" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">import sys
-import os
+<pre><code class="python">import os
 import io
 import re
 from zipfile import ZipFile
 from shutil import rmtree
+import requests
+import ssl
 
 from gitlab import Gitlab, GitlabGetError
+
+from .helpers import console as consoleKit
+from .files import chDir, getCwd, dirRemove
 
 VERSION_DIGIT_RE = re.compile(r&#34;^([0-9]+).*&#34;)
 SHELL_VAR_RE = re.compile(r&#34;[^A-Z0-9_]&#34;)
@@ -135,22 +139,14 @@ def fetchRepo(
 
     Returns
     -------
-    bool
-        Whether the operation was successful
+    bool | void
+        A boolean indicating Whether the operation was successful.
+        However, if the repo exists, but the subfolder does not exist in the repo,
+        and the requests succeeds, but yields empty data, `None` is returned.
     &#34;&#34;&#34;
 
     def console(*msg, error=False, newline=True):
-        msg = &#34; &#34;.join(m if type(m) is str else repr(m) for m in msg)
-        msg = msg[1:] if msg.startswith(&#34;\n&#34;) else msg
-        msg = msg[0:-1] if msg.endswith(&#34;\n&#34;) else msg
-        target = sys.stderr if error else sys.stdout
-        nl = &#34;\n&#34; if newline else &#34;&#34;
-
-        if indent:
-            msg = indent + msg.replace(&#34;\n&#34;, f&#34;\n{indent}&#34;)
-
-        target.write(f&#34;{msg}{nl}&#34;)
-        target.flush()
+        consoleKit(*msg, error=error, newline=newline, indent=indent)
 
     conn = None
 
@@ -266,7 +262,7 @@ def fetchRepo(
 
     if len(zf) == 0:
         console(&#34;Download is empty&#34;)
-        return False
+        return None
 
     initTree(folderLocal, fresh=removeLocal)
 
@@ -303,7 +299,96 @@ def fetchRepo(
     if verbose:
         console(&#34;done&#34;)
 
-    return True</code></pre>
+    return True
+
+
+def downloadZip(
+    org, repo, release, file, dest, force=False, fresh=False, verbose=False
+):
+    &#34;&#34;&#34;Download a zip file from a release on github and unpack it.
+
+    Parameters
+    ----------
+    org: string
+        Organization on GitHub
+    repo: string
+        Repository within organization
+    release: string
+        The release version of the data to be downloaded.
+    file: string
+        The filename of the release attachment to fetch, without extension.
+        The extension must be `.zip`
+    dest: string
+        The destination directory under which the contents of the zip is extracted.
+    force: boolean, optional False
+        Whether to force downloading data if the local copy matches the online copy
+        by release version.
+
+        If `False`: no re-download will take place. Otherwise the folder
+        will be downloaded again.
+
+        If `True`, the folder will be downloaded again, but the local copy will
+        not be wiped on beforehand, so new files will overwrite existing files,
+        but if the local copy contains additional material, it will be left in place.
+    fresh: boolean, optional False
+        Whether to clean the destination directory before extracting
+    verbose: boolean, optional False
+        If True, informational messages will be issued, otherwise only error messages
+        will be issued.
+
+    Returns
+    -------
+    boolean
+        Whether the download and extraction was successful
+    &#34;&#34;&#34;
+    url = f&#34;https://github.com/{org}/{repo}/releases/download/{release}/{file}.zip&#34;
+
+    ssl._create_default_https_context = ssl._create_unverified_context
+    console = consoleKit
+    existingRelease = readSha(dest)
+
+    if existingRelease == release and not force and not fresh:
+        if verbose:
+            console(f&#34;Data already present: {release}/{file}.zip&#34;)
+        return True
+
+    cwd = getCwd()
+
+    status = dict(downloaded=False, extracted=False)
+    good = False
+
+    try:
+        r = requests.get(url, allow_redirects=True)
+        if not r.ok:
+            console(f&#34;{r.reason}\n\tcould not download {url}&#34;, error=True)
+        else:
+            zf = r.content
+            if verbose:
+                console(f&#34;{release}/{file}.zip downloaded having {len(zf)} bytes&#34;)
+
+            status[&#34;downloaded&#34;] = True
+            zf = io.BytesIO(zf)
+            z = ZipFile(zf)
+            initTree(dest, fresh=fresh)
+            chDir(dest)
+            z.extractall()
+            status[&#34;extracted&#34;] = True
+            dirRemove(&#34;__MACOSX&#34;)
+            chDir(cwd)
+            writeSha(dest, release)
+            good = True
+    except Exception as e:
+        if not status[&#34;downloaded&#34;]:
+            console(f&#34;{str(e)}\n\tcould not download {url}&#34;, error=True)
+        elif not status[&#34;extracted&#34;]:
+            console(f&#34;{str(e)}\n\tcould not extract to {dest}&#34;, error=True)
+        else:
+            console(f&#34;{str(e)} could not complete the operation&#34;, error=True)
+
+        good = False
+        chDir(cwd)
+
+    return good</code></pre>
 </details>
 </section>
 <section>
@@ -321,10 +406,143 @@ def fetchRepo(
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/repo.py#L25-L26" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/835b7288f86c5b02336e7d8ccac7e1e63d85207f/ti/kit/repo.py#L29-L30" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def GLPERS(backend):
     return f&#34;GL_{SHELL_VAR_RE.sub(&#39;_&#39;, backend.upper())}_PERS&#34;</code></pre>
+</details>
+</dd>
+<dt id="ti.kit.repo.downloadZip"><code class="name flex">
+<span>def <span class="ident">downloadZip</span></span>(<span>org, repo, release, file, dest, force=False, fresh=False, verbose=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Download a zip file from a release on github and unpack it.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>org</code></strong> :&ensp;<code>string</code></dt>
+<dd>Organization on GitHub</dd>
+<dt><strong><code>repo</code></strong> :&ensp;<code>string</code></dt>
+<dd>Repository within organization</dd>
+<dt><strong><code>release</code></strong> :&ensp;<code>string</code></dt>
+<dd>The release version of the data to be downloaded.</dd>
+<dt><strong><code>file</code></strong> :&ensp;<code>string</code></dt>
+<dd>The filename of the release attachment to fetch, without extension.
+The extension must be <code>.zip</code></dd>
+<dt><strong><code>dest</code></strong> :&ensp;<code>string</code></dt>
+<dd>The destination directory under which the contents of the zip is extracted.</dd>
+<dt><strong><code>force</code></strong> :&ensp;<code>boolean</code>, optional <code>False</code></dt>
+<dd>
+<p>Whether to force downloading data if the local copy matches the online copy
+by release version.</p>
+<p>If <code>False</code>: no re-download will take place. Otherwise the folder
+will be downloaded again.</p>
+<p>If <code>True</code>, the folder will be downloaded again, but the local copy will
+not be wiped on beforehand, so new files will overwrite existing files,
+but if the local copy contains additional material, it will be left in place.</p>
+</dd>
+<dt><strong><code>fresh</code></strong> :&ensp;<code>boolean</code>, optional <code>False</code></dt>
+<dd>Whether to clean the destination directory before extracting</dd>
+<dt><strong><code>verbose</code></strong> :&ensp;<code>boolean</code>, optional <code>False</code></dt>
+<dd>If True, informational messages will be issued, otherwise only error messages
+will be issued.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>boolean</code></dt>
+<dd>Whether the download and extraction was successful</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/annotation/text-info/blob/835b7288f86c5b02336e7d8ccac7e1e63d85207f/ti/kit/repo.py#L270-L356" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def downloadZip(
+    org, repo, release, file, dest, force=False, fresh=False, verbose=False
+):
+    &#34;&#34;&#34;Download a zip file from a release on github and unpack it.
+
+    Parameters
+    ----------
+    org: string
+        Organization on GitHub
+    repo: string
+        Repository within organization
+    release: string
+        The release version of the data to be downloaded.
+    file: string
+        The filename of the release attachment to fetch, without extension.
+        The extension must be `.zip`
+    dest: string
+        The destination directory under which the contents of the zip is extracted.
+    force: boolean, optional False
+        Whether to force downloading data if the local copy matches the online copy
+        by release version.
+
+        If `False`: no re-download will take place. Otherwise the folder
+        will be downloaded again.
+
+        If `True`, the folder will be downloaded again, but the local copy will
+        not be wiped on beforehand, so new files will overwrite existing files,
+        but if the local copy contains additional material, it will be left in place.
+    fresh: boolean, optional False
+        Whether to clean the destination directory before extracting
+    verbose: boolean, optional False
+        If True, informational messages will be issued, otherwise only error messages
+        will be issued.
+
+    Returns
+    -------
+    boolean
+        Whether the download and extraction was successful
+    &#34;&#34;&#34;
+    url = f&#34;https://github.com/{org}/{repo}/releases/download/{release}/{file}.zip&#34;
+
+    ssl._create_default_https_context = ssl._create_unverified_context
+    console = consoleKit
+    existingRelease = readSha(dest)
+
+    if existingRelease == release and not force and not fresh:
+        if verbose:
+            console(f&#34;Data already present: {release}/{file}.zip&#34;)
+        return True
+
+    cwd = getCwd()
+
+    status = dict(downloaded=False, extracted=False)
+    good = False
+
+    try:
+        r = requests.get(url, allow_redirects=True)
+        if not r.ok:
+            console(f&#34;{r.reason}\n\tcould not download {url}&#34;, error=True)
+        else:
+            zf = r.content
+            if verbose:
+                console(f&#34;{release}/{file}.zip downloaded having {len(zf)} bytes&#34;)
+
+            status[&#34;downloaded&#34;] = True
+            zf = io.BytesIO(zf)
+            z = ZipFile(zf)
+            initTree(dest, fresh=fresh)
+            chDir(dest)
+            z.extractall()
+            status[&#34;extracted&#34;] = True
+            dirRemove(&#34;__MACOSX&#34;)
+            chDir(cwd)
+            writeSha(dest, release)
+            good = True
+    except Exception as e:
+        if not status[&#34;downloaded&#34;]:
+            console(f&#34;{str(e)}\n\tcould not download {url}&#34;, error=True)
+        elif not status[&#34;extracted&#34;]:
+            console(f&#34;{str(e)}\n\tcould not extract to {dest}&#34;, error=True)
+        else:
+            console(f&#34;{str(e)} could not complete the operation&#34;, error=True)
+
+        good = False
+        chDir(cwd)
+
+    return good</code></pre>
 </details>
 </dd>
 <dt id="ti.kit.repo.fetchRepo"><code class="name flex">
@@ -371,13 +589,15 @@ will be issued.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>bool</code></dt>
-<dd>Whether the operation was successful</dd>
+<dt><code>bool | void</code></dt>
+<dd>A boolean indicating Whether the operation was successful.
+However, if the repo exists, but the subfolder does not exist in the repo,
+and the requests succeeds, but yields empty data, <code>None</code> is returned.</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/repo.py#L55-L271" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/835b7288f86c5b02336e7d8ccac7e1e63d85207f/ti/kit/repo.py#L59-L267" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def fetchRepo(
     backend, org, repo, folder, destDir, force=False, verbose=False, indent=&#34;&#34;
@@ -427,22 +647,14 @@ will be issued.</dd>
 
     Returns
     -------
-    bool
-        Whether the operation was successful
+    bool | void
+        A boolean indicating Whether the operation was successful.
+        However, if the repo exists, but the subfolder does not exist in the repo,
+        and the requests succeeds, but yields empty data, `None` is returned.
     &#34;&#34;&#34;
 
     def console(*msg, error=False, newline=True):
-        msg = &#34; &#34;.join(m if type(m) is str else repr(m) for m in msg)
-        msg = msg[1:] if msg.startswith(&#34;\n&#34;) else msg
-        msg = msg[0:-1] if msg.endswith(&#34;\n&#34;) else msg
-        target = sys.stderr if error else sys.stdout
-        nl = &#34;\n&#34; if newline else &#34;&#34;
-
-        if indent:
-            msg = indent + msg.replace(&#34;\n&#34;, f&#34;\n{indent}&#34;)
-
-        target.write(f&#34;{msg}{nl}&#34;)
-        target.flush()
+        consoleKit(*msg, error=error, newline=newline, indent=indent)
 
     conn = None
 
@@ -558,7 +770,7 @@ will be issued.</dd>
 
     if len(zf) == 0:
         console(&#34;Download is empty&#34;)
-        return False
+        return None
 
     initTree(folderLocal, fresh=removeLocal)
 
@@ -606,7 +818,7 @@ will be issued.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/repo.py#L15-L22" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/835b7288f86c5b02336e7d8ccac7e1e63d85207f/ti/kit/repo.py#L19-L26" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def initTree(path, fresh=False, gentle=False):
     exists = os.path.exists(path)
@@ -626,7 +838,7 @@ will be issued.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/repo.py#L29-L42" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/835b7288f86c5b02336e7d8ccac7e1e63d85207f/ti/kit/repo.py#L33-L46" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def readSha(folder):
     path = f&#34;{folder}/{CHECK_FILE}&#34;
@@ -652,7 +864,7 @@ will be issued.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/annotation/text-info/blob/84b88341b443e1912642609283263f5618fb06c5/ti/kit/repo.py#L45-L52" class="git-link">Browse git</a>
+<a href="https://github.com/annotation/text-info/blob/835b7288f86c5b02336e7d8ccac7e1e63d85207f/ti/kit/repo.py#L49-L56" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def writeSha(folder, commit):
     path = f&#34;{folder}/{CHECK_FILE}&#34;
@@ -732,8 +944,9 @@ setTimeout(() => input.focus(), 100);
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="">
+<ul class="two-column">
 <li><code><a title="ti.kit.repo.GLPERS" href="#ti.kit.repo.GLPERS">GLPERS</a></code></li>
+<li><code><a title="ti.kit.repo.downloadZip" href="#ti.kit.repo.downloadZip">downloadZip</a></code></li>
 <li><code><a title="ti.kit.repo.fetchRepo" href="#ti.kit.repo.fetchRepo">fetchRepo</a></code></li>
 <li><code><a title="ti.kit.repo.initTree" href="#ti.kit.repo.initTree">initTree</a></code></li>
 <li><code><a title="ti.kit.repo.readSha" href="#ti.kit.repo.readSha">readSha</a></code></li>
