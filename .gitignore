@@ -59,3 +59,5 @@ dist
 .jekyll-metadata
 .obsidian*
 .idea/
+/env/
+/uv.lock

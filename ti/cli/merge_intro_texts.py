@@ -14,7 +14,7 @@ def main():
                         type=str)
     args = parser.parse_args()
 
-    merged_xml, errors = IntroTextFactory(args.intro_text_path)
+    merged_xml, errors = IntroTextFactory(args.intro_text_path).merge_intro_text_files()
     if errors:
         sys.exit(1)
     else:
