@@ -16,7 +16,7 @@ from .iiif import FILE_NOT_FOUND
 
 DS_STORE = ".DS_Store"
 LOGO = "logo"
-IDENTIFY_COMMAND = "identify"
+IDENTIFY_COMMAND = "magick identify"
 ATTRIBUTE_OPTIONS = ["-ping", "-format", "%w %h %[colorspace]"]
 
 
