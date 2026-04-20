@@ -892,7 +892,7 @@ class TEI:
                                 out.zoneRegion.append(aVal)
 
                             (ulx, uly, lrx, lry) = out.zoneRegion
-                            out.zoneRegion = f"pct:{ulx},{uly},{lrx - ulx},{lry - uly}"
+                            out.zoneRegion = f"pct:{ulx},{uly},{float(lrx) - float(ulx)},{float(lry) - float(uly)}"
 
                             if out.scanFile:
                                 facsMapping[xmlPath][out.zoneId] = [
