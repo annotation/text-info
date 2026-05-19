@@ -25,13 +25,11 @@ FILE_NOT_FOUND_SIZES = (480, 640)
 
 
 def fillinIIIF(data, **kwargs):
-    tpd = type(data)
-
-    if tpd is str:
+    if isinstance(data, str):
         for k, v in kwargs.items():
             pattern = "{" + k + "}"
 
-            if type(v) is int and data == pattern:
+            if isinstance(v, int) and data == pattern:
                 data = v
                 break
             else:
@@ -39,10 +37,10 @@ def fillinIIIF(data, **kwargs):
 
         return data
 
-    if tpd is list:
+    if isinstance(data,list):
         return [fillinIIIF(item, **kwargs) for item in data]
 
-    if tpd is dict:
+    if isinstance(data, dict):
         return {k: fillinIIIF(v, **kwargs) for (k, v) in data.items()}
 
     return data
@@ -107,9 +105,7 @@ def parseIIIF(settings, selector, **kwargs):
         return constants
 
     def substituteConstants(data, constants, kwargs):
-        tpd = type(data)
-
-        if tpd is str:
+        if isinstance(data, str):
             for k, v in constants.items():
                 pattern = f"«{k}»"
 
@@ -119,7 +115,7 @@ def parseIIIF(settings, selector, **kwargs):
                 else:
                     data = data.replace(pattern, str(v))
 
-            if type(data) is str:
+            if isinstance(data, str):
                 for k, v in kwargs.items():
                     pattern = f"[[{k}]]"
 
@@ -134,10 +130,10 @@ def parseIIIF(settings, selector, **kwargs):
 
             return data
 
-        if tpd is list:
+        if isinstance(data, list):
             return [substituteConstants(item, constants, kwargs) for item in data]
 
-        if tpd is dict:
+        if isinstance(data, dict):
             return {
                 k: substituteConstants(v, constants, kwargs) for (k, v) in data.items()
             }
