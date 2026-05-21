@@ -188,10 +188,10 @@ class IIIF:
         self.verbose = verbose
         self.error = False
 
-        (ok, settings) = readCfg(configPath, "iiif", verbose=verbose, plain=True)
+        (ok, settings) = readCfg(self.configPath, "iiif", verbose=self.verbose, plain=True)
 
-        if verbose != -1:
-            console(f"Source information taken from {infoDir}")
+        if self.verbose != -1:
+            console(f"Source information taken from {self.infoDir}")
 
         if not ok:
             self.error = True
@@ -225,10 +225,8 @@ class IIIF:
 
         self.manifestDir = manifestDir
 
-        infoDir = self.infoDir
-        settings = self.settings
 
-        fileInfoFile = f"{infoDir}/files.yml"
+        fileInfoFile = f"{self.infoDir}/files.yml"
 
         if not fileExists(fileInfoFile):
             console(f"File with folder/file info not found: {fileInfoFile}", error=True)
@@ -237,7 +235,7 @@ class IIIF:
 
         files = readYaml(asFile=fileInfoFile, plain=True)
         excludedFolders = {
-            k for k, v in settings.get("excludedFolders", {}).items() if v
+            k for k, v in self.settings.get("excludedFolders", {}).items() if v
         }
         if type(files) is not list:
             console(f"The file info in {fileInfoFile} should be a list", error=True)
@@ -279,9 +277,8 @@ class IIIF:
         self.files = iFiles
         files = self.files
 
-        manifestLevel = settings.get("manifestLevel", "folder")
-        self.manifestLevel = manifestLevel
-        (self.constants, self.templates) = parseIIIF(settings, "templates", **kwargs)
+        self.manifestLevel = self.settings.get("manifestLevel", "folder")
+        (self.constants, self.templates) = parseIIIF(self.settings, "templates", **kwargs)
 
         if verbose > -1:
             console("Parameters passed to manifest generation:")
@@ -296,17 +293,16 @@ class IIIF:
                     console(f"\t{k:<10} = {v}")
 
             excludedFoldersStr = ", ".join(sorted(excludedFolders))
-            console(f"Manifestlevel = {manifestLevel}")
-            console(f"Excluded {manifestLevel} items: = {excludedFoldersStr}")
+            console(f"Manifestlevel = {self.manifestLevel}")
+            console(f"Excluded {self.manifestLevel} items: = {excludedFoldersStr}")
 
             console(f"{nFolders} folders and {nFiles} files, not counting exclusions")
 
         self.getSizes()
         self.getRotations()
         self.getPageSeq()
-        pages = self.pages
-        properPages = pages.get("pages", {})
-        mLevelFolders = manifestLevel == "folder"
+        properPages = self.pages.get("pages", {})
+        mLevelFolders = self.manifestLevel == "folder"
 
         if verbose > -1:
             console("Folders:")
@@ -342,22 +338,15 @@ class IIIF:
             if verbose > -1:
                 console(f"\t{folder:<10} with {fileRep}{pageRep}")
 
-        manifestDir = self.manifestDir
-        manifestLevel = self.manifestLevel
-        infoDir = self.infoDir
+        initTree(self.manifestDir, fresh=True)
 
-        settings = self.settings
-
-        initTree(manifestDir, fresh=True)
-
-        missingFiles = {}
-        self.missingFiles = missingFiles
+        self.missingFiles = {}
 
         p = 0
         i = 0
         m = 0
 
-        if manifestLevel == "folder":
+        if self.manifestLevel == "folder":
             for folder in files:
                 (thisP, thisI) = self.genPages("pages", folder=folder)
                 p += thisP
@@ -367,7 +356,7 @@ class IIIF:
                     m += 1
         else:
             for folder, fls in files:
-                folderDir = f"{manifestDir}/{folder}"
+                folderDir = f"{self.manifestDir}/{folder}"
                 initTree(folderDir, fresh=True, gentle=False)
 
                 folderI = 0
@@ -385,14 +374,14 @@ class IIIF:
                 if folderI == 0:
                     dirRemove(folderDir)
 
-        if len(missingFiles):
+        if len(self.missingFiles):
             console("Missing image files:", error=True)
 
-        with fileOpen(f"{infoDir}/facsMissing.tsv", "w") as fh:
+        with fileOpen(f"{self.infoDir}/facsMissing.tsv", "w") as fh:
             fh.write("kind\tfile\tpage\tn\n")
             nMissing = 0
 
-            for kind, fls in missingFiles.items():
+            for kind, fls in self.missingFiles.items():
                 console(f"\t{kind}:", error=True)
 
                 for file, pages in fls.items():
@@ -409,25 +398,22 @@ class IIIF:
         if verbose > -1:
             console(
                 f"{m} IIIF manifests with {i} items "
-                f"for {p} pages generated in {manifestDir}"
+                f"for {p} pages generated in {self.manifestDir}"
             )
 
     def getRotations(self):
         if self.error:
             return
 
-        verbose = self.verbose
-        scanInfoDir = self.scanInfoDir
         prefix = "rotation_"
         suffix = ".tsv"
 
-        rotateInfo = {}
-        self.rotateInfo = rotateInfo
+        self.rotateInfo = {}
 
         n = 0
         nPages = 0
 
-        for f in dirContents(scanInfoDir)[0]:
+        for f in dirContents(self.scanInfoDir)[0]:
             if not f.startswith(prefix) or not f.endswith(suffix):
                 continue
 
@@ -436,24 +422,24 @@ class IIIF:
             if kind != PAGES:
                 continue
 
-            with fileOpen(f"{scanInfoDir}/{f}") as rh:
+            with fileOpen(f"{self.scanInfoDir}/{f}") as rh:
                 next(rh)
                 for line in rh:
                     fields = line.rstrip("\n").split("\t")
                     p = fields[0]
                     rot = int(fields[1])
-                    rotateInfo.setdefault(kind, {})[p] = rot
+                    self.rotateInfo.setdefault(kind, {})[p] = rot
                     n += 1
 
                     if rot != 0:
                         nPages += 1
 
         if n == 0:
-            if verbose > -1:
-                console(f"No rotation files found in {scanInfoDir}")
+            if self.verbose > -1:
+                console(f"No rotation files found in {self.scanInfoDir}")
                 return
 
-        if verbose > -1:
+        if self.verbose > -1:
             console(f"{nPages} pages have nonzero rotations")
 
     def getSizes(self):
@@ -465,8 +451,7 @@ class IIIF:
         prefix = "sizes_"
         suffix = ".tsv"
 
-        sizeInfo = {}
-        self.sizeInfo = sizeInfo
+        self.sizeInfo = {}
 
         maxW, maxH = 0, 0
         totW, totH = 0, 0
@@ -488,7 +473,7 @@ class IIIF:
                     fields = line.rstrip("\n").split("\t")
                     p = fields[0]
                     (w, h) = (int(x) for x in fields[1:3])
-                    sizeInfo.setdefault(kind, {})[p] = (w, h)
+                    self.sizeInfo.setdefault(kind, {})[p] = (w, h)
                     ws.append(w)
                     hs.append(h)
                     n += 1
@@ -519,12 +504,9 @@ class IIIF:
         if self.error:
             return
 
-        manifestLevel = self.manifestLevel
         zoneBased = self.settings.get("zoneBased", False)
 
-        verbose = self.verbose
-        infoDir = self.infoDir
-        facsFile = f"{infoDir}/facs.yml"
+        facsFile = f"{self.infoDir}/facs.yml"
 
         if not fileExists(facsFile):
             console("No page-facsimile relating information found", error=True)
@@ -532,13 +514,13 @@ class IIIF:
 
         pagesProto = readYaml(asFile=facsFile, plain=True, preferTuples=False)
 
-        if verbose > -1:
+        if self.verbose > -1:
             console(f"Using facs file info file {facsFile}")
 
         pages = {}
 
         if zoneBased:
-            facsMappingFile = f"{infoDir}/facsMapping.yml"
+            facsMappingFile = f"{self.infoDir}/facsMapping.yml"
 
             if fileExists(facsMappingFile):
                 console(f"Using facs mapping file {facsMappingFile}")
@@ -550,16 +532,16 @@ class IIIF:
                     pathComps = path.split("/")
                     folder = pathComps[0]
 
-                    if manifestLevel == "file":
+                    if self.manifestLevel == "file":
                         file = stripExt(pathComps[1])
 
                     mapping = facsMapping.get(path, {})
                     mappedPs = [mapping.get(p, p) for p in ps]
                     pagesDest = pages.setdefault(
-                        folder, [] if manifestLevel == "folder" else {}
+                        folder, [] if self.manifestLevel == "folder" else {}
                     )
 
-                    if manifestLevel == "folder":
+                    if self.manifestLevel == "folder":
                         pagesDest.extend(mappedPs)
                     else:
                         pagesDest.setdefault(file, []).extend(mappedPs)
@@ -570,11 +552,11 @@ class IIIF:
                 (folder, file) = path.split("/")
                 file = stripExt(file)
                 pagesDest = pages.setdefault(
-                    folder, [] if manifestLevel == "folder" else {}
+                    folder, [] if self.manifestLevel == "folder" else {}
                 )
                 pages.setdefault(folder, []).extend(ps)
 
-                if manifestLevel == "folder":
+                if self.manifestLevel == "folder":
                     pagesDest.extend(ps)
                 else:
                     pagesDest.setdefault(file, []).extend(ps)
@@ -590,28 +572,22 @@ class IIIF:
         if self.error:
             return (0, 0)
 
-        constants = self.constants
-        settings = self.settings
-        scanInfoDir = self.scanInfoDir
-        missingFiles = self.missingFiles
-        manifestLevel = self.manifestLevel
-        zoneBased = settings.get("zoneBased", False)
-        templates = self.templates
+        zoneBased = self.settings.get("zoneBased", False)
         sizeInfo = self.sizeInfo.get(kind, {})
         rotateInfo = self.rotateInfo.get(kind, {})
-        ext = constants.get("ext", "jpg")
+        ext = self.constants.get("ext", "jpg")
 
         things = self.pages[kind]
         theseThings = things if folder is None else things.get(folder, None)
 
-        if manifestLevel == "folder":
+        if self.manifestLevel == "folder":
             thesePages = theseThings or []
         else:
             thesePages = (
                 theseThings if file is None else (theseThings or {}).get(file, [])
             )
 
-        pageItem = templates.pageItem
+        pageItem = self.templates.pageItem
 
         itemsSeen = set()
         items = []
@@ -638,7 +614,7 @@ class IIIF:
                 w, h = sizeInfo.get(p, (0, 0))
                 rot = 0 if rotateInfo is None else rotateInfo.get(p, 0)
             else:
-                missingFiles.setdefault(kind, {}).setdefault(
+                self.missingFiles.setdefault(kind, {}).setdefault(
                     file, collections.Counter()
                 )[p] += 1
                 p = FILE_NOT_FOUND
@@ -656,7 +632,7 @@ class IIIF:
                 myDir = self.myDir
                 fof = f"{FILE_NOT_FOUND}.{ext}"
                 fofInPath = f"{myDir}/fof/{fof}"
-                fofOutDir = f"{scanInfoDir}/{kind}"
+                fofOutDir = f"{self.scanInfoDir}/{kind}"
                 fofOutPath = f"{fofOutDir}/{fof}"
 
                 if not fileExists(fofOutPath):
@@ -680,7 +656,7 @@ class IIIF:
 
             items.append(item)
 
-        pageSequence = templates.pageSequence
+        pageSequence = self.templates.pageSequence
         manifestDir = self.manifestDir
 
         data = {}
@@ -698,7 +674,7 @@ class IIIF:
                 data,
                 asFile=(
                     f"{manifestDir}/{folder}.json"
-                    if manifestLevel == "folder"
+                    if self.manifestLevel == "folder"
                     else f"{manifestDir}/{folder}/{file}.json"
                 ),
             )
