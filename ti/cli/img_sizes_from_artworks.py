@@ -36,6 +36,7 @@ def main():
                     raise e
                 else:
                     print(f"WARNING: Skipping {source} due to error: {e}", file=sys.stderr)
+                    continue
             width = data['width']
             height = data['height']
             print(f"{source}\t{width}\t{height}")
