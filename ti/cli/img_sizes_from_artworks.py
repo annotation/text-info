@@ -23,11 +23,6 @@ def main():
     tree = etree.fromstring(data.encode('utf-8'))
     print("file\twidth\theight")
     for artwork_node in tree.xpath("//ed:artwork", namespaces=NSMAP):
-        try:
-            id: str = artwork_node.attrib[ATTRIB_XMLID]
-        except KeyError:
-            print("missing xml:id for artwork! skipping...", file=sys.stderr)
-            continue
         for graphic_node in artwork_node.xpath("./tei:graphic", namespaces=NSMAP):
             source: str = graphic_node.attrib['url']
             base_url = get_base_url(graphic_node, args.iiif_base)
@@ -43,7 +38,7 @@ def main():
                     print(f"WARNING: Skipping {source} due to error: {e}", file=sys.stderr)
             width = data['width']
             height = data['height']
-            print(f"{id}\t{width}\t{height}")
+            print(f"{source}\t{width}\t{height}")
 
 
 if __name__ == "__main__":
