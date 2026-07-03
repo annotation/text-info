@@ -33,11 +33,12 @@ def main():
                         print("WARNING: Skipping dummy or empty source", file=sys.stderr)
                     else:
                         base_url = get_base_url(graphic_node, args.iiif_base)
+                        if base_url and base_url[-1] != '/': base_url += '/'
                         try:
                             if source.startswith(("http://", "https://")):
                                 data = fetch_json(f"{source}/info.json")
                             else:
-                                data = fetch_json(f"{base_url}/{source}/info.json")
+                                data = fetch_json(f"{base_url}{source}/info.json")
                         except Exception as e:
                             if not args.ignore_errors:
                                 raise e
