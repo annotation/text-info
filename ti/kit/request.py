@@ -2,15 +2,23 @@ import sys
 import json
 import urllib.request
 from typing import Optional
+import ssl
 
 ATTRIB_XMLBASE = '{http://www.w3.org/XML/1998/namespace}base'
 ATTRIB_XMLID = '{http://www.w3.org/XML/1998/namespace}id'
 
 
-def fetch_json(url: str, timeout: int = 10):
+# fake curl user-agent because RKD server is picky
+def fetch_json(url: str, timeout: int = 10, verify_cert=True, user_agent="curl/8.21.0"):
     print(f"(fetching {url})", file=sys.stderr)
-    req = urllib.request.Request(url, headers={"Accept": "application/ld+json", "User-Agent": "curl/8.20.0"})  # fake curl user-agent because RKD server is picky
-    with urllib.request.urlopen(req, timeout=timeout) as resp:
+
+    context = ssl.create_default_context()
+    if not verify_cert:
+        context.check_hostname = False
+        context.verify_mode = ssl.CERT_NONE
+
+    req = urllib.request.Request(url, headers={"Accept": "application/ld+json", "User-Agent": user_agent})
+    with urllib.request.urlopen(req, timeout=timeout, context=context) as resp:
         if resp.status != 200:
             raise RuntimeError(f"HTTP {resp.status}")
         data = resp.read()
