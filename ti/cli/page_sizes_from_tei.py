@@ -18,6 +18,9 @@ def main():
     parser.add_argument("--tei-dir", action="store", type=str, help="Directory where input TEI XML files are", required=True)
     parser.add_argument("--iiif-base", action="store", type=str, help="Base URL for IIIF server", required=True)
     parser.add_argument("--ignore-errors", action="store_true", help="Ignore IIIF query errors")
+    parser.add_argument("--no-verify", action="store_true", help="Ignore SSL certificate errors")
+    # fake curl user-agent because servers like RKD's can be picky
+    parser.add_argument("--user-agent", action="store", type=str, help="User agent", default="curl/8.21.0")
     args = parser.parse_args()
 
     print("file\twidth\theight")
@@ -36,9 +39,9 @@ def main():
                         if base_url and base_url[-1] != '/': base_url += '/'
                         try:
                             if source.startswith(("http://", "https://")):
-                                data = fetch_json(f"{source}/info.json")
+                                data = fetch_json(f"{source}/info.json", verify_cert=not args.no_verify, user_agent=args.user_agent)
                             else:
-                                data = fetch_json(f"{base_url}{source}/info.json")
+                                data = fetch_json(f"{base_url}{source}/info.json", verify_cert=not args.no_verify, user_agent=args.user_agent)
                         except Exception as e:
                             if not args.ignore_errors:
                                 raise e
