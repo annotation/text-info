@@ -31,7 +31,7 @@ def main():
                 for graphic_node in surface_node.xpath("./tei:graphic", namespaces=NSMAP):
                     source: str = graphic_node.attrib['url']
                     if source.endswith('default.jpg'):
-                        print(f"WARNING: Graphic URL is a full specific URL rather than the excepted IIIF identifier: {source} ... skipping lookup for this one!", file=sys.stderr)
+                        print(f"WARNING: Graphic URL is a full specific URL rather than the accepted IIIF identifier: {source} ... skipping lookup for this one!", file=sys.stderr)
                     elif source == "dummy" or not source:
                         print("WARNING: Skipping dummy or empty source", file=sys.stderr)
                     else:
