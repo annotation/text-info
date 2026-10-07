@@ -27,7 +27,7 @@ def main():
     for filename in glob(f"{args.tei_dir}/*.xml", recursive=True):
         tree = etree.parse(filename)
         for facs_node in tree.xpath("//tei:facsimile", namespaces=NSMAP):
-            for surface_node in facs_node.xpath('./tei:surface', namespaces=NSMAP):
+            for surface_node in facs_node.xpath('.//tei:surface', namespaces=NSMAP):
                 for graphic_node in surface_node.xpath("./tei:graphic", namespaces=NSMAP):
                     source: str = graphic_node.attrib['url']
                     if source.endswith('default.jpg'):
